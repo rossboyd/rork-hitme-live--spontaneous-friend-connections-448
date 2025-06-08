@@ -1,10 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { Image } from 'expo-image';
-import { X, Check } from 'lucide-react-native';
 import { HitRequest, Contact } from '@/types';
+import { X, Check } from 'lucide-react-native';
 import { useThemeStore } from '@/store/useThemeStore';
-import * as Haptics from 'expo-haptics';
 
 interface QueueReviewProps {
   visible: boolean;
@@ -29,25 +28,21 @@ export const QueueReview = ({
 }: QueueReviewProps) => {
   const { colors } = useThemeStore();
 
-  const handleToggleContact = (contactId: string) => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    
-    setSelectedIds((prev: string[]) => 
-      prev.includes(contactId)
-        ? prev.filter((id: string) => id !== contactId)
-        : [...prev, contactId]
-    );
-  };
-
-  const getContactById = (contactId: string) => {
-    return contacts.find(c => c.id === contactId) || {
-      id: contactId,
+  const getContactById = (id: string) => {
+    return contacts.find(c => c.id === id) || {
+      id,
       name: "Unknown Contact",
       avatar: "https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80",
       phone: "",
     };
+  };
+
+  const toggleContact = (contactId: string) => {
+    setSelectedIds(prev => 
+      prev.includes(contactId)
+        ? prev.filter(id => id !== contactId)
+        : [...prev, contactId]
+    );
   };
 
   return (
@@ -70,14 +65,14 @@ export const QueueReview = ({
 
           <ScrollView style={styles.scrollView}>
             <Text style={[styles.description, { color: colors.text.secondary }]}>
-              {previewMode 
-                ? "These people are waiting to chat with you"
+              {previewMode
+                ? "These people are waiting to talk to you"
                 : "Select who to notify when you go live"}
             </Text>
 
             {requests.map(request => {
               const contact = getContactById(request.senderId);
-              const isSelected = selectedIds.includes(contact.id);
+              const isSelected = selectedIds.includes(request.senderId);
 
               return (
                 <TouchableOpacity
@@ -85,9 +80,9 @@ export const QueueReview = ({
                   style={[
                     styles.contactItem,
                     { backgroundColor: colors.card },
-                    !previewMode && isSelected && { borderColor: colors.primary }
+                    isSelected && styles.selectedItem
                   ]}
-                  onPress={() => !previewMode && handleToggleContact(contact.id)}
+                  onPress={() => !previewMode && toggleContact(request.senderId)}
                   disabled={previewMode}
                 >
                   <Image
@@ -95,7 +90,6 @@ export const QueueReview = ({
                     style={styles.avatar}
                     contentFit="cover"
                   />
-                  
                   <View style={styles.contactInfo}>
                     <Text style={[styles.contactName, { color: colors.text.primary }]}>
                       {contact.name}
@@ -104,13 +98,12 @@ export const QueueReview = ({
                       {request.topic}
                     </Text>
                   </View>
-
                   {!previewMode && (
                     <View style={[
                       styles.checkbox,
-                      isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
+                      isSelected && { backgroundColor: '#00FF00', borderColor: '#00FF00' }
                     ]}>
-                      {isSelected && <Check size={16} color="#000" />}
+                      {isSelected && <Check size={16} color="#fff" />}
                     </View>
                   )}
                 </TouchableOpacity>
@@ -120,12 +113,10 @@ export const QueueReview = ({
 
           {!previewMode && onGoLive && (
             <TouchableOpacity
-              style={[styles.goLiveButton, { backgroundColor: colors.primary }]}
+              style={[styles.goLiveButton, { backgroundColor: '#00FF00' }]}
               onPress={() => onGoLive(selectedIds)}
             >
-              <Text style={styles.goLiveText}>
-                Go Live ({selectedIds.length} selected)
-              </Text>
+              <Text style={styles.goLiveText}>Go Live ({selectedIds.length})</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -156,6 +147,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
+    fontFamily: 'PlusJakartaSans-SemiBold',
   },
   closeButton: {
     position: 'absolute',
@@ -166,8 +158,9 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 16,
-    marginBottom: 16,
+    marginBottom: 20,
     textAlign: 'center',
+    fontFamily: 'PlusJakartaSans-Regular',
   },
   contactItem: {
     flexDirection: 'row',
@@ -175,13 +168,15 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 12,
     marginBottom: 12,
-    borderWidth: 2,
-    borderColor: 'transparent',
+  },
+  selectedItem: {
+    borderColor: '#00FF00',
+    borderWidth: 1,
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
   },
   contactInfo: {
     flex: 1,
@@ -191,18 +186,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
+    fontFamily: 'PlusJakartaSans-SemiBold',
   },
   requestTopic: {
     fontSize: 14,
+    fontFamily: 'PlusJakartaSans-Regular',
   },
   checkbox: {
     width: 24,
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
+    borderColor: '#D1D5DB',
+    marginLeft: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 12,
   },
   goLiveButton: {
     margin: 16,
@@ -211,7 +209,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   goLiveText: {
-    color: '#000',
+    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
     fontFamily: 'PlusJakartaSans-SemiBold',

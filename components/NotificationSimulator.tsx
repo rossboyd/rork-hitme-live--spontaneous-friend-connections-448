@@ -12,7 +12,6 @@ import { Bell, ExternalLink } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { HitRequest, Contact } from '@/types';
 import { useThemeStore } from '@/store/useThemeStore';
-import { openWhatsApp } from '@/utils/whatsapp';
 
 // Only import Notifications on native platforms
 let Notifications: any = null;
@@ -47,10 +46,13 @@ export const NotificationSimulator = ({
   const { colors } = useThemeStore();
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
+  const lastNotificationRequest = useRef<HitRequest | null>(null);
 
   // Set up notification listeners
   useEffect(() => {
+    // Only set up notification listeners on native platforms
     if (Platform.OS !== 'web' && Notifications) {
+      // Request permissions
       const requestPermissions = async () => {
         const { status } = await Notifications.requestPermissionsAsync();
         if (status !== 'granted') {
@@ -64,21 +66,19 @@ export const NotificationSimulator = ({
       
       requestPermissions();
 
+      // Listen for notifications received while app is foregrounded
       notificationListener.current = Notifications.addNotificationReceivedListener((notification: any) => {
         console.log('Notification received in foreground:', notification);
       });
 
+      // Listen for user interaction with the notification
       responseListener.current = Notifications.addNotificationResponseReceivedListener((response: any) => {
         console.log('Notification response received:', response);
         
+        // Handle the notification response
         const requestId = response.notification.request.content.data?.requestId;
-        const contactId = response.notification.request.content.data?.contactId;
-        
-        if (requestId && contactId) {
-          const contact = contacts.find(c => c.id === contactId);
-          if (contact) {
-            handleConnectFromNotification(requestId, contact);
-          }
+        if (requestId && lastNotificationRequest.current) {
+          handleConnectFromNotification(lastNotificationRequest.current);
         }
       });
 
@@ -91,27 +91,7 @@ export const NotificationSimulator = ({
         }
       };
     }
-  }, [contacts]);
-
-  const handleConnectFromNotification = async (requestId: string, contact: Contact) => {
-    try {
-      const success = await openWhatsApp(contact.phone);
-      if (success) {
-        onSimulateConnection(requestId);
-      } else {
-        Alert.alert(
-          "Connection Error",
-          "There was an error connecting to WhatsApp. Please try again later."
-        );
-      }
-    } catch (error) {
-      console.error("Error connecting:", error);
-      Alert.alert(
-        "Connection Error",
-        "There was an error connecting. Please try again later."
-      );
-    }
-  };
+  }, []);
 
   // Filter for active outbound requests
   const activeRequests = outboundRequests.filter(req => req.status === 'pending');
@@ -133,22 +113,25 @@ export const NotificationSimulator = ({
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       
+      // Store the request for later use when notification is tapped
+      lastNotificationRequest.current = requestToSimulate;
+      
+      // Schedule the notification
       try {
         if (Notifications) {
           await Notifications.scheduleNotificationAsync({
             content: {
               title: 'HitMe Notification',
               body: `${contact.name} is now online! Connect with them now.`,
-              data: { 
-                requestId: requestToSimulate.id,
-                contactId: contact.id
-              },
+              data: { requestId: requestToSimulate.id, contactId: contact.id },
             },
             trigger: { 
+              type: 'seconds',
               seconds: 1,
             },
           });
           
+          // Show confirmation
           Alert.alert(
             'Notification Sent',
             'Check your notifications to see the test notification',
@@ -163,18 +146,51 @@ export const NotificationSimulator = ({
         );
       }
     } else {
-      // Web fallback
+      // Web fallback - just show an alert
       Alert.alert(
         'Notification Simulation (Web)',
         `${contact.name} is now online! Connect with them now.`,
         [
           { 
             text: 'Connect', 
-            onPress: () => handleConnectFromNotification(requestToSimulate.id, contact)
+            onPress: () => handleConnectFromNotification(requestToSimulate) 
           },
           { text: 'Dismiss' }
         ]
       );
+    }
+  };
+
+  const handleConnectFromNotification = async (request: HitRequest) => {
+    const contactForRequest = contacts.find(c => c.id === request.receiverId);
+    if (!contactForRequest) return;
+    
+    // Try to open WhatsApp with the contact's phone number
+    try {
+      const whatsappUrl = `whatsapp://send?phone=${contactForRequest.phone.replace(/[^0-9]/g, '')}`;
+      const canOpen = await Linking.canOpenURL(whatsappUrl);
+      
+      if (canOpen) {
+        await Linking.openURL(whatsappUrl);
+      } else {
+        // Fallback if WhatsApp isn't installed
+        Alert.alert(
+          "WhatsApp Not Found",
+          "WhatsApp is not installed on your device."
+        );
+      }
+      
+      // Mark the request as completed
+      onSimulateConnection(request.id);
+    } catch (error) {
+      console.error("Error opening WhatsApp:", error);
+      Alert.alert(
+        "Connection Error",
+        "There was an error connecting to WhatsApp."
+      );
+      
+      // Still mark as completed even if there was an error
+      onSimulateConnection(request.id);
     }
   };
 
@@ -185,7 +201,7 @@ export const NotificationSimulator = ({
       activeOpacity={0.7}
     >
       <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
-        <Bell size={20} color="#000" />
+        <Bell size={20} color="#fff" />
       </View>
       <View style={styles.textContainer}>
         <Text style={[styles.title, { color: colors.text.primary }]}>Test Notification</Text>
@@ -229,6 +245,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '600',
+    marginBottom: 4,
   },
   description: {
     fontSize: 14,
