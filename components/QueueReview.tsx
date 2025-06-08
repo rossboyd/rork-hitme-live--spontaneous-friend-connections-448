@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  Modal, 
+  ScrollView,
+  Dimensions
+} from 'react-native';
 import { Image } from 'expo-image';
 import { HitRequest, Contact } from '@/types';
 import { X, Check } from 'lucide-react-native';
@@ -16,6 +24,9 @@ interface QueueReviewProps {
   selectedIds: string[];
   setSelectedIds: (ids: string[]) => void;
 }
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const MODAL_HEIGHT = SCREEN_HEIGHT * 0.6; // 60% of screen height
 
 export const QueueReview = ({
   visible,
@@ -53,81 +64,101 @@ export const QueueReview = ({
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={[styles.header, { borderBottomColor: colors.border }]}>
-          <Text style={[styles.title, { color: colors.text.primary }]}>
-            {previewMode ? "Queue Preview" : "Manage Your Queue"}
-          </Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <X size={24} color={colors.text.primary} />
-          </TouchableOpacity>
-        </View>
+      <View style={styles.overlay}>
+        <View 
+          style={[
+            styles.container, 
+            { 
+              backgroundColor: colors.background,
+              height: MODAL_HEIGHT
+            }
+          ]}
+        >
+          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.title, { color: colors.text.primary }]}>
+              {previewMode ? "Queue Preview" : "Manage Your Queue"}
+            </Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <X size={24} color={colors.text.primary} />
+            </TouchableOpacity>
+          </View>
 
-        <ScrollView style={styles.content}>
-          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
-            {previewMode
-              ? `${requests.length} people waiting to talk`
-              : "Select who to notify when you go live"}
-          </Text>
+          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
+              {previewMode
+                ? `${requests.length} people waiting to talk`
+                : "Select who to notify when you go live"}
+            </Text>
 
-          {requests.map(request => {
-            const contact = getContactById(request.senderId);
-            const isSelected = selectedIds.includes(request.senderId);
+            {requests.map(request => {
+              const contact = getContactById(request.senderId);
+              const isSelected = selectedIds.includes(request.senderId);
 
-            return (
-              <TouchableOpacity
-                key={request.id}
-                style={[
-                  styles.contactItem,
-                  { backgroundColor: colors.card },
-                  isSelected && { borderColor: colors.primary, borderWidth: 2 }
-                ]}
-                onPress={() => !previewMode && toggleContact(request.senderId)}
-                disabled={previewMode}
-              >
-                <Image
-                  source={{ uri: contact.avatar }}
-                  style={styles.avatar}
-                  contentFit="cover"
-                />
-                <View style={styles.contactInfo}>
-                  <Text style={[styles.contactName, { color: colors.text.primary }]}>
-                    {contact.name}
-                  </Text>
-                  <Text style={[styles.topic, { color: colors.text.secondary }]}>
-                    {request.topic}
-                  </Text>
-                </View>
-                {!previewMode && (
-                  <View style={[
-                    styles.checkbox,
-                    { borderColor: colors.border },
-                    isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
-                  ]}>
-                    {isSelected && <Check size={16} color="#000" />}
+              return (
+                <TouchableOpacity
+                  key={request.id}
+                  style={[
+                    styles.contactItem,
+                    { backgroundColor: colors.card },
+                    isSelected && { borderColor: colors.primary, borderWidth: 2 }
+                  ]}
+                  onPress={() => !previewMode && toggleContact(request.senderId)}
+                  disabled={previewMode}
+                >
+                  <Image
+                    source={{ uri: contact.avatar }}
+                    style={styles.avatar}
+                    contentFit="cover"
+                  />
+                  <View style={styles.contactInfo}>
+                    <Text style={[styles.contactName, { color: colors.text.primary }]}>
+                      {contact.name}
+                    </Text>
+                    <Text style={[styles.topic, { color: colors.text.secondary }]}>
+                      {request.topic}
+                    </Text>
                   </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+                  {!previewMode && (
+                    <View style={[
+                      styles.checkbox,
+                      { borderColor: colors.border },
+                      isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
+                    ]}>
+                      {isSelected && <Check size={16} color="#000" />}
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
 
-        {!previewMode && onGoLive && (
-          <TouchableOpacity
-            style={[styles.goLiveButton, { backgroundColor: colors.primary }]}
-            onPress={() => onGoLive(selectedIds)}
-          >
-            <Text style={[styles.goLiveText, { color: "#000" }]}>Go Live ({selectedIds.length})</Text>
-          </TouchableOpacity>
-        )}
+          {!previewMode && onGoLive && (
+            <View style={styles.footer}>
+              <TouchableOpacity
+                style={[styles.goLiveButton, { backgroundColor: colors.primary }]}
+                onPress={() => onGoLive(selectedIds)}
+              >
+                <Text style={[styles.goLiveText, { color: "#000" }]}>
+                  Go Live ({selectedIds.length})
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
       </View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  overlay: {
     flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  container: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   header: {
     flexDirection: 'row',
@@ -185,8 +216,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  footer: {
+    padding: 16,
+    paddingBottom: 24,
+  },
   goLiveButton: {
-    margin: 16,
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
