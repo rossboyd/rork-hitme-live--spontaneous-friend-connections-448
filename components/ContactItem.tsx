@@ -94,13 +94,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
+    fontFamily: 'PlusJakartaSans-SemiBold',
   },
   phone: {
     fontSize: 14,
     marginBottom: 4,
+    fontFamily: 'PlusJakartaSans-Regular',
   },
   lastOnline: {
     fontSize: 12,
+    fontFamily: 'PlusJakartaSans-Regular',
   },
   hitListButton: {
     paddingVertical: 8,
@@ -111,5 +114,6 @@ const styles = StyleSheet.create({
   hitListButtonText: {
     fontSize: 14,
     fontWeight: '500',
+    fontFamily: 'PlusJakartaSans-Medium',
   },
 });

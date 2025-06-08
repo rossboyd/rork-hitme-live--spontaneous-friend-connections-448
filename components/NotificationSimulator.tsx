@@ -173,13 +173,13 @@ export const NotificationSimulator = ({
     // Format phone number for WhatsApp - remove all non-numeric characters
     // Keep the plus sign for international format
     const formattedPhone = contactForRequest.phone.startsWith('+') 
-      ? contactForRequest.phone.substring(1).replace(/\D/g, '')
+      ? contactForRequest.phone.replace(/\D/g, '')
       : contactForRequest.phone.replace(/\D/g, '');
     
     // Try to open WhatsApp with the contact's phone number
     try {
       // WhatsApp deep link format: whatsapp://send?phone=XXXXXXXXXXX
-      // Note: WhatsApp requires the phone number without the + sign but with country code
+      // Note: WhatsApp requires the phone number with country code
       const whatsappUrl = `whatsapp://send?phone=${formattedPhone}`;
       const canOpen = await Linking.canOpenURL(whatsappUrl);
       
@@ -257,8 +257,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
+    fontFamily: 'PlusJakartaSans-SemiBold',
   },
   description: {
     fontSize: 14,
+    fontFamily: 'PlusJakartaSans-Regular',
   },
 });
