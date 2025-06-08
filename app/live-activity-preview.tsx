@@ -25,7 +25,7 @@ export default function LiveActivityPreviewScreen() {
       <TouchableOpacity 
         style={styles.touchable}
         activeOpacity={1}
-        onPress={() => router.push('/(tabs)/home')}
+        onPress={() => router.back()}
       >
         <View style={styles.widgetContainer}>
           <LiveActivitySimulator

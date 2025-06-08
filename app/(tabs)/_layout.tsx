@@ -20,12 +20,16 @@ export default function TabLayout() {
         },
         headerTitleStyle: {
           color: colors.text.primary,
+          fontFamily: 'PlusJakartaSans-Bold',
+          fontSize: 20,
         },
         headerShadowVisible: false,
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '500',
+          fontFamily: 'PlusJakartaSans-Medium',
         },
+        headerTitle: "HitMeApp",
       }}
       initialRouteName="home"
     >
