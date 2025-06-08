@@ -5,15 +5,14 @@ type ThemeType = 'light' | 'dark';
 
 interface ThemeState {
   theme: ThemeType;
-  colors: typeof lightTheme;
+  colors: typeof darkTheme;
   setTheme: (theme: ThemeType) => void;
   toggleTheme: () => void;
 }
 
-// Create store with default theme values to prevent undefined errors
-export const useThemeStore = create<ThemeState>((set) => ({
-  theme: 'dark', // Default to dark theme when offline
-  colors: darkTheme, // Default colors
+export const useThemeStore = create<ThemeState>()((set) => ({
+  theme: 'dark',
+  colors: darkTheme,
   setTheme: (theme) => set({ 
     theme, 
     colors: theme === 'light' ? lightTheme : darkTheme 
