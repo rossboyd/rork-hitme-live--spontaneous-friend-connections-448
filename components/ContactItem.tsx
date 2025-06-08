@@ -4,7 +4,6 @@ import { Image } from 'expo-image';
 import { Contact } from '@/types';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
-import { formatDistanceToNow } from 'date-fns';
 import { ChevronRight, Clock } from 'lucide-react-native';
 
 interface ContactItemProps {
@@ -38,7 +37,24 @@ export const ContactItem = ({
   // Format last online time
   const getLastOnlineText = () => {
     if (!contact.lastOnline) return 'Never online';
-    return `Last online ${formatDistanceToNow(contact.lastOnline, { addSuffix: true })}`;
+    
+    // Simple formatting without date-fns
+    const now = new Date();
+    const lastOnline = new Date(contact.lastOnline);
+    const diffMs = now.getTime() - lastOnline.getTime();
+    
+    // Convert to minutes, hours, days
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffMins < 60) {
+      return `Last online ${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+    } else if (diffHours < 24) {
+      return `Last online ${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    } else {
+      return `Last online ${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    }
   };
 
   return (

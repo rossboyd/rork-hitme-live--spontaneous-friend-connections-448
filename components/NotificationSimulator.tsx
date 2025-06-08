@@ -131,7 +131,6 @@ export const NotificationSimulator = ({
               },
             },
             trigger: { 
-              type: 'seconds',
               seconds: 1,
             },
           });
