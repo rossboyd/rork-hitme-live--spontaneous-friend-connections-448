@@ -12,10 +12,16 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.text.light,
         tabBarStyle: {
-          backgroundColor: colors.card,
+          backgroundColor: colors.background,
           borderTopColor: colors.border,
         },
-        headerShown: false, // Hide the top-level tabs header
+        headerStyle: {
+          backgroundColor: colors.background,
+        },
+        headerTitleStyle: {
+          color: colors.text.primary,
+        },
+        headerShadowVisible: false,
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '500',
