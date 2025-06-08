@@ -256,10 +256,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
-    fontFamily: 'PlusJakartaSans-SemiBold',
   },
   description: {
     fontSize: 14,
-    fontFamily: 'PlusJakartaSans-Regular',
   },
 });

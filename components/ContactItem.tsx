@@ -5,6 +5,7 @@ import { Contact } from '@/types';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { ChevronRight, Clock } from 'lucide-react-native';
+import { formatDistanceToNow } from '@/utils/dateUtils';
 
 interface ContactItemProps {
   contact: Contact;
@@ -133,7 +134,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
-    fontFamily: 'PlusJakartaSans-SemiBold',
   },
   lastOnlineContainer: {
     flexDirection: 'row',
@@ -144,7 +144,6 @@ const styles = StyleSheet.create({
   },
   lastOnline: {
     fontSize: 12,
-    fontFamily: 'PlusJakartaSans-Regular',
   },
   hitListButton: {
     paddingHorizontal: 12,
@@ -156,6 +155,5 @@ const styles = StyleSheet.create({
   hitListButtonText: {
     fontSize: 12,
     fontWeight: '500',
-    fontFamily: 'PlusJakartaSans-Medium',
   },
 });

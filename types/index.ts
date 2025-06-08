@@ -29,7 +29,7 @@ export interface HitRequest {
   receiverId: string;
   message?: string;
   status: RequestStatus;
-  urgency?: RequestUrgency;
+  urgency: RequestUrgency; // Making urgency required with a default type
   duration?: number; // in minutes
   createdAt: number; // timestamp in milliseconds
   expiresAt?: number; // timestamp in milliseconds

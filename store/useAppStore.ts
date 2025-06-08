@@ -33,6 +33,15 @@ interface AppState {
   removeFromHitList: (contactId: string) => void;
 }
 
+// Ensure mock requests have the correct types
+const typedMockRequests: HitRequest[] = mockRequests.map(req => ({
+  ...req,
+  createdAt: typeof req.createdAt === 'string' ? Date.parse(req.createdAt) : req.createdAt,
+  expiresAt: req.expiresAt ? (typeof req.expiresAt === 'string' ? Date.parse(req.expiresAt) : req.expiresAt) : undefined,
+  status: req.status as RequestStatus,
+  urgency: (req.urgency as any) || 'medium' // Default to medium if not specified
+}));
+
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
@@ -52,8 +61,8 @@ export const useAppStore = create<AppState>()(
         })),
       
       // Requests
-      inboundRequests: mockRequests.filter((req) => req.receiverId === 'user-1'),
-      outboundRequests: mockRequests.filter((req) => req.senderId === 'user-1'),
+      inboundRequests: typedMockRequests.filter((req) => req.receiverId === 'user-1'),
+      outboundRequests: typedMockRequests.filter((req) => req.senderId === 'user-1'),
       addRequest: (request) => 
         set((state) => {
           if (request.senderId === 'user-1') {

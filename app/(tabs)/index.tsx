@@ -23,11 +23,9 @@ export default function HitListScreen() {
 
   useEffect(() => {
     // Check for expired requests on mount and every minute
-    if (expireRequests) {
-      expireRequests();
-      const interval = setInterval(expireRequests, 60000);
-      return () => clearInterval(interval);
-    }
+    expireRequests();
+    const interval = setInterval(expireRequests, 60000);
+    return () => clearInterval(interval);
   }, [expireRequests]);
 
   useEffect(() => {
@@ -36,8 +34,8 @@ export default function HitListScreen() {
     const expired = outboundRequests.filter(req => req.status === 'expired');
     
     // Sort by creation date (newest first)
-    setActiveRequests([...active].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
-    setExpiredRequests([...expired].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
+    setActiveRequests([...active].sort((a, b) => b.createdAt - a.createdAt));
+    setExpiredRequests([...expired].sort((a, b) => b.createdAt - a.createdAt));
   }, [outboundRequests]);
 
   const handleAddRequest = () => {
