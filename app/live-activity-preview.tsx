@@ -22,6 +22,7 @@ export default function LiveActivityPreviewScreen() {
       style={styles.container}
       resizeMode="cover"
     >
+      <View style={styles.overlay} />
       <TouchableOpacity 
         style={styles.touchable}
         activeOpacity={1}
@@ -42,6 +43,10 @@ export default function LiveActivityPreviewScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   touchable: {
     flex: 1,

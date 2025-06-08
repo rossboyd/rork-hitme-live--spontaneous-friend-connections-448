@@ -107,7 +107,7 @@ export default function ProfileScreen() {
             style={[styles.cameraButton, { backgroundColor: colors.primary }]}
             onPress={() => setEditProfileVisible(true)}
           >
-            <Camera size={20} color="#fff" />
+            <Camera size={20} color={colors.background} />
           </TouchableOpacity>
         </View>
         
@@ -130,7 +130,7 @@ export default function ProfileScreen() {
             value={notificationsEnabled}
             onValueChange={handleNotificationsToggle}
             trackColor={{ false: colors.border, true: colors.primary }}
-            thumbColor="#FFFFFF"
+            thumbColor={notificationsEnabled ? colors.background : colors.text.primary}
           />
         )}
         

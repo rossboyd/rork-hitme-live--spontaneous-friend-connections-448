@@ -20,11 +20,12 @@ export default function TabLayout() {
         },
         headerTitleStyle: {
           color: colors.text.primary,
+          fontFamily: 'PlusJakartaSans-SemiBold',
         },
         headerShadowVisible: false,
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: '500',
+          fontFamily: 'PlusJakartaSans-Medium',
         },
       }}
       initialRouteName="home"
