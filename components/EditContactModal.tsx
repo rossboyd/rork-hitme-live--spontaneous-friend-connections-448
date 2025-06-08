@@ -14,6 +14,7 @@ import { X, Edit2 } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import { Contact } from '@/types';
 import { useThemeStore } from '@/store/useThemeStore';
+import { darkTheme } from '@/constants/colors';
 
 interface EditContactModalProps {
   visible: boolean;
@@ -38,7 +39,7 @@ export const EditContactModal = ({
   onClose, 
   onUpdate 
 }: EditContactModalProps) => {
-  const { colors } = useThemeStore();
+  const { colors = darkTheme } = useThemeStore();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState('');
@@ -145,8 +146,8 @@ export const EditContactModal = ({
             onPress={handleUpdate}
             disabled={!isFormValid}
           >
-            <Edit2 size={18} color="#fff" style={styles.buttonIcon} />
-            <Text style={styles.submitText}>Update Contact</Text>
+            <Edit2 size={18} color="#000" style={styles.buttonIcon} />
+            <Text style={[styles.submitText, { color: "#000" }]}>Update Contact</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -238,15 +239,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
   },
-  disabledButton: {
-    opacity: 0.6,
-  },
   buttonIcon: {
     marginRight: 8,
   },
   submitText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
   },
 });

@@ -239,9 +239,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
   },
-  disabledButton: {
-    opacity: 0.6,
-  },
   buttonIcon: {
     marginRight: 8,
   },

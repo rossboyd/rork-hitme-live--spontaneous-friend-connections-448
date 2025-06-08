@@ -124,7 +124,11 @@ export const NotificationSimulator = ({
             content: {
               title: 'HitMe Notification',
               body: `${contact.name} is now online! Connect with them now.`,
-              data: { requestId: requestToSimulate.id, contactId: contact.id },
+              data: { 
+                requestId: requestToSimulate.id, 
+                contactId: contact.id,
+                phone: contact.phone 
+              },
             },
             trigger: { 
               type: 'seconds',
@@ -166,19 +170,31 @@ export const NotificationSimulator = ({
     const contactForRequest = contacts.find(c => c.id === request.receiverId);
     if (!contactForRequest) return;
     
+    // Format phone number for WhatsApp - remove all non-numeric characters
+    const formattedPhone = contactForRequest.phone.replace(/\D/g, '');
+    
     // Try to open WhatsApp with the contact's phone number
     try {
-      const whatsappUrl = `whatsapp://send?phone=${contactForRequest.phone.replace(/[^0-9]/g, '')}`;
+      // WhatsApp deep link format: whatsapp://send?phone=XXXXXXXXXXX
+      // Note: Some countries may require country code prefix
+      const whatsappUrl = `whatsapp://send?phone=${formattedPhone}`;
       const canOpen = await Linking.canOpenURL(whatsappUrl);
       
       if (canOpen) {
         await Linking.openURL(whatsappUrl);
       } else {
-        // Fallback if WhatsApp isn't installed
-        Alert.alert(
-          "WhatsApp Not Found",
-          "WhatsApp is not installed on your device."
-        );
+        // Fallback to web WhatsApp if app isn't installed
+        const webWhatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}`;
+        const canOpenWeb = await Linking.canOpenURL(webWhatsappUrl);
+        
+        if (canOpenWeb) {
+          await Linking.openURL(webWhatsappUrl);
+        } else {
+          Alert.alert(
+            "WhatsApp Not Found",
+            "WhatsApp is not installed on your device and web fallback failed."
+          );
+        }
       }
       
       // Mark the request as completed

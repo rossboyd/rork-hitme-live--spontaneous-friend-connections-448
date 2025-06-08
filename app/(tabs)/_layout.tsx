@@ -2,9 +2,10 @@ import React from "react";
 import { Tabs } from "expo-router";
 import { Home, ListChecks, Users, User } from "lucide-react-native";
 import { useThemeStore } from "@/store/useThemeStore";
+import { darkTheme } from "@/constants/colors";
 
 export default function TabLayout() {
-  const { colors } = useThemeStore();
+  const { colors = darkTheme } = useThemeStore();
 
   return (
     <Tabs
@@ -20,6 +21,10 @@ export default function TabLayout() {
           fontSize: 12,
           fontWeight: '500',
         },
+        headerStyle: {
+          backgroundColor: colors.background,
+        },
+        headerTintColor: colors.text.primary,
       }}
       initialRouteName="home"
     >

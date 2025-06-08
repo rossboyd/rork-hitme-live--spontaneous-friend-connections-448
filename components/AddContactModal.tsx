@@ -13,6 +13,7 @@ import {
 import { X, User } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import { useThemeStore } from '@/store/useThemeStore';
+import { darkTheme } from '@/constants/colors';
 
 interface AddContactModalProps {
   visible: boolean;
@@ -39,7 +40,7 @@ export const AddContactModal = ({
   onClose, 
   onSubmit 
 }: AddContactModalProps) => {
-  const { colors } = useThemeStore();
+  const { colors = darkTheme } = useThemeStore();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState(DEFAULT_AVATARS[0]);
