@@ -39,7 +39,7 @@ const typedMockRequests: HitRequest[] = mockRequests.map(req => ({
   createdAt: typeof req.createdAt === 'string' ? Date.parse(req.createdAt) : req.createdAt,
   expiresAt: req.expiresAt ? (typeof req.expiresAt === 'string' ? Date.parse(req.expiresAt) : req.expiresAt) : undefined,
   status: req.status as RequestStatus,
-  urgency: (req.urgency as any) || 'medium' // Default to medium if not specified
+  urgency: req.urgency || 'medium' // Default to medium if not specified
 }));
 
 export const useAppStore = create<AppState>()(
@@ -94,37 +94,26 @@ export const useAppStore = create<AppState>()(
             request.id === id ? { ...request, status } : request
           ),
         })),
-      // Function to check and expire requests
       expireRequests: () => 
         set((state) => {
           const now = Date.now();
-          const updatedOutboundRequests = state.outboundRequests.map(request => {
-            // If request is pending and has expired, update status
-            if (request.status === 'pending' && request.expiresAt && request.expiresAt < now) {
-              return { ...request, status: 'expired' as RequestStatus };
-            }
-            return request;
-          });
-          
-          const updatedInboundRequests = state.inboundRequests.map(request => {
-            // If request is pending and has expired, update status
-            if (request.status === 'pending' && request.expiresAt && request.expiresAt < now) {
-              return { ...request, status: 'expired' as RequestStatus };
-            }
-            return request;
-          });
-          
-          return { 
-            outboundRequests: updatedOutboundRequests,
-            inboundRequests: updatedInboundRequests
+          const updateRequests = (requests: HitRequest[]) =>
+            requests.map(request => {
+              if (request.status === 'pending' && request.expiresAt && request.expiresAt < now) {
+                return { ...request, status: 'expired' as RequestStatus };
+              }
+              return request;
+            });
+
+          return {
+            outboundRequests: updateRequests(state.outboundRequests),
+            inboundRequests: updateRequests(state.inboundRequests)
           };
         }),
-      // Alias for deleteRequest specifically for outbound requests
       deleteOutboundRequest: (id) => 
         set((state) => ({
           outboundRequests: state.outboundRequests.filter((request) => request.id !== id),
         })),
-      // Alias for updateRequest specifically for outbound requests
       updateOutboundRequest: (id, updates) => 
         set((state) => ({
           outboundRequests: state.outboundRequests.map((request) => 

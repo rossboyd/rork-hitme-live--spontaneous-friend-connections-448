@@ -35,29 +35,6 @@ export const ContactItem = ({
     }
   };
 
-  // Format last online time
-  const getLastOnlineText = () => {
-    if (!contact.lastOnline) return 'Never online';
-    
-    // Simple formatting without date-fns
-    const now = new Date();
-    const lastOnline = new Date(contact.lastOnline);
-    const diffMs = now.getTime() - lastOnline.getTime();
-    
-    // Convert to minutes, hours, days
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
-    if (diffMins < 60) {
-      return `Last online ${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
-    } else if (diffHours < 24) {
-      return `Last online ${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
-    } else {
-      return `Last online ${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-    }
-  };
-
   return (
     <TouchableOpacity
       style={[styles.container, { backgroundColor: colors.card }]}
@@ -75,11 +52,11 @@ export const ContactItem = ({
           {contact.name}
         </Text>
         
-        {showLastOnline && (
+        {showLastOnline && contact.lastOnline && (
           <View style={styles.lastOnlineContainer}>
             <Clock size={12} color={colors.text.light} style={styles.clockIcon} />
             <Text style={[styles.lastOnline, { color: colors.text.light }]}>
-              {getLastOnlineText()}
+              Last online {formatDistanceToNow(Date.parse(contact.lastOnline))}
             </Text>
           </View>
         )}

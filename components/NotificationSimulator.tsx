@@ -55,7 +55,14 @@ export const NotificationSimulator = ({
     if (Platform.OS !== 'web' && Notifications) {
       // Request permissions
       const requestPermissions = async () => {
-        const { status } = await Notifications.requestPermissionsAsync();
+        const { status } = await Notifications.requestPermissionsAsync({
+          ios: {
+            allowAlert: true,
+            allowBadge: true,
+            allowSound: true,
+            allowAnnouncements: true,
+          },
+        });
         if (status !== 'granted') {
           Alert.alert(
             'Permission Required',

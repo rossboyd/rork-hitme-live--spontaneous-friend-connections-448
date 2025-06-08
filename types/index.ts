@@ -29,7 +29,7 @@ export interface HitRequest {
   receiverId: string;
   message?: string;
   status: RequestStatus;
-  urgency: RequestUrgency; // Making urgency required with a default type
+  urgency: RequestUrgency;
   duration?: number; // in minutes
   createdAt: number; // timestamp in milliseconds
   expiresAt?: number; // timestamp in milliseconds
@@ -52,6 +52,11 @@ export interface ThemeColors {
     success: string;
     warning: string;
     error: string;
+  };
+  urgency: {
+    high: string;
+    medium: string;
+    low: string;
   };
 }
 

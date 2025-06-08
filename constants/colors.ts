@@ -1,39 +1,23 @@
-import { ThemeColors } from '@/types';
-
-export const lightTheme: ThemeColors = {
-  primary: '#5E72E4',
-  secondary: '#F7FAFC',
-  background: '#FFFFFF',
-  card: '#F7FAFC',
-  border: '#E2E8F0',
-  notification: '#FF3B30',
+export const darkTheme = {
+  primary: '#4ADE80',
+  secondary: '#F472B6',
+  background: '#111827',
+  card: '#1F2937',
+  border: '#374151',
+  notification: '#EF4444',
   text: {
-    primary: '#1A202C',
-    secondary: '#4A5568',
-    light: '#A0AEC0',
+    primary: '#F9FAFB',
+    secondary: '#9CA3AF',
+    light: '#6B7280',
   },
   status: {
-    success: '#48BB78',
-    warning: '#F6AD55',
-    error: '#F56565',
+    success: '#4ADE80',
+    warning: '#FBBF24',
+    error: '#EF4444',
   },
-};
-
-export const darkTheme: ThemeColors = {
-  primary: '#5E72E4',
-  secondary: '#2D3748',
-  background: '#1A202C',
-  card: '#2D3748',
-  border: '#4A5568',
-  notification: '#FF3B30',
-  text: {
-    primary: '#F7FAFC',
-    secondary: '#CBD5E0',
-    light: '#718096',
-  },
-  status: {
-    success: '#48BB78',
-    warning: '#F6AD55',
-    error: '#F56565',
+  urgency: {
+    high: '#EF4444',
+    medium: '#FBBF24',
+    low: '#4ADE80',
   },
 };
