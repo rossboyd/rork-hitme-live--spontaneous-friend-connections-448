@@ -22,7 +22,7 @@ interface SlideToLiveToggleProps {
 
 const TOGGLE_HEIGHT = 240;
 const THUMB_SIZE = 80;
-const ACTIVATION_THRESHOLD = 0.8; // How far up the user needs to drag to activate
+const ACTIVATION_THRESHOLD = 0.8;
 
 export const SlideToLiveToggle = ({ 
   waitingCount, 
@@ -34,7 +34,6 @@ export const SlideToLiveToggle = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isThresholdReached, setIsThresholdReached] = useState(false);
   
-  // Animation values - negative values for upward movement
   const dragY = useRef(new Animated.Value(0)).current;
   const trackColorInterpolation = dragY.interpolate({
     inputRange: [-(TOGGLE_HEIGHT - THUMB_SIZE), 0],
@@ -42,20 +41,17 @@ export const SlideToLiveToggle = ({
     extrapolate: 'clamp'
   });
   
-  // Calculate track background color based on drag position
   const trackBackgroundColor = trackColorInterpolation.interpolate({
     inputRange: [0, 1],
-    outputRange: [colors.border, '#4ADE80'] // Light gray to green
+    outputRange: [colors.border, '#4ADE80']
   });
   
-  // Calculate thumb scale based on drag position
   const thumbScale = trackColorInterpolation.interpolate({
     inputRange: [0, 0.5, 1],
     outputRange: [1, 1.1, 1.15],
     extrapolate: 'clamp'
   });
   
-  // Create pan responder for upward gesture
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -64,11 +60,9 @@ export const SlideToLiveToggle = ({
         setIsDragging(true);
       },
       onPanResponderMove: (_, gestureState) => {
-        // For upward movement, dy will be negative
         const newY = Math.max(-(TOGGLE_HEIGHT - THUMB_SIZE), Math.min(0, gestureState.dy));
         dragY.setValue(newY);
         
-        // Check if threshold is reached (negative values for upward movement)
         const threshold = -(TOGGLE_HEIGHT - THUMB_SIZE) * ACTIVATION_THRESHOLD;
         const thresholdReached = newY <= threshold;
         
@@ -82,7 +76,6 @@ export const SlideToLiveToggle = ({
       onPanResponderRelease: (_, gestureState) => {
         setIsDragging(false);
         
-        // Check if drag went far enough upward to trigger action
         const threshold = -(TOGGLE_HEIGHT - THUMB_SIZE) * ACTIVATION_THRESHOLD;
         if (gestureState.dy <= threshold) {
           if (Platform.OS !== 'web') {
@@ -91,7 +84,6 @@ export const SlideToLiveToggle = ({
           onSlideComplete();
         }
         
-        // Reset position with animation
         Animated.spring(dragY, {
           toValue: 0,
           useNativeDriver: false,
@@ -156,7 +148,7 @@ export const SlideToLiveToggle = ({
         >
           <Phone 
             size={32} 
-            color={isThresholdReached ? colors.primary : '#6B7280'} // Darker grey for icon
+            color={isThresholdReached ? colors.primary : '#6B7280'} 
           />
         </Animated.View>
       </Animated.View>

@@ -7,14 +7,15 @@ import {
   Platform,
   Keyboard,
   Pressable,
-  TouchableOpacity
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  ScrollView
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import * as Haptics from 'expo-haptics';
 import { darkTheme } from '@/constants/colors';
 
-// Mock OTP for demo
 const MOCK_OTP = '123456';
 const OTP_LENGTH = 6;
 
@@ -131,96 +132,107 @@ export default function VerifyScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: darkTheme.background }]}>
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: darkTheme.text.primary }]}>
-            Verify your number
-          </Text>
-          <Text style={[styles.subtitle, { color: darkTheme.text.secondary }]}>
-            Enter the code we sent to {phone}
-          </Text>
-        </View>
-
-        <Pressable onPress={() => focusInput(0)}>
-          <View style={styles.otpContainer}>
-            {Array(OTP_LENGTH).fill(0).map((_, index) => (
-              <TextInput
-                key={index}
-                ref={ref => inputRefs.current[index] = ref}
-                style={[
-                  styles.otpInput,
-                  { 
-                    backgroundColor: darkTheme.card,
-                    borderColor: error ? darkTheme.accent : darkTheme.border,
-                    color: darkTheme.text.primary 
-                  },
-                  otp[index] && styles.otpInputFilled
-                ]}
-                value={otp[index]}
-                onChangeText={(text) => handleInputChange(text.replace(/[^\d]/g, ''), index)}
-                onKeyPress={(e) => handleKeyPress(e, index)}
-                keyboardType="number-pad"
-                maxLength={index === 0 ? OTP_LENGTH : 1}
-                selectTextOnFocus
-                selectionColor={darkTheme.primary}
-              />
-            ))}
-          </View>
-        </Pressable>
-
-        {error ? (
-          <Text style={[styles.errorText, { color: darkTheme.accent }]}>{error}</Text>
-        ) : (
-          <Text style={[styles.helperText, { color: darkTheme.text.light }]}>
-            Enter the 6-digit code
-          </Text>
-        )}
-
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[
-              styles.verifyButton,
-              { 
-                backgroundColor: otp.every(digit => digit) ? darkTheme.primary : darkTheme.border,
-                opacity: otp.every(digit => digit) ? 1 : 0.6
-              }
-            ]}
-            onPress={() => handleVerify()}
-            disabled={!otp.every(digit => digit)}
-          >
-            <Text style={styles.verifyButtonText}>Verify</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.resendButton,
-              { 
-                borderColor: countdown > 0 ? darkTheme.border : darkTheme.primary,
-                opacity: countdown > 0 || isResending ? 0.6 : 1
-              }
-            ]}
-            onPress={handleResend}
-            disabled={countdown > 0 || isResending}
-          >
-            <Text 
-              style={[
-                styles.resendButtonText,
-                { color: countdown > 0 ? darkTheme.text.light : darkTheme.primary }
-              ]}
-            >
-              {countdown > 0 ? `Resend code (${countdown}s)` : 'Resend code'}
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: darkTheme.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: darkTheme.text.primary }]}>
+              Verify your number
             </Text>
-          </TouchableOpacity>
+            <Text style={[styles.subtitle, { color: darkTheme.text.secondary }]}>
+              Enter the code we sent to {phone}
+            </Text>
+          </View>
+
+          <Pressable onPress={() => focusInput(0)}>
+            <View style={styles.otpContainer}>
+              {Array(OTP_LENGTH).fill(0).map((_, index) => (
+                <TextInput
+                  key={index}
+                  ref={ref => inputRefs.current[index] = ref}
+                  style={[
+                    styles.otpInput,
+                    { 
+                      backgroundColor: darkTheme.card,
+                      borderColor: error ? darkTheme.accent : darkTheme.border,
+                      color: darkTheme.text.primary 
+                    },
+                    otp[index] && styles.otpInputFilled
+                  ]}
+                  value={otp[index]}
+                  onChangeText={(text) => handleInputChange(text.replace(/[^\d]/g, ''), index)}
+                  onKeyPress={(e) => handleKeyPress(e, index)}
+                  keyboardType="number-pad"
+                  maxLength={index === 0 ? OTP_LENGTH : 1}
+                  selectTextOnFocus
+                  selectionColor={darkTheme.primary}
+                />
+              ))}
+            </View>
+          </Pressable>
+
+          {error ? (
+            <Text style={[styles.errorText, { color: darkTheme.accent }]}>{error}</Text>
+          ) : (
+            <Text style={[styles.helperText, { color: darkTheme.text.light }]}>
+              Enter the 6-digit code
+            </Text>
+          )}
+
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[
+                styles.verifyButton,
+                { 
+                  backgroundColor: otp.every(digit => digit) ? darkTheme.primary : darkTheme.border,
+                  opacity: otp.every(digit => digit) ? 1 : 0.6
+                }
+              ]}
+              onPress={() => handleVerify()}
+              disabled={!otp.every(digit => digit)}
+            >
+              <Text style={styles.verifyButtonText}>Verify</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.resendButton,
+                { 
+                  borderColor: countdown > 0 ? darkTheme.border : darkTheme.primary,
+                  opacity: countdown > 0 || isResending ? 0.6 : 1
+                }
+              ]}
+              onPress={handleResend}
+              disabled={countdown > 0 || isResending}
+            >
+              <Text 
+                style={[
+                  styles.resendButtonText,
+                  { color: countdown > 0 ? darkTheme.text.light : darkTheme.primary }
+                ]}
+              >
+                {countdown > 0 ? `Resend code (${countdown}s)` : 'Resend code'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   content: {
     flex: 1,
@@ -246,9 +258,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 16,
+    gap: 8,
   },
   otpInput: {
-    width: 45,
+    flex: 1,
     height: 56,
     borderRadius: 12,
     borderWidth: 1,
