@@ -2,10 +2,41 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { useThemeStore } from '@/store/useThemeStore';
 
-// ... rest of the component code stays the same ...
+interface LiveModeStatusProps {
+  timeRemaining: number;
+  onGoOffline: () => void;
+}
+
+export const LiveModeStatus = ({ timeRemaining, onGoOffline }: LiveModeStatusProps) => {
+  const { colors } = useThemeStore();
+  
+  // Format time remaining as MM:SS
+  const minutes = Math.floor(timeRemaining / 1000 / 60);
+  const seconds = Math.floor((timeRemaining / 1000) % 60);
+  const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>You're Live!</Text>
+      <View style={styles.circle}>
+        <Text style={styles.timeText}>{timeString}</Text>
+      </View>
+      
+      <TouchableOpacity
+        style={[styles.offlineButton, { backgroundColor: colors.accent }]}
+        onPress={onGoOffline}
+      >
+        <Text style={styles.offlineButtonText}>Go Offline</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
-  // ... other styles stay the same ...
+  container: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
   title: {
     fontSize: 28,
     fontWeight: '700',
@@ -20,13 +51,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#00FF00',
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 40,
   },
-  pulseCircle: {
-    position: 'absolute',
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: '#00FF0033',
+  timeText: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#fff',
+    fontFamily: 'PlusJakartaSans-Bold',
   },
-  // ... other styles stay the same ...
+  offlineButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+  },
+  offlineButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
 });
