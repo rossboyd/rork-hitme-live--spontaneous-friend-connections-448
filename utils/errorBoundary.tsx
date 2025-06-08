@@ -1,6 +1,6 @@
+// Error boundary component
 import React, { Component, ErrorInfo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useThemeStore } from '@/store/useThemeStore';
 
 interface Props {
   children: React.ReactNode;
@@ -26,6 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Error caught by boundary:', error, errorInfo);
+    // Here you could send to error reporting service
   }
 
   handleReset = () => {
@@ -74,12 +75,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   button: {
-    backgroundColor: '#00E676',
+    backgroundColor: '#4A6FA5',
     padding: 12,
     borderRadius: 8,
   },
   buttonText: {
-    color: '#000',
+    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },

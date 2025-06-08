@@ -1,79 +1,74 @@
-import React from 'react';
-import { Platform } from 'react-native';
-import { Tabs } from 'expo-router';
-import { Home, ListChecks, Users, User } from 'lucide-react-native';
-import { useThemeStore } from '@/store/useThemeStore';
-import Animated, { 
-  useAnimatedStyle, 
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
-import { SPRING_CONFIG } from '@/utils/animations';
+import React from "react";
+import { Tabs } from "expo-router";
+import { Home, ListChecks, Users, User } from "lucide-react-native";
+import { useThemeStore } from "@/store/useThemeStore";
+import { darkTheme } from "@/constants/colors";
 
 export default function TabLayout() {
-  const { colors } = useThemeStore();
-
-  const tabBarStyle = useAnimatedStyle(() => ({
-    backgroundColor: colors.card,
-    borderTopColor: colors.border,
-    borderTopWidth: 1,
-  }));
+  // Always provide default colors to prevent undefined errors
+  const { colors = darkTheme } = useThemeStore();
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.text.light,
-        tabBarStyle: Platform.select({
-          web: {
-            backgroundColor: colors.card,
-            borderTopColor: colors.border,
-          },
-          default: tabBarStyle,
-        }),
+        tabBarStyle: {
+          backgroundColor: colors.card,
+          borderTopColor: colors.border,
+        },
+        headerShown: false,
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '500',
+        },
         headerStyle: {
           backgroundColor: colors.background,
         },
         headerTintColor: colors.text.primary,
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-          fontFamily: 'PlusJakartaSans-SemiBold',
-        },
-        tabBarItemStyle: {
-          paddingVertical: 8,
-        },
-        tabBarIconStyle: {
-          marginBottom: 4,
-        },
       }}
+      initialRouteName="home"
     >
       <Tabs.Screen
-        name="index"
+        name="home"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <Home size={24} color={color} />,
+          title: "Home",
+          tabBarLabel: "Home",
+          tabBarIcon: ({ color, size }) => (
+            <Home size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="hitlist"
+        name="index"
         options={{
-          title: 'HitList',
-          tabBarIcon: ({ color }) => <ListChecks size={24} color={color} />,
+          title: "HitList",
+          tabBarLabel: "HitList",
+          tabBarIcon: ({ color, size }) => (
+            <ListChecks size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="contacts"
         options={{
-          title: 'Contacts',
-          tabBarIcon: ({ color }) => <Users size={24} color={color} />,
+          title: "Contacts",
+          tabBarLabel: "Contacts",
+          tabBarIcon: ({ color, size }) => (
+            <Users size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <User size={24} color={color} />,
+          title: "Profile",
+          tabBarLabel: "Profile",
+          tabBarIcon: ({ color, size }) => (
+            <User size={size} color={color} />
+          ),
+          // Hide the header completely to remove the "(tabs)" text
+          headerShown: false,
         }}
       />
     </Tabs>

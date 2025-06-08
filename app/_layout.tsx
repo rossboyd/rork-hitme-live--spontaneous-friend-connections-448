@@ -2,20 +2,16 @@ import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-import { 
-  PlusJakartaSans_400Regular, 
-  PlusJakartaSans_500Medium, 
-  PlusJakartaSans_600SemiBold, 
-  PlusJakartaSans_700Bold 
-} from '@expo-google-fonts/plus-jakarta-sans';
+import { PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans';
 import { useThemeStore } from '@/store/useThemeStore';
-import { ErrorBoundary } from '@/utils/errorBoundary';
+import { darkTheme } from '@/constants/colors';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const { colors } = useThemeStore();
+  // Always provide default colors to prevent undefined errors
+  const { theme, colors = darkTheme } = useThemeStore();
   
   const [fontsLoaded] = useFonts({
     'PlusJakartaSans-Regular': PlusJakartaSans_400Regular,
@@ -35,17 +31,14 @@ export default function RootLayout() {
   }
 
   return (
-    <ErrorBoundary>
-      <Stack
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: colors.background,
-          },
-          headerShadowVisible: false,
-          headerTintColor: colors.text.primary,
-          animation: 'fade',
-        }}
-      />
-    </ErrorBoundary>
+    <Stack
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: colors.background,
+        },
+        headerShadowVisible: false,
+        headerTintColor: colors.text.primary,
+      }}
+    />
   );
 }
