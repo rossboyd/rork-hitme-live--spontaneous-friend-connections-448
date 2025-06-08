@@ -5,205 +5,218 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   TextInput,
-  KeyboardAvoidingView, 
+  KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
+  Alert,
   ScrollView
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { ArrowLeft, Camera } from 'lucide-react-native';
 import { Image } from 'expo-image';
-import * as ImagePicker from 'expo-image-picker';
-import { useThemeStore } from '@/store/useThemeStore';
+import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
+import { ChevronLeft, Camera, User } from 'lucide-react-native';
 
-// Default avatars to choose from
-const DEFAULT_AVATARS = [
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80',
-  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1350&q=80',
-  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80',
-  'https://images.unsplash.com/photo-1554151228-14d9def656e4?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=633&q=80',
-];
-
-export default function ProfileScreen() {
+export default function ProfileSetupScreen() {
   const router = useRouter();
+  const { user, updateUser, completeOnboarding } = useAuthStore();
   const { colors = darkTheme } = useThemeStore();
-  const { completeProfile } = useAuthStore();
   
   const [name, setName] = useState('');
-  const [selectedAvatar, setSelectedAvatar] = useState(DEFAULT_AVATARS[0]);
+  const [email, setEmail] = useState('');
+  const [avatar, setAvatar] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  
+  const handleBack = () => {
+    router.back();
+  };
   
   const handlePickImage = async () => {
-    try {
-      // Request permissions
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (status !== 'granted') {
-        alert('Sorry, we need camera roll permissions to make this work!');
-        return;
-      }
-      
-      // Launch image picker
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-      
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setSelectedAvatar(result.assets[0].uri);
-      }
-    } catch (err) {
-      console.error('Error picking image:', err);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    
+    // Request permission
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Please allow access to your photo library to select a profile picture');
+      return;
+    }
+    
+    // Launch image picker
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setAvatar(result.assets[0].uri);
     }
   };
   
   const handleContinue = async () => {
     if (!name.trim()) {
-      setError('Please enter your name');
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
+      Alert.alert('Name Required', 'Please enter your name to continue');
       return;
     }
     
-    setError('');
     setIsLoading(true);
     
     try {
-      // Complete profile
-      completeProfile({
-        name: name.trim(),
-        avatar: selectedAvatar,
-      });
-      
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
       
-      // Navigate to permissions screen
-      router.push('/(auth)/permissions');
-    } catch (err) {
-      console.error('Error completing profile:', err);
-      setError('Failed to save profile. Please try again.');
+      // Update user profile
+      updateUser({
+        name,
+        email: email || undefined,
+        avatar: avatar || undefined,
+      });
       
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
-    } finally {
+      // In a real app, we would save this to a backend
+      
+      // Navigate to permissions screen
+      router.push('/permissions');
+    } catch (error) {
+      console.error('Error saving profile:', error);
       setIsLoading(false);
+      Alert.alert('Error', 'Failed to save profile. Please try again.');
     }
   };
   
+  const handleSkip = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    
+    // If name is not provided, use a default
+    if (!name.trim()) {
+      updateUser({
+        name: 'HitMe User',
+      });
+    }
+    
+    // Navigate to permissions screen
+    router.push('/permissions');
+  };
+  
   return (
-    <KeyboardAvoidingView
+    <KeyboardAvoidingView 
       style={[styles.container, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <ArrowLeft size={24} color={colors.text.primary} />
-          </TouchableOpacity>
-        </View>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <ChevronLeft size={24} color={colors.text.primary} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.text.primary }]}>
+          Complete Profile
+        </Text>
+        <TouchableOpacity onPress={handleSkip}>
+          <Text style={[styles.skipText, { color: colors.text.secondary }]}>
+            Skip
+          </Text>
+        </TouchableOpacity>
+      </View>
+      
+      <ScrollView 
+        style={styles.content}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={[styles.title, { color: colors.text.primary }]}>
+          Set up your profile
+        </Text>
+        <Text style={[styles.description, { color: colors.text.secondary }]}>
+          Add your details so friends can recognize you
+        </Text>
         
-        <View style={styles.content}>
-          <Text style={[styles.title, { color: colors.text.primary }]}>
-            Complete your profile
-          </Text>
-          
-          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
-            Add your name and a profile picture
-          </Text>
-          
-          <View style={styles.avatarContainer}>
+        {/* Profile Picture */}
+        <TouchableOpacity 
+          style={[styles.avatarContainer, { borderColor: colors.border }]}
+          onPress={handlePickImage}
+        >
+          {avatar ? (
             <Image
-              source={{ uri: selectedAvatar }}
+              source={{ uri: avatar }}
               style={styles.avatar}
               contentFit="cover"
             />
-            
-            <TouchableOpacity
-              style={[styles.cameraButton, { backgroundColor: colors.primary }]}
-              onPress={handlePickImage}
-            >
-              <Camera size={20} color="#000" />
-            </TouchableOpacity>
+          ) : (
+            <View style={[styles.avatarPlaceholder, { backgroundColor: colors.card }]}>
+              <User size={40} color={colors.text.light} />
+            </View>
+          )}
+          <View style={[styles.cameraButton, { backgroundColor: colors.primary }]}>
+            <Camera size={16} color="#000" />
           </View>
-          
-          <View style={styles.avatarOptions}>
-            {DEFAULT_AVATARS.map((avatar, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.avatarOption,
-                  selectedAvatar === avatar && { borderColor: colors.primary, borderWidth: 2 }
-                ]}
-                onPress={() => setSelectedAvatar(avatar)}
-              >
-                <Image
-                  source={{ uri: avatar }}
-                  style={styles.avatarThumbnail}
-                  contentFit="cover"
-                />
-              </TouchableOpacity>
-            ))}
-          </View>
-          
-          <View style={styles.inputContainer}>
-            <Text style={[styles.label, { color: colors.text.primary }]}>
-              Your Name
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { 
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
-                  color: colors.text.primary,
-                }
-              ]}
-              value={name}
-              onChangeText={setName}
-              placeholder="Enter your name"
-              placeholderTextColor={colors.text.light}
-              autoCapitalize="words"
-            />
-            
-            {error ? (
-              <Text style={[styles.errorText, { color: colors.accent }]}>
-                {error}
-              </Text>
-            ) : null}
-          </View>
-          
-          <TouchableOpacity
+        </TouchableOpacity>
+        
+        {/* Name Input */}
+        <View style={styles.inputContainer}>
+          <Text style={[styles.inputLabel, { color: colors.text.secondary }]}>
+            Name
+          </Text>
+          <TextInput
             style={[
-              styles.button,
-              { backgroundColor: colors.primary },
-              (!name.trim() || isLoading) && styles.disabledButton
+              styles.input,
+              { 
+                backgroundColor: colors.card,
+                color: colors.text.primary,
+                borderColor: colors.border
+              }
             ]}
-            onPress={handleContinue}
-            disabled={!name.trim() || isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#000" />
-            ) : (
-              <Text style={styles.buttonText}>Continue</Text>
-            )}
-          </TouchableOpacity>
+            placeholder="Your name"
+            placeholderTextColor={colors.text.light}
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+          />
         </View>
+        
+        {/* Email Input */}
+        <View style={styles.inputContainer}>
+          <Text style={[styles.inputLabel, { color: colors.text.secondary }]}>
+            Email (Optional)
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              { 
+                backgroundColor: colors.card,
+                color: colors.text.primary,
+                borderColor: colors.border
+              }
+            ]}
+            placeholder="Your email"
+            placeholderTextColor={colors.text.light}
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
+        
+        <TouchableOpacity
+          style={[
+            styles.button, 
+            { backgroundColor: colors.primary },
+            !name.trim() && styles.buttonDisabled
+          ]}
+          onPress={handleContinue}
+          disabled={isLoading || !name.trim()}
+        >
+          <Text style={styles.buttonText}>
+            {isLoading ? 'Saving...' : 'Continue'}
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -213,42 +226,67 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 24,
-  },
   header: {
-    marginBottom: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    fontFamily: 'PlusJakartaSans-SemiBold',
+  },
+  skipText: {
+    fontSize: 14,
+    fontWeight: '500',
+    padding: 8,
+    fontFamily: 'PlusJakartaSans-Medium',
   },
   content: {
     flex: 1,
   },
+  contentContainer: {
+    padding: 24,
+    paddingTop: 20,
+  },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '700',
     marginBottom: 12,
     fontFamily: 'PlusJakartaSans-Bold',
   },
-  subtitle: {
+  description: {
     fontSize: 16,
+    lineHeight: 24,
     marginBottom: 32,
     fontFamily: 'PlusJakartaSans-Regular',
   },
   avatarContainer: {
     alignSelf: 'center',
-    marginBottom: 24,
-    position: 'relative',
-  },
-  avatar: {
     width: 120,
     height: 120,
     borderRadius: 60,
+    marginBottom: 32,
+    borderWidth: 2,
+    position: 'relative',
+  },
+  avatar: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 60,
+  },
+  avatarPlaceholder: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cameraButton: {
     position: 'absolute',
@@ -259,51 +297,30 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  avatarOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    marginBottom: 32,
-  },
-  avatarOption: {
-    margin: 8,
-    borderRadius: 25,
-  },
-  avatarThumbnail: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
   },
   inputContainer: {
-    marginBottom: 32,
+    marginBottom: 20,
   },
-  label: {
-    fontSize: 16,
+  inputLabel: {
+    fontSize: 14,
     marginBottom: 8,
     fontFamily: 'PlusJakartaSans-Medium',
   },
   input: {
-    height: 52,
+    height: 50,
     borderRadius: 12,
-    borderWidth: 1,
     paddingHorizontal: 16,
     fontSize: 16,
+    borderWidth: 1,
     fontFamily: 'PlusJakartaSans-Regular',
-  },
-  errorText: {
-    fontSize: 14,
-    marginTop: 8,
-    fontFamily: 'PlusJakartaSans-Medium',
   },
   button: {
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
+    marginTop: 12,
   },
-  disabledButton: {
+  buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {

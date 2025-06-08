@@ -1,221 +1,166 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
   TouchableOpacity, 
-  KeyboardAvoidingView, 
+  KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
-  ScrollView
+  Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft } from 'lucide-react-native';
-import { OTPInput } from '@/components/auth/OTPInput';
-import { useThemeStore } from '@/store/useThemeStore';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import * as Haptics from 'expo-haptics';
+import { OTPInput } from '@/components/auth/OTPInput';
+import { ChevronLeft } from 'lucide-react-native';
+
+// Mock OTP for demo purposes
+const MOCK_OTP = '1234';
 
 export default function VerifyScreen() {
   const router = useRouter();
+  const { verifyPhone, user } = useAuthStore();
   const { colors = darkTheme } = useThemeStore();
-  const { phoneNumber, verifyOTP, mockSendOTP, setVerificationId } = useAuthStore();
   
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const [countdown, setCountdown] = useState(30);
-  const [isResending, setIsResending] = useState(false);
+  const [canResend, setCanResend] = useState(false);
   
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Start countdown timer
+  // Countdown timer for resend code
   useEffect(() => {
-    startCountdown();
-    
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, []);
-  
-  const startCountdown = () => {
-    setCountdown(30);
-    
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setCanResend(true);
     }
-    
-    timerRef.current = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+  }, [countdown]);
+  
+  const handleBack = () => {
+    router.back();
   };
   
   const handleVerify = async () => {
     if (otp.length !== 4) {
-      setError('Please enter a valid 4-digit code');
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
+      Alert.alert('Invalid Code', 'Please enter the 4-digit verification code');
       return;
     }
     
-    setError('');
     setIsLoading(true);
     
     try {
-      const success = await verifyOTP(otp);
-      
-      if (success) {
-        if (Platform.OS !== 'web') {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // In a real app, we would verify the OTP with a backend service
+      // For demo, we'll just check against our mock OTP
+      setTimeout(() => {
+        if (otp === MOCK_OTP) {
+          if (Platform.OS !== 'web') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
+          
+          // Mark phone as verified
+          verifyPhone();
+          
+          // Navigate to profile setup
+          router.push('/profile');
+        } else {
+          if (Platform.OS !== 'web') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          }
+          Alert.alert('Invalid Code', 'The verification code you entered is incorrect');
         }
-        
-        // Navigate to profile completion
-        router.push('/(auth)/profile');
-      } else {
-        setError('Invalid verification code. Please try again.');
-        if (Platform.OS !== 'web') {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        }
-      }
-    } catch (err) {
-      console.error('Error verifying OTP:', err);
-      setError('Failed to verify code. Please try again.');
-      
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
-    } finally {
+        setIsLoading(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Error verifying code:', error);
       setIsLoading(false);
+      Alert.alert('Error', 'Failed to verify code. Please try again.');
     }
   };
   
-  const handleResendCode = async () => {
-    if (countdown > 0) return;
+  const handleResendCode = () => {
+    if (!canResend) return;
     
-    setIsResending(true);
-    
-    try {
-      // Resend OTP
-      const newVerificationId = await mockSendOTP();
-      setVerificationId(newVerificationId);
-      
-      // Reset countdown
-      startCountdown();
-      
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-    } catch (err) {
-      console.error('Error resending OTP:', err);
-      setError('Failed to resend code. Please try again.');
-      
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
-    } finally {
-      setIsResending(false);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-  };
-  
-  // Format phone number for display
-  const formatPhoneNumber = (phone: string) => {
-    if (!phone) return '';
     
-    // Simple formatting - in a real app you'd use a library like libphonenumber-js
-    const lastFourDigits = phone.slice(-4);
-    return `${phone.slice(0, -4)}****${lastFourDigits}`;
+    // Reset countdown
+    setCountdown(30);
+    setCanResend(false);
+    
+    // In a real app, we would resend the OTP
+    Alert.alert('Code Resent', 'A new verification code has been sent to your phone');
   };
   
   return (
-    <KeyboardAvoidingView
+    <KeyboardAvoidingView 
       style={[styles.container, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <ArrowLeft size={24} color={colors.text.primary} />
-          </TouchableOpacity>
-        </View>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <ChevronLeft size={24} color={colors.text.primary} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.text.primary }]}>
+          Verification
+        </Text>
+      </View>
+      
+      <View style={styles.content}>
+        <Text style={[styles.title, { color: colors.text.primary }]}>
+          Enter verification code
+        </Text>
+        <Text style={[styles.description, { color: colors.text.secondary }]}>
+          We've sent a 4-digit code to {user?.phone || 'your phone'}
+        </Text>
         
-        <View style={styles.content}>
-          <Text style={[styles.title, { color: colors.text.primary }]}>
-            Verify your number
+        <OTPInput
+          value={otp}
+          onChange={setOtp}
+          containerStyle={styles.otpContainer}
+          codeLength={4}
+        />
+        
+        <TouchableOpacity
+          style={[
+            styles.button, 
+            { backgroundColor: colors.primary },
+            otp.length !== 4 && styles.buttonDisabled
+          ]}
+          onPress={handleVerify}
+          disabled={isLoading || otp.length !== 4}
+        >
+          <Text style={styles.buttonText}>
+            {isLoading ? 'Verifying...' : 'Verify'}
           </Text>
-          
-          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
-            Enter the 4-digit code we sent to {formatPhoneNumber(phoneNumber)}
-          </Text>
-          
-          <View style={styles.inputContainer}>
-            <OTPInput
-              value={otp}
-              onChange={setOtp}
-              length={4}
-              autoFocus
-            />
-            
-            {error ? (
-              <Text style={[styles.errorText, { color: colors.accent }]}>
-                {error}
-              </Text>
-            ) : null}
-          </View>
-          
-          <TouchableOpacity
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.resendContainer}
+          onPress={handleResendCode}
+          disabled={!canResend}
+        >
+          <Text 
             style={[
-              styles.button,
-              { backgroundColor: colors.primary },
-              (otp.length !== 4 || isLoading) && styles.disabledButton
+              styles.resendText, 
+              { color: canResend ? colors.primary : colors.text.light }
             ]}
-            onPress={handleVerify}
-            disabled={otp.length !== 4 || isLoading}
           >
-            {isLoading ? (
-              <ActivityIndicator color="#000" />
-            ) : (
-              <Text style={styles.buttonText}>Verify</Text>
-            )}
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={styles.resendButton}
-            onPress={handleResendCode}
-            disabled={countdown > 0 || isResending}
-          >
-            {isResending ? (
-              <ActivityIndicator size="small" color={colors.primary} />
-            ) : (
-              <Text
-                style={[
-                  styles.resendText,
-                  { color: countdown > 0 ? colors.text.light : colors.primary }
-                ]}
-              >
-                {countdown > 0
-                  ? `Get your code again (${countdown}s)`
-                  : 'Get your code again'}
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+            {canResend 
+              ? 'Resend Code' 
+              : `Resend code in ${countdown}s`
+            }
+          </Text>
+        </TouchableOpacity>
+        
+        <Text style={[styles.hintText, { color: colors.text.light }]}>
+          For this demo, use code: {MOCK_OTP}
+        </Text>
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -224,41 +169,41 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 24,
-  },
   header: {
-    marginBottom: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 8,
+    fontFamily: 'PlusJakartaSans-SemiBold',
   },
   content: {
     flex: 1,
+    padding: 24,
+    paddingTop: 40,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '700',
     marginBottom: 12,
     fontFamily: 'PlusJakartaSans-Bold',
   },
-  subtitle: {
+  description: {
     fontSize: 16,
+    lineHeight: 24,
     marginBottom: 32,
     fontFamily: 'PlusJakartaSans-Regular',
   },
-  inputContainer: {
+  otpContainer: {
     marginBottom: 32,
-  },
-  errorText: {
-    fontSize: 14,
-    marginTop: 16,
-    textAlign: 'center',
-    fontFamily: 'PlusJakartaSans-Medium',
   },
   button: {
     paddingVertical: 16,
@@ -266,7 +211,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
-  disabledButton: {
+  buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
@@ -275,12 +220,19 @@ const styles = StyleSheet.create({
     color: '#000',
     fontFamily: 'PlusJakartaSans-SemiBold',
   },
-  resendButton: {
+  resendContainer: {
     alignItems: 'center',
     padding: 8,
   },
   resendText: {
     fontSize: 14,
+    fontWeight: '500',
     fontFamily: 'PlusJakartaSans-Medium',
+  },
+  hintText: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 24,
+    fontFamily: 'PlusJakartaSans-Regular',
   },
 });

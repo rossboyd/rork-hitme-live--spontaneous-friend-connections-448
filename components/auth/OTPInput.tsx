@@ -3,6 +3,7 @@ import {
   View, 
   TextInput, 
   StyleSheet, 
+  ViewStyle,
   Keyboard,
   Platform
 } from 'react-native';
@@ -10,57 +11,47 @@ import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 
 interface OTPInputProps {
-  length?: number;
   value: string;
   onChange: (value: string) => void;
-  autoFocus?: boolean;
+  containerStyle?: ViewStyle;
+  codeLength?: number;
 }
 
 export const OTPInput = ({ 
-  length = 4, 
   value, 
   onChange, 
-  autoFocus = true 
+  containerStyle,
+  codeLength = 4
 }: OTPInputProps) => {
   const { colors = darkTheme } = useThemeStore();
   const [isFocused, setIsFocused] = useState(false);
   
-  // Create refs for each input
+  // Create an array of refs for each input
   const inputRefs = useRef<Array<TextInput | null>>([]);
   
-  // Initialize refs array
+  // Initialize the refs array
   useEffect(() => {
-    inputRefs.current = Array(length).fill(null);
-  }, [length]);
-  
-  // Auto focus first input
-  useEffect(() => {
-    if (autoFocus && inputRefs.current[0]) {
-      setTimeout(() => {
-        inputRefs.current[0]?.focus();
-      }, 500);
-    }
-  }, [autoFocus]);
+    inputRefs.current = Array(codeLength).fill(null);
+  }, [codeLength]);
   
   // Handle input change
   const handleChange = (text: string, index: number) => {
     const newValue = value.split('');
+    newValue[index] = text;
     
-    // Only accept digits
-    if (/^\d*$/.test(text)) {
-      newValue[index] = text;
-      onChange(newValue.join(''));
-      
-      // Auto advance to next input if a digit was entered
-      if (text.length === 1 && index < length - 1) {
-        inputRefs.current[index + 1]?.focus();
-      }
+    // Update the value
+    onChange(newValue.join(''));
+    
+    // Move to next input if text is entered
+    if (text && index < codeLength - 1) {
+      inputRefs.current[index + 1]?.focus();
     }
   };
   
   // Handle backspace
   const handleKeyPress = (e: any, index: number) => {
-    if (e.nativeEvent.key === 'Backspace' && index > 0 && !value[index]) {
+    if (e.nativeEvent.key === 'Backspace' && !value[index] && index > 0) {
+      // Move to previous input on backspace if current input is empty
       inputRefs.current[index - 1]?.focus();
     }
   };
@@ -69,45 +60,43 @@ export const OTPInput = ({
   const handlePaste = (e: any) => {
     if (Platform.OS === 'web') {
       e.preventDefault();
-      const pastedData = e.clipboardData.getData('text/plain').trim();
+      const pastedData = e.clipboardData.getData('text/plain').slice(0, codeLength);
+      onChange(pastedData);
       
-      if (/^\d+$/.test(pastedData)) {
-        const digits = pastedData.slice(0, length).split('');
-        onChange(digits.join(''));
-        
-        // Focus the next empty input or the last one
-        const nextEmptyIndex = digits.length < length ? digits.length : length - 1;
-        inputRefs.current[nextEmptyIndex]?.focus();
+      // Focus the appropriate input
+      if (pastedData.length === codeLength) {
+        Keyboard.dismiss();
+      } else if (pastedData.length < codeLength) {
+        inputRefs.current[pastedData.length]?.focus();
       }
     }
   };
   
   return (
-    <View style={styles.container}>
-      {Array(length).fill(0).map((_, index) => (
+    <View style={[styles.container, containerStyle]}>
+      {Array(codeLength).fill(0).map((_, index) => (
         <TextInput
           key={index}
-          ref={ref => inputRefs.current[index] = ref}
+          ref={(ref) => (inputRefs.current[index] = ref)}
           style={[
             styles.input,
             {
               backgroundColor: colors.card,
-              borderColor: isFocused && inputRefs.current[index]?.isFocused?.() 
-                ? colors.primary 
-                : colors.border,
-              color: colors.text.primary,
+              borderColor: isFocused && index === value.length ? colors.primary : colors.border,
+              color: colors.text.primary
             }
           ]}
           value={value[index] || ''}
-          onChangeText={text => handleChange(text, index)}
-          onKeyPress={e => handleKeyPress(e, index)}
+          onChangeText={(text) => handleChange(text, index)}
+          onKeyPress={(e) => handleKeyPress(e, index)}
           onPaste={handlePaste}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           keyboardType="number-pad"
           maxLength={1}
+          textAlign="center"
           selectTextOnFocus
-          textContentType="oneTimeCode"
+          caretHidden
         />
       ))}
     </View>
@@ -118,16 +107,15 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',
   },
   input: {
-    width: 64,
-    height: 64,
+    width: 60,
+    height: 60,
     borderRadius: 12,
-    borderWidth: 1,
-    textAlign: 'center',
     fontSize: 24,
     fontWeight: '600',
+    borderWidth: 1,
+    textAlign: 'center',
     fontFamily: 'PlusJakartaSans-SemiBold',
   },
 });

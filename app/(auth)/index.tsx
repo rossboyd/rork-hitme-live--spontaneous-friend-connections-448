@@ -1,119 +1,102 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  Dimensions,
+  Platform
+} from 'react-native';
 import { Image } from 'expo-image';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withRepeat, 
-  withTiming, 
-  withDelay,
-  Easing
-} from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
-import { Platform } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
 
-export default function WelcomeScreen() {
+export default function AuthScreen() {
   const router = useRouter();
+  const { isAuthenticated, isOnboarded } = useAuthStore();
   const { colors = darkTheme } = useThemeStore();
   
-  // Animation values
-  const logoScale = useSharedValue(0.8);
-  const logoOpacity = useSharedValue(0);
-  const textOpacity = useSharedValue(0);
-  const buttonOpacity = useSharedValue(0);
-  
-  // Set up animations
+  // Check if user is already authenticated and onboarded
   useEffect(() => {
-    // Logo animation
-    logoOpacity.value = withTiming(1, { duration: 1000 });
-    logoScale.value = withTiming(1, { duration: 1200, easing: Easing.elastic(1.2) });
-    
-    // Text animation
-    textOpacity.value = withDelay(600, withTiming(1, { duration: 800 }));
-    
-    // Button animation
-    buttonOpacity.value = withDelay(1200, withTiming(1, { duration: 800 }));
-    
-    // Pulse animation for logo (only on native platforms)
-    if (Platform.OS !== 'web') {
-      logoScale.value = withDelay(
-        1500, 
-        withRepeat(
-          withTiming(1.05, { duration: 2000, easing: Easing.ease }),
-          -1,
-          true
-        )
-      );
+    if (isAuthenticated && isOnboarded) {
+      router.replace('/(tabs)');
+    } else if (isAuthenticated && !isOnboarded) {
+      router.replace('/(onboarding)');
     }
-  }, []);
+  }, [isAuthenticated, isOnboarded]);
   
-  // Animated styles
-  const logoAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: logoOpacity.value,
-    transform: [{ scale: logoScale.value }],
-  }));
+  const handleSignUp = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    router.push('/phone');
+  };
   
-  const textAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: textOpacity.value,
-    transform: [{ translateY: (1 - textOpacity.value) * 20 }],
-  }));
-  
-  const buttonAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: buttonOpacity.value,
-    transform: [{ translateY: (1 - buttonOpacity.value) * 20 }],
-  }));
+  const handleLogin = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    router.push('/phone');
+  };
   
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Background Image with Gradient Overlay */}
+      <Image
+        source={{ uri: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1350&q=80' }}
+        style={styles.backgroundImage}
+        contentFit="cover"
+      />
       <LinearGradient
-        colors={['rgba(0, 255, 0, 0.1)', 'rgba(0, 0, 0, 0)']}
+        colors={['transparent', colors.background, colors.background]}
         style={styles.gradient}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 0.8 }}
       />
       
+      {/* Content */}
       <View style={styles.content}>
-        <Animated.View style={[styles.logoContainer, logoAnimatedStyle]}>
-          <Image
-            source={{ uri: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=1974&auto=format&fit=crop' }}
-            style={styles.logoBackground}
-            contentFit="cover"
-          />
-          <View style={styles.logoOverlay} />
-          <Text style={styles.logoText}>HitMe</Text>
-        </Animated.View>
-        
-        <Animated.View style={[styles.textContainer, textAnimatedStyle]}>
-          <Text style={[styles.title, { color: colors.text.primary }]}>
+        <View style={styles.logoContainer}>
+          <Text style={[styles.logoText, { color: colors.text.primary }]}>
+            HitMe
+          </Text>
+          <Text style={[styles.tagline, { color: colors.text.secondary }]}>
             Connect when it matters
           </Text>
-          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
-            Let your friends know when you're available to talk and connect instantly
-          </Text>
-        </Animated.View>
+        </View>
         
-        <Animated.View style={[styles.buttonContainer, buttonAnimatedStyle]}>
+        <View style={styles.actionContainer}>
+          <Text style={[styles.welcomeText, { color: colors.text.primary }]}>
+            Welcome to HitMe
+          </Text>
+          <Text style={[styles.descriptionText, { color: colors.text.secondary }]}>
+            The app that helps you connect with friends when they are available
+          </Text>
+          
           <TouchableOpacity
             style={[styles.button, { backgroundColor: colors.primary }]}
-            onPress={() => router.push('/(auth)/phone')}
+            onPress={handleSignUp}
           >
-            <Text style={styles.buttonText}>Get Started</Text>
+            <Text style={styles.buttonText}>Sign Up</Text>
           </TouchableOpacity>
           
           <TouchableOpacity
-            style={styles.textButton}
-            onPress={() => router.push('/(auth)/phone')}
+            style={[styles.outlineButton, { borderColor: colors.border }]}
+            onPress={handleLogin}
           >
-            <Text style={[styles.textButtonText, { color: colors.text.secondary }]}>
-              Already have an account? Log in
+            <Text style={[styles.outlineButtonText, { color: colors.text.primary }]}>
+              Log In
             </Text>
           </TouchableOpacity>
-        </Animated.View>
+          
+          <Text style={[styles.termsText, { color: colors.text.light }]}>
+            By signing up, you agree to our Terms of Service and Privacy Policy. We'll send you a verification code via SMS.
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -123,63 +106,51 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  backgroundImage: {
+    position: 'absolute',
+    width,
+    height: height * 0.6,
+    top: 0,
+  },
   gradient: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+    width,
     height: height * 0.6,
+    top: 0,
   },
   content: {
     flex: 1,
     justifyContent: 'space-between',
     padding: 24,
-    paddingTop: height * 0.12,
-    paddingBottom: 40,
   },
   logoContainer: {
-    alignSelf: 'center',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    overflow: 'hidden',
-    justifyContent: 'center',
+    marginTop: 60,
     alignItems: 'center',
-    marginBottom: 40,
-  },
-  logoBackground: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  logoOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   logoText: {
-    fontSize: 24,
+    fontSize: 42,
     fontWeight: '700',
-    color: '#fff',
     fontFamily: 'PlusJakartaSans-Bold',
   },
-  textContainer: {
-    alignItems: 'center',
-    marginBottom: 60,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 16,
-    fontFamily: 'PlusJakartaSans-Bold',
-  },
-  subtitle: {
+  tagline: {
     fontSize: 16,
-    textAlign: 'center',
-    maxWidth: '80%',
-    lineHeight: 24,
+    marginTop: 8,
     fontFamily: 'PlusJakartaSans-Regular',
   },
-  buttonContainer: {
-    width: '100%',
+  actionContainer: {
+    marginBottom: 40,
+  },
+  welcomeText: {
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 12,
+    fontFamily: 'PlusJakartaSans-Bold',
+  },
+  descriptionText: {
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 32,
+    fontFamily: 'PlusJakartaSans-Regular',
   },
   button: {
     paddingVertical: 16,
@@ -193,12 +164,22 @@ const styles = StyleSheet.create({
     color: '#000',
     fontFamily: 'PlusJakartaSans-SemiBold',
   },
-  textButton: {
+  outlineButton: {
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: 'center',
-    padding: 8,
+    marginBottom: 24,
+    borderWidth: 1,
   },
-  textButtonText: {
-    fontSize: 14,
-    fontFamily: 'PlusJakartaSans-Medium',
+  outlineButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'PlusJakartaSans-SemiBold',
+  },
+  termsText: {
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
+    fontFamily: 'PlusJakartaSans-Regular',
   },
 });

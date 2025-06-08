@@ -1,40 +1,39 @@
-// App color scheme
-export const lightTheme = {
-  primary: '#00FF00', // Bright green for live mode
-  secondary: '#9BB1D2', // Light blue
-  accent: '#E8505B', // Soft red for urgency indicators
-  background: '#FAFFFA', // Light green-tinted background
-  card: '#FFFFFF', // White card background
+import { ThemeColors } from '@/types';
+
+export const lightTheme: ThemeColors = {
+  primary: '#5E72E4',
+  secondary: '#F7FAFC',
+  background: '#FFFFFF',
+  card: '#F7FAFC',
+  border: '#E2E8F0',
+  notification: '#FF3B30',
   text: {
-    primary: '#1B281B', // Dark green text
-    secondary: '#3D4A3D', // Medium green text
-    light: '#5E6B5E', // Light green text
+    primary: '#1A202C',
+    secondary: '#4A5568',
+    light: '#A0AEC0',
   },
-  border: '#E2E8F0', // Light gray border
-  success: '#00FF00', // Bright green for success states
-  urgency: {
-    low: '#9BB1D2', // Light blue
-    medium: '#F6AD55', // Orange
-    high: '#E8505B', // Red
-  }
+  status: {
+    success: '#48BB78',
+    warning: '#F6AD55',
+    error: '#F56565',
+  },
 };
 
-export const darkTheme = {
-  primary: '#00FF00', // Keep bright green for consistency
-  secondary: '#5D7CA6', // Darker blue
-  accent: '#E8505B', // Keep the same accent color
-  background: '#0A0F0A', // Much darker green background
-  card: '#121812', // Slightly lighter than background for cards
+export const darkTheme: ThemeColors = {
+  primary: '#5E72E4',
+  secondary: '#2D3748',
+  background: '#1A202C',
+  card: '#2D3748',
+  border: '#4A5568',
+  notification: '#FF3B30',
   text: {
-    primary: '#E6FFE6', // Light green text
-    secondary: '#B8CCB8', // Medium light green text
-    light: '#8AA68A', // Darker light green text
+    primary: '#F7FAFC',
+    secondary: '#CBD5E0',
+    light: '#718096',
   },
-  border: '#4A5568', // Darker border
-  success: '#00FF00', // Same bright green
-  urgency: {
-    low: '#5D7CA6', // Darker blue
-    medium: '#DD6B20', // Darker orange
-    high: '#C53030', // Darker red
-  }
+  status: {
+    success: '#48BB78',
+    warning: '#F6AD55',
+    error: '#F56565',
+  },
 };

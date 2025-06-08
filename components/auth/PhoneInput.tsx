@@ -1,75 +1,102 @@
 import React, { useState } from 'react';
 import { 
   View, 
-  Text, 
-  StyleSheet, 
   TextInput, 
+  StyleSheet, 
   TouchableOpacity, 
-  Platform 
+  Text,
+  ViewStyle
 } from 'react-native';
-import { ChevronDown } from 'lucide-react-native';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
+import { ChevronDown } from 'lucide-react-native';
+import { CountryPicker } from './CountryPicker';
 
 interface PhoneInputProps {
   value: string;
   onChangeText: (text: string) => void;
-  countryCode: string;
-  onCountryPress: () => void;
+  containerStyle?: ViewStyle;
 }
 
 export const PhoneInput = ({ 
   value, 
   onChangeText, 
-  countryCode, 
-  onCountryPress 
+  containerStyle 
 }: PhoneInputProps) => {
   const { colors = darkTheme } = useThemeStore();
-  const [isFocused, setIsFocused] = useState(false);
+  const [countryCode, setCountryCode] = useState('+1');
+  const [isPickerVisible, setIsPickerVisible] = useState(false);
   
-  // Format phone number as user types
-  const handleChangeText = (text: string) => {
+  const handleCountrySelect = (code: string) => {
+    setCountryCode(code);
+    setIsPickerVisible(false);
+  };
+  
+  const handlePhoneChange = (text: string) => {
     // Remove any non-numeric characters
-    const cleaned = text.replace(/\D/g, '');
+    const cleaned = text.replace(/[^0-9]/g, '');
     onChangeText(cleaned);
   };
   
+  // Format the phone number for display
+  const formatPhoneNumber = (phone: string) => {
+    if (!phone) return '';
+    
+    // Format US numbers like (XXX) XXX-XXXX
+    if (countryCode === '+1' && phone.length > 0) {
+      let formatted = '';
+      
+      if (phone.length > 0) {
+        formatted += phone.substring(0, Math.min(3, phone.length));
+      }
+      
+      if (phone.length > 3) {
+        formatted = `(${formatted}) ${phone.substring(3, Math.min(6, phone.length))}`;
+      }
+      
+      if (phone.length > 6) {
+        formatted += `-${phone.substring(6, Math.min(10, phone.length))}`;
+      }
+      
+      return formatted;
+    }
+    
+    // For other countries, just return the number
+    return phone;
+  };
+  
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, containerStyle]}>
       <TouchableOpacity 
-        style={[
-          styles.countryButton, 
-          { 
-            backgroundColor: colors.card,
-            borderColor: isFocused ? colors.primary : colors.border,
-          }
-        ]}
-        onPress={onCountryPress}
+        style={[styles.countryButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+        onPress={() => setIsPickerVisible(true)}
       >
         <Text style={[styles.countryCode, { color: colors.text.primary }]}>
           {countryCode}
         </Text>
-        <ChevronDown size={16} color={colors.text.secondary} />
+        <ChevronDown size={16} color={colors.text.light} />
       </TouchableOpacity>
       
       <TextInput
         style={[
           styles.input, 
           { 
-            backgroundColor: colors.card,
-            borderColor: isFocused ? colors.primary : colors.border,
+            backgroundColor: colors.card, 
             color: colors.text.primary,
+            borderColor: colors.border
           }
         ]}
-        value={value}
-        onChangeText={handleChangeText}
         placeholder="Phone number"
         placeholderTextColor={colors.text.light}
         keyboardType="phone-pad"
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
-        maxLength={15}
-        returnKeyType="done"
+        value={formatPhoneNumber(value)}
+        onChangeText={handlePhoneChange}
+      />
+      
+      <CountryPicker
+        visible={isPickerVisible}
+        onClose={() => setIsPickerVisible(false)}
+        onSelect={handleCountrySelect}
       />
     </View>
   );
@@ -79,30 +106,28 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
   },
   countryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 14,
+    height: 50,
     borderRadius: 12,
     borderWidth: 1,
     marginRight: 8,
-    minWidth: 100,
   },
   countryCode: {
     fontSize: 16,
-    marginRight: 8,
+    marginRight: 4,
     fontFamily: 'PlusJakartaSans-Medium',
   },
   input: {
     flex: 1,
-    height: 52,
+    height: 50,
     borderRadius: 12,
-    borderWidth: 1,
     paddingHorizontal: 16,
     fontSize: 16,
+    borderWidth: 1,
     fontFamily: 'PlusJakartaSans-Regular',
   },
 });
