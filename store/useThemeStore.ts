@@ -1,45 +1,27 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { themes } from '@/constants/colors';
+import { lightTheme, darkTheme } from '@/constants/colors';
 
-type ThemeMode = 'light' | 'dark';
-type ThemeColor = 'green' | 'pink';
+type ThemeType = 'light' | 'dark';
 
 interface ThemeState {
-  mode: ThemeMode;
-  color: ThemeColor;
-  colors: typeof themes.green.light;
-  setMode: (mode: ThemeMode) => void;
-  setColor: (color: ThemeColor) => void;
-  toggleMode: () => void;
+  theme: ThemeType;
+  colors: typeof lightTheme;
+  setTheme: (theme: ThemeType) => void;
+  toggleTheme: () => void;
 }
 
-export const useThemeStore = create<ThemeState>()(
-  persist(
-    (set) => ({
-      mode: 'dark',
-      color: 'green',
-      colors: themes.green.dark,
-      setMode: (mode) => set((state) => ({ 
-        mode,
-        colors: themes[state.color][mode]
-      })),
-      setColor: (color) => set((state) => ({
-        color,
-        colors: themes[color][state.mode]
-      })),
-      toggleMode: () => set((state) => {
-        const newMode = state.mode === 'light' ? 'dark' : 'light';
-        return { 
-          mode: newMode,
-          colors: themes[state.color][newMode]
-        };
-      }),
-    }),
-    {
-      name: 'theme-storage',
-      storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
-);
+export const useThemeStore = create<ThemeState>((set) => ({
+  theme: 'dark', // Default to dark theme when offline
+  colors: darkTheme, // Default colors
+  setTheme: (theme) => set({ 
+    theme, 
+    colors: theme === 'light' ? lightTheme : darkTheme 
+  }),
+  toggleTheme: () => set((state) => {
+    const newTheme = state.theme === 'light' ? 'dark' : 'light';
+    return { 
+      theme: newTheme, 
+      colors: newTheme === 'light' ? lightTheme : darkTheme 
+    };
+  }),
+}));

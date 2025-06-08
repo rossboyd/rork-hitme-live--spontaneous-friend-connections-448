@@ -21,10 +21,10 @@ export const SlideToLiveToggle = ({
     <View style={styles.container}>
       {waitingCount > 0 && (
         <TouchableOpacity
-          style={[styles.waitingButton, { backgroundColor: colors.primary }]}
           onPress={onPreviewQueue}
+          style={[styles.waitingButton, { backgroundColor: colors.card }]}
         >
-          <Text style={[styles.waitingText, { color: '#000' }]}>
+          <Text style={[styles.waitingText, { color: colors.primary }]}>
             {waitingCount} {waitingCount === 1 ? 'person is' : 'people are'} waiting
           </Text>
         </TouchableOpacity>
@@ -34,7 +34,7 @@ export const SlideToLiveToggle = ({
         style={[styles.slideButton, { backgroundColor: colors.primary }]}
         onPress={onSlideComplete}
       >
-        <Text style={[styles.slideText, { color: '#000' }]}>
+        <Text style={styles.slideText}>
           {userName ? `Hey ${userName}, tap to go live` : 'Tap to go live'}
         </Text>
       </TouchableOpacity>
@@ -64,5 +64,6 @@ const styles = StyleSheet.create({
   slideText: {
     fontSize: 18,
     fontWeight: '600',
+    color: '#000',
   },
 });

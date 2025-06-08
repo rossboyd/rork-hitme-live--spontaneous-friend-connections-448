@@ -14,7 +14,7 @@ interface QueueReviewProps {
   onGoLive?: (selectedIds: string[]) => void;
   previewMode?: boolean;
   selectedIds: string[];
-  setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
+  setSelectedIds: (ids: string[]) => void;
 }
 
 export const QueueReview = ({
@@ -41,6 +41,15 @@ export const QueueReview = ({
     );
   };
 
+  const getContactById = (contactId: string) => {
+    return contacts.find(c => c.id === contactId) || {
+      id: contactId,
+      name: "Unknown Contact",
+      avatar: "https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80",
+      phone: "",
+    };
+  };
+
   return (
     <Modal
       visible={visible}
@@ -48,11 +57,11 @@ export const QueueReview = ({
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={[styles.container, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
-        <View style={[styles.content, { backgroundColor: colors.background }]}>
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text.primary }]}>
-              {previewMode ? 'Preview Queue' : 'Review Queue'}
+      <View style={styles.modalContainer}>
+        <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.headerTitle, { color: colors.text.primary }]}>
+              {previewMode ? "Queue Preview" : "Manage Your Queue"}
             </Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <X size={24} color={colors.text.primary} />
@@ -60,20 +69,25 @@ export const QueueReview = ({
           </View>
 
           <ScrollView style={styles.scrollView}>
-            {requests.map(request => {
-              const contact = contacts.find(c => c.id === request.receiverId);
-              if (!contact) return null;
+            <Text style={[styles.description, { color: colors.text.secondary }]}>
+              {previewMode 
+                ? "These people are waiting to chat with you"
+                : "Select who to notify when you go live"}
+            </Text>
 
-              const isSelected = selectedIds.includes(request.id);
+            {requests.map(request => {
+              const contact = getContactById(request.senderId);
+              const isSelected = selectedIds.includes(contact.id);
 
               return (
                 <TouchableOpacity
                   key={request.id}
                   style={[
-                    styles.requestItem,
-                    { backgroundColor: colors.card }
+                    styles.contactItem,
+                    { backgroundColor: colors.card },
+                    !previewMode && isSelected && { borderColor: colors.primary }
                   ]}
-                  onPress={() => handleToggleContact(request.id)}
+                  onPress={() => !previewMode && handleToggleContact(contact.id)}
                   disabled={previewMode}
                 >
                   <Image
@@ -81,18 +95,20 @@ export const QueueReview = ({
                     style={styles.avatar}
                     contentFit="cover"
                   />
-                  <View style={styles.requestInfo}>
+                  
+                  <View style={styles.contactInfo}>
                     <Text style={[styles.contactName, { color: colors.text.primary }]}>
                       {contact.name}
                     </Text>
-                    <Text style={[styles.topic, { color: colors.text.secondary }]}>
+                    <Text style={[styles.requestTopic, { color: colors.text.secondary }]}>
                       {request.topic}
                     </Text>
                   </View>
+
                   {!previewMode && (
                     <View style={[
                       styles.checkbox,
-                      isSelected && { backgroundColor: colors.primary }
+                      isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
                     ]}>
                       {isSelected && <Check size={16} color="#000" />}
                     </View>
@@ -107,7 +123,9 @@ export const QueueReview = ({
               style={[styles.goLiveButton, { backgroundColor: colors.primary }]}
               onPress={() => onGoLive(selectedIds)}
             >
-              <Text style={styles.goLiveText}>Go Live ({selectedIds.length})</Text>
+              <Text style={styles.goLiveText}>
+                Go Live ({selectedIds.length} selected)
+              </Text>
             </TouchableOpacity>
           )}
         </View>
@@ -117,23 +135,25 @@ export const QueueReview = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
+  modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  content: {
+  modalContent: {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '80%',
+    maxHeight: '90%',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
+    borderBottomWidth: 1,
+    paddingVertical: 16,
     position: 'relative',
   },
-  title: {
+  headerTitle: {
     fontSize: 18,
     fontWeight: '600',
   },
@@ -144,28 +164,35 @@ const styles = StyleSheet.create({
   scrollView: {
     padding: 16,
   },
-  requestItem: {
+  description: {
+    fontSize: 16,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  contactItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
     borderRadius: 12,
     marginBottom: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
   },
-  requestInfo: {
+  contactInfo: {
     flex: 1,
     marginLeft: 12,
   },
   contactName: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 2,
+    marginBottom: 4,
   },
-  topic: {
+  requestTopic: {
     fontSize: 14,
   },
   checkbox: {
@@ -173,9 +200,9 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#E2E8F0',
     justifyContent: 'center',
     alignItems: 'center',
+    marginLeft: 12,
   },
   goLiveButton: {
     margin: 16,
@@ -184,8 +211,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   goLiveText: {
+    color: '#000',
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    fontFamily: 'PlusJakartaSans-SemiBold',
   },
 });
