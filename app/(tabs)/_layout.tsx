@@ -12,20 +12,13 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.text.light,
         tabBarStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: colors.card,
           borderTopColor: colors.border,
         },
-        headerStyle: {
-          backgroundColor: colors.background,
-        },
-        headerTitleStyle: {
-          color: colors.text.primary,
-          fontFamily: 'PlusJakartaSans-SemiBold',
-        },
-        headerShadowVisible: false,
+        headerShown: false, // Hide the top-level tabs header
         tabBarLabelStyle: {
           fontSize: 12,
-          fontFamily: 'PlusJakartaSans-Medium',
+          fontWeight: '500',
         },
       }}
       initialRouteName="home"

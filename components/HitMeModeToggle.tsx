@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import { useThemeStore } from '@/store/useThemeStore';
+import { colors } from '@/constants/colors';
 
 interface HitMeModeToggleProps {
   isActive: boolean;
@@ -8,7 +8,6 @@ interface HitMeModeToggleProps {
 }
 
 export const HitMeModeToggle = ({ isActive, onToggle }: HitMeModeToggleProps) => {
-  const { colors } = useThemeStore();
   const animation = React.useRef(new Animated.Value(isActive ? 1 : 0)).current;
   
   React.useEffect(() => {
@@ -21,7 +20,7 @@ export const HitMeModeToggle = ({ isActive, onToggle }: HitMeModeToggleProps) =>
   
   const backgroundColor = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#E2E8F0', colors.primary]
+    outputRange: [colors.border, colors.primary]
   });
   
   const translateX = animation.interpolate({
@@ -44,10 +43,7 @@ export const HitMeModeToggle = ({ isActive, onToggle }: HitMeModeToggleProps) =>
           <Animated.View 
             style={[
               styles.thumb,
-              { 
-                transform: [{ translateX }],
-                backgroundColor: isActive ? '#fff' : colors.text.primary
-              }
+              { transform: [{ translateX }] }
             ]} 
           />
         </Animated.View>
@@ -93,5 +89,6 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
+    backgroundColor: '#fff',
   },
 });
