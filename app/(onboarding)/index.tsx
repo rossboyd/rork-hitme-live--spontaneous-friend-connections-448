@@ -28,14 +28,14 @@ const ONBOARDING_DATA = [
   },
   {
     id: '2',
-    title: "Let Friends Know You're Available",
-    description: "Go live when you have time to talk and let your friends know you're available",
+    title: "Let Friends Know You are Available",
+    description: "Go live when you have time to talk and let your friends know you are available",
     image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1490&q=80',
   },
   {
     id: '3',
     title: 'Connect Instantly',
-    description: "When a friend goes live, you'll get notified so you can connect right away",
+    description: "When a friend goes live, you will get notified so you can connect right away",
     image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1350&q=80',
   },
 ];

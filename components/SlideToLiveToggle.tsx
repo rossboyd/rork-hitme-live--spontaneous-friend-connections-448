@@ -45,7 +45,7 @@ export const SlideToLiveToggle = ({
   // Calculate track background color based on drag position
   const trackBackgroundColor = trackColorInterpolation.interpolate({
     inputRange: [0, 1],
-    outputRange: [colors.border, '#4ADE80'] // Light gray to green
+    outputRange: [colors.border, colors.primary] // Light gray to primary color
   });
   
   // Calculate thumb scale based on drag position
@@ -119,7 +119,7 @@ export const SlideToLiveToggle = ({
   return (
     <View style={styles.container}>
       <View style={styles.infoContainer}>
-        <Text style={[styles.title, { color: colors.text.primary }]}>Hey {userName}, You're Offline</Text>
+        <Text style={[styles.title, { color: colors.text.primary }]}>Hey {userName}, You are Offline</Text>
         <TouchableOpacity 
           onPress={handlePreviewQueue}
           disabled={waitingCount === 0 || !onPreviewQueue}
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: TOGGLE_HEIGHT,
     borderRadius: 40,
-    justifyContent: 'flex-end', // Position thumb at bottom
+    justifyContent: 'flex-end',
     alignItems: 'center',
     marginBottom: 20,
   },
