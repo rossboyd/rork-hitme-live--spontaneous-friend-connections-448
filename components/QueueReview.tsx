@@ -4,14 +4,13 @@ import {
   Text, 
   StyleSheet, 
   TouchableOpacity, 
-  Modal,
+  Modal, 
   ScrollView,
-  Platform,
-  useWindowDimensions
+  Dimensions
 } from 'react-native';
 import { Image } from 'expo-image';
-import { X, Check } from 'lucide-react-native';
 import { HitRequest, Contact } from '@/types';
+import { X, Check } from 'lucide-react-native';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 
@@ -26,6 +25,9 @@ interface QueueReviewProps {
   setSelectedIds: (ids: string[]) => void;
 }
 
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const MODAL_HEIGHT = SCREEN_HEIGHT * 0.6; // 60% of screen height
+
 export const QueueReview = ({
   visible,
   requests,
@@ -36,10 +38,195 @@ export const QueueReview = ({
   selectedIds,
   setSelectedIds,
 }: QueueReviewProps) => {
-  const { height: SCREEN_HEIGHT } = useWindowDimensions();
   const { colors = darkTheme } = useThemeStore();
-  
-  const MODAL_HEIGHT = SCREEN_HEIGHT * 0.6; // 60% of screen height
 
-  // Rest of the component code...
+  const getContactById = (contactId: string) => {
+    return contacts.find(c => c.id === contactId) || {
+      id: contactId,
+      name: "Unknown Contact",
+      avatar: "https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80",
+      phone: "",
+    };
+  };
+
+  const toggleContact = (contactId: string) => {
+    if (selectedIds.includes(contactId)) {
+      setSelectedIds(selectedIds.filter(id => id !== contactId));
+    } else {
+      setSelectedIds([...selectedIds, contactId]);
+    }
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={onClose}
+    >
+      <View style={styles.overlay}>
+        <View 
+          style={[
+            styles.container, 
+            { 
+              backgroundColor: colors.background,
+              height: MODAL_HEIGHT
+            }
+          ]}
+        >
+          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.title, { color: colors.text.primary }]}>
+              {previewMode ? "Queue Preview" : "Manage Your Queue"}
+            </Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <X size={24} color={colors.text.primary} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
+              {previewMode
+                ? `${requests.length} people waiting to talk`
+                : "Select who to notify when you go live"}
+            </Text>
+
+            {requests.map(request => {
+              const contact = getContactById(request.senderId);
+              const isSelected = selectedIds.includes(request.senderId);
+
+              return (
+                <TouchableOpacity
+                  key={request.id}
+                  style={[
+                    styles.contactItem,
+                    { backgroundColor: colors.card },
+                    isSelected && { borderColor: colors.primary, borderWidth: 2 }
+                  ]}
+                  onPress={() => !previewMode && toggleContact(request.senderId)}
+                  disabled={previewMode}
+                >
+                  <Image
+                    source={{ uri: contact.avatar }}
+                    style={styles.avatar}
+                    contentFit="cover"
+                  />
+                  <View style={styles.contactInfo}>
+                    <Text style={[styles.contactName, { color: colors.text.primary }]}>
+                      {contact.name}
+                    </Text>
+                    <Text style={[styles.topic, { color: colors.text.secondary }]}>
+                      {request.topic}
+                    </Text>
+                  </View>
+                  {!previewMode && (
+                    <View style={[
+                      styles.checkbox,
+                      { borderColor: colors.border },
+                      isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
+                    ]}>
+                      {isSelected && <Check size={16} color="#000" />}
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {!previewMode && onGoLive && (
+            <View style={styles.footer}>
+              <TouchableOpacity
+                style={[styles.goLiveButton, { backgroundColor: colors.primary }]}
+                onPress={() => onGoLive(selectedIds)}
+              >
+                <Text style={[styles.goLiveText, { color: "#000" }]}>
+                  Go Live ({selectedIds.length})
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
 };
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  container: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  closeButton: {
+    position: 'absolute',
+    right: 16,
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  subtitle: {
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  contactItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  contactInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  contactName: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  topic: {
+    fontSize: 14,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    marginLeft: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  footer: {
+    padding: 16,
+    paddingBottom: 24,
+  },
+  goLiveButton: {
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  goLiveText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});

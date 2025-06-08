@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { useThemeStore } from '@/store/useThemeStore';
 
@@ -7,7 +7,7 @@ interface CardProps {
   style?: StyleProp<ViewStyle>;
 }
 
-export const Card = ({ children, style }: CardProps) => {
+export const Card = memo(({ children, style }: CardProps) => {
   const { colors } = useThemeStore();
 
   return (
@@ -22,7 +22,9 @@ export const Card = ({ children, style }: CardProps) => {
       {children}
     </View>
   );
-};
+});
+
+Card.displayName = 'Card';
 
 const styles = StyleSheet.create({
   card: {
