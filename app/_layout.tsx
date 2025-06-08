@@ -5,16 +5,13 @@ import * as SplashScreen from 'expo-splash-screen';
 import { PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
-import Animated from 'react-native-reanimated';
-import { useThemeTransition } from '@/hooks/useThemeTransition';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  // Always provide default colors to prevent undefined errors
   const { theme, colors = darkTheme } = useThemeStore();
-  const isDark = theme === 'dark';
-  const themeStyle = useThemeTransition(isDark);
   
   const [fontsLoaded] = useFonts({
     'PlusJakartaSans-Regular': PlusJakartaSans_400Regular,
@@ -34,32 +31,29 @@ export default function RootLayout() {
   }
 
   return (
-    <Animated.View style={[{ flex: 1 }, themeStyle]}>
-      <Stack
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: colors.background,
-          },
-          headerShadowVisible: false,
-          headerTintColor: colors.text.primary,
-          headerBackTitle: 'Back',
-          animation: 'fade',
+    <Stack
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: colors.background,
+        },
+        headerShadowVisible: false,
+        headerTintColor: colors.text.primary,
+        headerBackTitle: 'Back',
+      }}
+    >
+      <Stack.Screen
+        name="index"
+        options={{
+          headerShown: false,
         }}
-      >
-        <Stack.Screen
-          name="index"
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="verify"
-          options={{
-            headerTitle: '',
-            headerTransparent: true,
-          }}
-        />
-      </Stack>
-    </Animated.View>
+      />
+      <Stack.Screen
+        name="verify"
+        options={{
+          headerTitle: '',
+          headerTransparent: true,
+        }}
+      />
+    </Stack>
   );
 }
