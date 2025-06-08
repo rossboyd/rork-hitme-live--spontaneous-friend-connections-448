@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, Text } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/hooks/useAppStore';
 import { RequestCard } from '@/components/RequestCard';
 import { EmptyState } from '@/components/EmptyState';
 import { Plus, ListChecks } from 'lucide-react-native';
@@ -23,10 +23,11 @@ export default function HitListScreen() {
 
   useEffect(() => {
     // Check for expired requests on mount and every minute
-    expireRequests();
-    const interval = setInterval(expireRequests, 60000);
-    
-    return () => clearInterval(interval);
+    if (expireRequests) {
+      expireRequests();
+      const interval = setInterval(expireRequests, 60000);
+      return () => clearInterval(interval);
+    }
   }, [expireRequests]);
 
   useEffect(() => {

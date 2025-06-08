@@ -19,6 +19,9 @@ interface AppState {
   updateRequest: (id: string, request: Partial<HitRequest>) => void;
   deleteRequest: (id: string) => void;
   updateRequestStatus: (id: string, status: HitRequest['status']) => void;
+  expireRequests: () => void;
+  deleteOutboundRequest: (id: string) => void;
+  updateOutboundRequest: (id: string, updates: Partial<HitRequest>) => void;
   
   // Live Mode
   isLiveMode: boolean;
@@ -80,6 +83,43 @@ export const useAppStore = create<AppState>()(
           ),
           outboundRequests: state.outboundRequests.map((request) => 
             request.id === id ? { ...request, status } : request
+          ),
+        })),
+      // New function to check and expire requests
+      expireRequests: () => 
+        set((state) => {
+          const now = Date.now();
+          const updatedOutboundRequests = state.outboundRequests.map(request => {
+            // If request is pending and has expired, update status
+            if (request.status === 'pending' && request.expiresAt && request.expiresAt < now) {
+              return { ...request, status: 'expired' };
+            }
+            return request;
+          });
+          
+          const updatedInboundRequests = state.inboundRequests.map(request => {
+            // If request is pending and has expired, update status
+            if (request.status === 'pending' && request.expiresAt && request.expiresAt < now) {
+              return { ...request, status: 'expired' };
+            }
+            return request;
+          });
+          
+          return { 
+            outboundRequests: updatedOutboundRequests,
+            inboundRequests: updatedInboundRequests
+          };
+        }),
+      // Alias for deleteRequest specifically for outbound requests
+      deleteOutboundRequest: (id) => 
+        set((state) => ({
+          outboundRequests: state.outboundRequests.filter((request) => request.id !== id),
+        })),
+      // Alias for updateRequest specifically for outbound requests
+      updateOutboundRequest: (id, updates) => 
+        set((state) => ({
+          outboundRequests: state.outboundRequests.map((request) => 
+            request.id === id ? { ...request, ...updates } : request
           ),
         })),
       

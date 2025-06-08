@@ -19,6 +19,9 @@ export const useAppStore = () => {
     updateRequest: store.updateRequest,
     deleteRequest: store.deleteRequest,
     updateRequestStatus: store.updateRequestStatus,
+    expireRequests: store.expireRequests,
+    deleteOutboundRequest: store.deleteOutboundRequest,
+    updateOutboundRequest: store.updateOutboundRequest,
     
     // Live Mode
     isLiveMode: store.isLiveMode,
