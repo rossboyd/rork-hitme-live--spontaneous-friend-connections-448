@@ -1,17 +1,17 @@
 // App color scheme
 export const lightTheme = {
-  primary: '#00FF00', // Bright green for live mode
+  primary: '#00E676', // Slightly softer green for better contrast
   secondary: '#9BB1D2', // Light blue
   accent: '#E8505B', // Soft red for urgency indicators
-  background: '#FAFFFA', // Light green-tinted background
-  card: '#FFFFFF', // White card background
+  background: '#FFFFFF', // Pure white background
+  card: '#F8F9FA', // Very light gray for cards
   text: {
-    primary: '#1B281B', // Dark green text
-    secondary: '#3D4A3D', // Medium green text
-    light: '#5E6B5E', // Light green text
+    primary: '#1A1A1A', // Almost black for primary text
+    secondary: '#4A4A4A', // Dark gray for secondary text
+    light: '#757575', // Medium gray for subtle text
   },
   border: '#E2E8F0', // Light gray border
-  success: '#00FF00', // Bright green for success states
+  success: '#00E676', // Match primary green
   urgency: {
     low: '#9BB1D2', // Light blue
     medium: '#F6AD55', // Orange
@@ -20,7 +20,7 @@ export const lightTheme = {
 };
 
 export const darkTheme = {
-  primary: '#00FF00', // Keep bright green for consistency
+  primary: '#00E676', // Match light theme for consistency
   secondary: '#5D7CA6', // Darker blue
   accent: '#E8505B', // Keep the same accent color
   background: '#0A0F0A', // Much darker green background
@@ -31,7 +31,7 @@ export const darkTheme = {
     light: '#8AA68A', // Darker light green text
   },
   border: '#4A5568', // Darker border
-  success: '#00FF00', // Same bright green
+  success: '#00E676', // Same as primary
   urgency: {
     low: '#5D7CA6', // Darker blue
     medium: '#DD6B20', // Darker orange
