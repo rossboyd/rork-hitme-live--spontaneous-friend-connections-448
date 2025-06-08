@@ -6,11 +6,11 @@ import {
   TextInput, 
   Platform,
   Keyboard,
-  Pressable
+  Pressable,
+  TouchableOpacity
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
-import { Button } from '@/components/common/Card';
 import * as Haptics from 'expo-haptics';
 import { darkTheme } from '@/constants/colors';
 
@@ -56,6 +56,7 @@ export default function VerifyScreen() {
       // Focus last input or submit if complete
       if (pastedText.length + index >= OTP_LENGTH) {
         Keyboard.dismiss();
+        handleVerify(newOtp.join(''));
       } else {
         focusInput(index + pastedText.length);
       }
@@ -71,6 +72,7 @@ export default function VerifyScreen() {
           focusInput(index + 1);
         } else {
           Keyboard.dismiss();
+          handleVerify(newOtp.join(''));
         }
       }
     }
@@ -84,9 +86,8 @@ export default function VerifyScreen() {
     }
   };
 
-  const handleVerify = () => {
-    const enteredOtp = otp.join('');
-    if (enteredOtp === MOCK_OTP) {
+  const handleVerify = (code: string = otp.join('')) => {
+    if (code === MOCK_OTP) {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
@@ -177,21 +178,40 @@ export default function VerifyScreen() {
         )}
 
         <View style={styles.buttonContainer}>
-          <Button
-            title="Verify"
-            onPress={handleVerify}
-            disabled={otp.some(digit => !digit)}
-            style={styles.button}
-          />
+          <TouchableOpacity
+            style={[
+              styles.verifyButton,
+              { 
+                backgroundColor: otp.every(digit => digit) ? darkTheme.primary : darkTheme.border,
+                opacity: otp.every(digit => digit) ? 1 : 0.6
+              }
+            ]}
+            onPress={() => handleVerify()}
+            disabled={!otp.every(digit => digit)}
+          >
+            <Text style={styles.verifyButtonText}>Verify</Text>
+          </TouchableOpacity>
 
-          <Button
-            title={countdown > 0 ? `Resend code (${countdown}s)` : 'Resend code'}
-            variant="outline"
+          <TouchableOpacity
+            style={[
+              styles.resendButton,
+              { 
+                borderColor: countdown > 0 ? darkTheme.border : darkTheme.primary,
+                opacity: countdown > 0 || isResending ? 0.6 : 1
+              }
+            ]}
             onPress={handleResend}
-            disabled={countdown > 0}
-            loading={isResending}
-            style={styles.resendButton}
-          />
+            disabled={countdown > 0 || isResending}
+          >
+            <Text 
+              style={[
+                styles.resendButtonText,
+                { color: countdown > 0 ? darkTheme.text.light : darkTheme.primary }
+              ]}
+            >
+              {countdown > 0 ? `Resend code (${countdown}s)` : 'Resend code'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -252,10 +272,28 @@ const styles = StyleSheet.create({
   buttonContainer: {
     gap: 16,
   },
-  button: {
+  verifyButton: {
     height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  verifyButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    fontFamily: 'PlusJakartaSans-SemiBold',
   },
   resendButton: {
     height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  resendButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'PlusJakartaSans-SemiBold',
   },
 });
