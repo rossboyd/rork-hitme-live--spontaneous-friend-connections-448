@@ -1,27 +1,17 @@
-import React, { useCallback } from 'react';
-import { 
+import React, { useRef, useState } from 'react';
+import {
   View, 
   Text, 
   StyleSheet, 
-  TouchableOpacity, 
+  Animated, 
+  PanResponder,
   Platform,
-  Dimensions
+  TouchableOpacity
 } from 'react-native';
-import { Eye } from 'lucide-react-native';
+import { Phone } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
-import Animated, {
-  useAnimatedStyle,
-  useAnimatedGestureHandler,
-  withSpring,
-  runOnJS,
-  useSharedValue,
-} from 'react-native-reanimated';
-import { PanGestureHandler } from 'react-native-gesture-handler';
-
-const BUTTON_WIDTH = 64;
-const SLIDER_WIDTH = Dimensions.get('window').width - 48; // 24px padding on each side
-const SLIDER_HEIGHT = 80;
 
 interface SlideToLiveToggleProps {
   waitingCount: number;
@@ -30,84 +20,154 @@ interface SlideToLiveToggleProps {
   onPreviewQueue?: () => void;
 }
 
+const TOGGLE_HEIGHT = 240;
+const THUMB_SIZE = 80;
+const ACTIVATION_THRESHOLD = 0.8; // How far up the user needs to drag to activate
+
 export const SlideToLiveToggle = ({ 
   waitingCount, 
   onSlideComplete,
-  userName = "there",
+  userName = 'You',
   onPreviewQueue
 }: SlideToLiveToggleProps) => {
   const { colors = darkTheme } = useThemeStore();
-  const translateX = useSharedValue(0);
-  const isDragging = useSharedValue(false);
-
-  const handleComplete = useCallback(() => {
-    onSlideComplete();
-    translateX.value = withSpring(0);
-  }, [onSlideComplete]);
-
-  const gestureHandler = useAnimatedGestureHandler({
-    onStart: () => {
-      isDragging.value = true;
-    },
-    onActive: (event) => {
-      const newValue = Math.max(0, Math.min(event.translationX, SLIDER_WIDTH - BUTTON_WIDTH));
-      translateX.value = newValue;
-    },
-    onEnd: () => {
-      isDragging.value = false;
-      if (translateX.value > SLIDER_WIDTH * 0.8) {
-        runOnJS(handleComplete)();
-      } else {
-        translateX.value = withSpring(0);
-      }
-    },
+  const [isDragging, setIsDragging] = useState(false);
+  const [isThresholdReached, setIsThresholdReached] = useState(false);
+  
+  // Animation values - negative values for upward movement
+  const dragY = useRef(new Animated.Value(0)).current;
+  const trackColorInterpolation = dragY.interpolate({
+    inputRange: [-(TOGGLE_HEIGHT - THUMB_SIZE), 0],
+    outputRange: [1, 0],
+    extrapolate: 'clamp'
   });
+  
+  // Calculate track background color based on drag position
+  const trackBackgroundColor = trackColorInterpolation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.border, '#4ADE80'] // Light gray to green
+  });
+  
+  // Calculate thumb scale based on drag position
+  const thumbScale = trackColorInterpolation.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [1, 1.1, 1.15],
+    extrapolate: 'clamp'
+  });
+  
+  // Create pan responder for upward gesture
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        setIsDragging(true);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        // For upward movement, dy will be negative
+        const newY = Math.max(-(TOGGLE_HEIGHT - THUMB_SIZE), Math.min(0, gestureState.dy));
+        dragY.setValue(newY);
+        
+        // Check if threshold is reached (negative values for upward movement)
+        const threshold = -(TOGGLE_HEIGHT - THUMB_SIZE) * ACTIVATION_THRESHOLD;
+        const thresholdReached = newY <= threshold;
+        
+        if (thresholdReached !== isThresholdReached) {
+          setIsThresholdReached(thresholdReached);
+          if (Platform.OS !== 'web' && thresholdReached) {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          }
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        setIsDragging(false);
+        
+        // Check if drag went far enough upward to trigger action
+        const threshold = -(TOGGLE_HEIGHT - THUMB_SIZE) * ACTIVATION_THRESHOLD;
+        if (gestureState.dy <= threshold) {
+          if (Platform.OS !== 'web') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
+          onSlideComplete();
+        }
+        
+        // Reset position with animation
+        Animated.spring(dragY, {
+          toValue: 0,
+          useNativeDriver: false,
+          friction: 7,
+          tension: 40
+        }).start();
+        
+        setIsThresholdReached(false);
+      }
+    })
+  ).current;
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-  }));
-
-  const progressStyle = useAnimatedStyle(() => ({
-    width: translateX.value + BUTTON_WIDTH,
-  }));
+  const handlePreviewQueue = () => {
+    if (waitingCount > 0 && onPreviewQueue) {
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      onPreviewQueue();
+    }
+  };
 
   return (
     <View style={styles.container}>
-      {waitingCount > 0 && (
+      <View style={styles.infoContainer}>
+        <Text style={[styles.title, { color: colors.text.primary }]}>Hey {userName}, You're Offline</Text>
         <TouchableOpacity 
-          style={[styles.previewButton, { backgroundColor: colors.card }]}
-          onPress={onPreviewQueue}
+          onPress={handlePreviewQueue}
+          disabled={waitingCount === 0 || !onPreviewQueue}
+          activeOpacity={waitingCount > 0 ? 0.7 : 1}
         >
-          <Eye size={20} color={colors.text.primary} />
-          <Text style={[styles.previewText, { color: colors.text.primary }]}>
-            Preview Queue ({waitingCount})
+          <Text style={[
+            styles.subtitle,
+            { color: colors.text.secondary },
+            waitingCount > 0 && [styles.clickableSubtitle, { color: colors.primary }]
+          ]}>
+            {waitingCount > 0 
+              ? `${waitingCount} ${waitingCount === 1 ? 'person is' : 'people are'} waiting to chat`
+              : 'No one is waiting to chat with you'}
           </Text>
         </TouchableOpacity>
-      )}
+      </View>
       
-      <View style={[styles.slider, { backgroundColor: colors.card }]}>
+      <Animated.View 
+        style={[
+          styles.track,
+          { backgroundColor: trackBackgroundColor }
+        ]}
+      >
         <Animated.View 
           style={[
-            styles.progress, 
-            { backgroundColor: colors.primary },
-            progressStyle
-          ]} 
-        />
-        
-        <Text style={[styles.sliderText, { color: colors.text.primary }]}>
-          Hey {userName}, slide to go live
-        </Text>
-        
-        <PanGestureHandler onGestureEvent={gestureHandler}>
-          <Animated.View 
-            style={[
-              styles.thumb,
-              { backgroundColor: '#E2E8F0' }, // Light grey color as requested
-              animatedStyle
-            ]}
+            styles.thumb,
+            {
+              transform: [
+                { translateY: dragY },
+                { scale: thumbScale }
+              ],
+              borderColor: isThresholdReached ? colors.primary : 'transparent',
+              backgroundColor: '#F3F4F6' // Light grey color for thumb
+            }
+          ]}
+          {...panResponder.panHandlers}
+        >
+          <Phone 
+            size={32} 
+            color={isThresholdReached ? colors.primary : '#6B7280'} // Darker grey for icon
           />
-        </PanGestureHandler>
-      </View>
+        </Animated.View>
+      </Animated.View>
+      
+      <Text style={[styles.instructionText, { color: colors.text.secondary }]}>
+        {isDragging 
+          ? isThresholdReached 
+            ? "Release to switch" 
+            : "Keep sliding up"
+          : "Slide up to go live"}
+      </Text>
     </View>
   );
 };
@@ -115,44 +175,50 @@ export const SlideToLiveToggle = ({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    width: '100%',
-    paddingHorizontal: 24,
-  },
-  previewButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  previewText: {
-    marginLeft: 8,
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  slider: {
-    width: SLIDER_WIDTH,
-    height: SLIDER_HEIGHT,
-    borderRadius: SLIDER_HEIGHT / 2,
     justifyContent: 'center',
-    overflow: 'hidden',
+    paddingHorizontal: 20,
+    paddingVertical: 40,
   },
-  progress: {
-    ...StyleSheet.absoluteFillObject,
-    width: BUTTON_WIDTH,
+  infoContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
   },
-  sliderText: {
-    fontSize: 16,
-    fontWeight: '500',
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 8,
     textAlign: 'center',
   },
+  subtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  clickableSubtitle: {
+    textDecorationLine: 'underline',
+  },
+  track: {
+    width: 80,
+    height: TOGGLE_HEIGHT,
+    borderRadius: 40,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   thumb: {
-    position: 'absolute',
-    left: 8,
-    width: BUTTON_WIDTH - 16,
-    height: SLIDER_HEIGHT - 16,
-    borderRadius: (SLIDER_HEIGHT - 16) / 2,
-    margin: 8,
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
+    borderRadius: THUMB_SIZE / 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  instructionText: {
+    fontSize: 16,
+    marginTop: 8,
   },
 });
