@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useThemeStore } from '@/store/useThemeStore';
 
 interface LiveModeStatusProps {
@@ -17,8 +17,8 @@ export const LiveModeStatus = ({ timeRemaining, onGoOffline }: LiveModeStatusPro
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>You're Live!</Text>
-      <View style={styles.circle}>
+      <Text style={[styles.title, { color: colors.primary }]}>You're Live!</Text>
+      <View style={[styles.circle, { backgroundColor: colors.primary }]}>
         <Text style={styles.timeText}>{timeString}</Text>
       </View>
       
@@ -40,7 +40,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#00FF00',
     marginBottom: 40,
     fontFamily: 'PlusJakartaSans-Bold',
   },
@@ -48,7 +47,6 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: '#00FF00',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 40,

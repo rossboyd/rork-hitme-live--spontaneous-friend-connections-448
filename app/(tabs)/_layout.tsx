@@ -20,7 +20,6 @@ export default function TabLayout() {
           fontSize: 12,
           fontWeight: '500',
         },
-        headerTitle: '', // This removes the (tabs) text
       }}
       initialRouteName="home"
     >

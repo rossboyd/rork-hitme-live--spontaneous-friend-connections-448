@@ -53,7 +53,7 @@ export const QueueReview = ({
       onRequestClose={onClose}
     >
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.header}>
+        <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <Text style={[styles.title, { color: colors.text.primary }]}>
             {previewMode ? "Queue Preview" : "Manage Your Queue"}
           </Text>
@@ -79,7 +79,7 @@ export const QueueReview = ({
                 style={[
                   styles.contactItem,
                   { backgroundColor: colors.card },
-                  isSelected && { borderColor: '#00FF00', borderWidth: 2 }
+                  isSelected && { borderColor: colors.primary, borderWidth: 2 }
                 ]}
                 onPress={() => !previewMode && toggleContact(request.senderId)}
                 disabled={previewMode}
@@ -100,7 +100,8 @@ export const QueueReview = ({
                 {!previewMode && (
                   <View style={[
                     styles.checkbox,
-                    isSelected && { backgroundColor: '#00FF00', borderColor: '#00FF00' }
+                    { borderColor: colors.border },
+                    isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
                   ]}>
                     {isSelected && <Check size={16} color="#fff" />}
                   </View>
@@ -112,7 +113,7 @@ export const QueueReview = ({
 
         {!previewMode && onGoLive && (
           <TouchableOpacity
-            style={[styles.goLiveButton, { backgroundColor: '#00FF00' }]}
+            style={[styles.goLiveButton, { backgroundColor: colors.primary }]}
             onPress={() => onGoLive(selectedIds)}
           >
             <Text style={styles.goLiveText}>Go Live ({selectedIds.length})</Text>
@@ -133,7 +134,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
   },
   title: {
     fontSize: 18,
@@ -180,7 +180,6 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: 'rgba(0, 0, 0, 0.2)',
     marginLeft: 12,
     justifyContent: 'center',
     alignItems: 'center',

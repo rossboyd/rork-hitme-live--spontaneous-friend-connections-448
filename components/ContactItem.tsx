@@ -48,13 +48,15 @@ export const ContactItem = ({
         <TouchableOpacity
           style={[
             styles.hitListButton,
-            isInHitList ? styles.inHitListButton : styles.notInHitListButton
+            isInHitList ? 
+              { backgroundColor: colors.primary, borderColor: colors.primary } : 
+              { borderColor: colors.primary }
           ]}
           onPress={() => onToggleHitList(contact)}
         >
           <Text style={[
             styles.hitListButtonText,
-            { color: isInHitList ? '#fff' : '#00FF00' }
+            { color: isInHitList ? '#fff' : colors.primary }
           ]}>
             {isInHitList ? 'In HitList' : 'Add'}
           </Text>
@@ -104,14 +106,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 20,
     borderWidth: 1,
-  },
-  inHitListButton: {
-    backgroundColor: '#00FF00',
-    borderColor: '#00FF00',
-  },
-  notInHitListButton: {
-    backgroundColor: 'transparent',
-    borderColor: '#00FF00',
   },
   hitListButtonText: {
     fontSize: 14,

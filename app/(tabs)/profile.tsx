@@ -25,6 +25,7 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { EditProfileModal } from '@/components/EditProfileModal';
+import { Card } from '@/components/common/Card';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -79,7 +80,7 @@ export default function ProfileScreen() {
     textColor = colors.text.primary
   ) => (
     <TouchableOpacity 
-      style={styles.settingItem}
+      style={[styles.settingItem, { borderBottomColor: colors.border }]}
       onPress={onPress}
       disabled={!onPress}
     >
@@ -93,86 +94,84 @@ export default function ProfileScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.contentContainer}>
-        <View style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
-            <Image
-              source={{ uri: user?.avatar }}
-              style={styles.avatar}
-              contentFit="cover"
-            />
-            <TouchableOpacity 
-              style={[styles.cameraButton, { backgroundColor: colors.primary }]}
-              onPress={() => setEditProfileVisible(true)}
-            >
-              <Camera size={20} color="#fff" />
-            </TouchableOpacity>
-          </View>
-          
+      <View style={styles.profileSection}>
+        <View style={styles.avatarContainer}>
+          <Image
+            source={{ uri: user?.avatar }}
+            style={styles.avatar}
+            contentFit="cover"
+          />
           <TouchableOpacity 
-            style={styles.editNameButton}
+            style={[styles.cameraButton, { backgroundColor: colors.primary }]}
             onPress={() => setEditProfileVisible(true)}
           >
-            <Edit size={18} color={colors.text.secondary} />
+            <Camera size={20} color="#fff" />
           </TouchableOpacity>
         </View>
         
-        <View style={[styles.settingsCard, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Settings</Text>
-          
-          {renderSettingItem(
-            <Bell size={24} color={colors.text.primary} />,
-            "Notifications",
-            undefined,
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={handleNotificationsToggle}
-              trackColor={{ false: colors.border, true: '#00FF00' }}
-              thumbColor="#FFFFFF"
-            />
-          )}
-          
-          {renderSettingItem(
-            <Lock size={24} color={colors.text.primary} />,
-            "Privacy",
-            () => Alert.alert("Privacy", "Privacy settings would open here")
-          )}
-          
-          {renderSettingItem(
-            <Shield size={24} color={colors.text.primary} />,
-            "Security",
-            () => Alert.alert("Security", "Security settings would open here")
-          )}
-          
-          {renderSettingItem(
-            <HelpCircle size={24} color={colors.text.primary} />,
-            "Help",
-            () => Alert.alert("Help", "Help center would open here")
-          )}
-        </View>
-
-        <View style={[styles.settingsCard, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Developer</Text>
-          {renderSettingItem(
-            <Smartphone size={24} color={colors.text.primary} />,
-            "Live Activity Preview",
-            () => router.push('/live-activity-preview')
-          )}
-        </View>
-        
-        <View style={[styles.settingsCard, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Danger Zone</Text>
-          {renderSettingItem(
-            <LogOut size={24} color={colors.accent} />,
-            "Log Out",
-            handleLogout,
-            <ChevronRight size={20} color={colors.accent} />,
-            colors.accent
-          )}
-        </View>
-        
-        <Text style={[styles.versionText, { color: colors.text.light }]}>HitMe v1.0.0</Text>
+        <TouchableOpacity 
+          style={[styles.editNameButton, { backgroundColor: colors.border }]}
+          onPress={() => setEditProfileVisible(true)}
+        >
+          <Edit size={18} color={colors.text.secondary} />
+        </TouchableOpacity>
       </View>
+      
+      <Card style={styles.settingsCard}>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Settings</Text>
+        
+        {renderSettingItem(
+          <Bell size={24} color={colors.text.primary} />,
+          "Notifications",
+          undefined,
+          <Switch
+            value={notificationsEnabled}
+            onValueChange={handleNotificationsToggle}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor="#FFFFFF"
+          />
+        )}
+        
+        {renderSettingItem(
+          <Lock size={24} color={colors.text.primary} />,
+          "Privacy",
+          () => Alert.alert("Privacy", "Privacy settings would open here")
+        )}
+        
+        {renderSettingItem(
+          <Shield size={24} color={colors.text.primary} />,
+          "Security",
+          () => Alert.alert("Security", "Security settings would open here")
+        )}
+        
+        {renderSettingItem(
+          <HelpCircle size={24} color={colors.text.primary} />,
+          "Help",
+          () => Alert.alert("Help", "Help center would open here")
+        )}
+      </Card>
+
+      <Card style={styles.settingsCard}>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Developer</Text>
+        {renderSettingItem(
+          <Smartphone size={24} color={colors.text.primary} />,
+          "Live Activity Preview",
+          () => router.push('/live-activity-preview')
+        )}
+      </Card>
+      
+      <Card style={styles.settingsCard}>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Danger Zone</Text>
+        {renderSettingItem(
+          <LogOut size={24} color={colors.accent} />,
+          "Log Out",
+          handleLogout,
+          <ChevronRight size={20} color={colors.accent} />,
+          colors.accent
+        )}
+      </Card>
+      
+      <Text style={[styles.versionText, { color: colors.text.light }]}>HitMe v1.0.0</Text>
       
       <EditProfileModal
         visible={editProfileVisible}
@@ -187,9 +186,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  contentContainer: {
-    paddingBottom: 40,
   },
   profileSection: {
     alignItems: 'center',
@@ -220,18 +216,10 @@ const styles = StyleSheet.create({
   editNameButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
   },
   settingsCard: {
-    borderRadius: 16,
     marginHorizontal: 16,
     marginTop: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
   },
   sectionTitle: {
     fontSize: 20,
@@ -243,7 +231,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
   },
   settingIconContainer: {
     width: 40,
