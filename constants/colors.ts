@@ -23,8 +23,8 @@ export const darkTheme = {
   primary: '#00FF00', // Keep bright green for consistency
   secondary: '#5D7CA6', // Darker blue
   accent: '#E8505B', // Keep the same accent color
-  background: '#1A2B1A', // Darker green background (updated)
-  card: '#233923', // Slightly lighter than background for cards
+  background: '#0A0F0A', // Much darker green background
+  card: '#121812', // Slightly lighter than background for cards
   text: {
     primary: '#E6FFE6', // Light green text
     secondary: '#B8CCB8', // Medium light green text
@@ -38,6 +38,3 @@ export const darkTheme = {
     high: '#C53030', // Darker red
   }
 };
-
-// For backward compatibility
-export const colors = lightTheme;

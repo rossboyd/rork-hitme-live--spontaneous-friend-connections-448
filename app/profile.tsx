@@ -6,13 +6,13 @@ import {
   TouchableOpacity, 
   Switch,
   Alert,
-  ScrollView,
-  Platform
+  Platform,
+  ScrollView
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
-import { colors } from '@/constants/colors';
+import { useThemeStore } from '@/store/useThemeStore';
 import { 
   Bell, 
   Lock, 
@@ -21,7 +21,8 @@ import {
   LogOut, 
   ChevronRight,
   Camera,
-  Edit
+  Edit,
+  Smartphone
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { EditProfileModal } from '@/components/EditProfileModal';
@@ -29,6 +30,7 @@ import { EditProfileModal } from '@/components/EditProfileModal';
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, setUser } = useAppStore();
+  const { colors } = useThemeStore();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [editProfileVisible, setEditProfileVisible] = useState(false);
 
@@ -56,7 +58,6 @@ export default function ProfileScreen() {
           text: "Log Out",
           style: "destructive",
           onPress: () => {
-            // In a real app, this would clear auth tokens, etc.
             Alert.alert("Logged Out", "You have been logged out successfully");
           }
         }
@@ -92,7 +93,7 @@ export default function ProfileScreen() {
   );
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.contentContainer}>
       <View style={styles.profileSection}>
         <View style={styles.avatarContainer}>
           <Image
@@ -101,7 +102,7 @@ export default function ProfileScreen() {
             contentFit="cover"
           />
           <TouchableOpacity 
-            style={styles.cameraButton}
+            style={[styles.cameraButton, { backgroundColor: colors.primary }]}
             onPress={() => setEditProfileVisible(true)}
           >
             <Camera size={20} color="#fff" />
@@ -116,8 +117,8 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
       
-      <View style={styles.settingsCard}>
-        <Text style={styles.sectionTitle}>Settings</Text>
+      <View style={[styles.settingsCard, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Settings</Text>
         
         {renderSettingItem(
           <Bell size={24} color={colors.text.primary} />,
@@ -126,7 +127,7 @@ export default function ProfileScreen() {
           <Switch
             value={notificationsEnabled}
             onValueChange={handleNotificationsToggle}
-            trackColor={{ false: colors.border, true: '#4ADE80' }}
+            trackColor={{ false: colors.border, true: '#00FF00' }}
             thumbColor="#FFFFFF"
           />
         )}
@@ -148,7 +149,19 @@ export default function ProfileScreen() {
           "Help",
           () => Alert.alert("Help", "Help center would open here")
         )}
-        
+      </View>
+
+      <View style={[styles.settingsCard, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Developer</Text>
+        {renderSettingItem(
+          <Smartphone size={24} color={colors.text.primary} />,
+          "Live Activity Preview",
+          () => router.push('/live-activity-preview')
+        )}
+      </View>
+      
+      <View style={[styles.settingsCard, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Danger Zone</Text>
         {renderSettingItem(
           <LogOut size={24} color={colors.accent} />,
           "Log Out",
@@ -158,7 +171,7 @@ export default function ProfileScreen() {
         )}
       </View>
       
-      <Text style={styles.versionText}>HitMe v1.0.0</Text>
+      <Text style={[styles.versionText, { color: colors.text.light }]}>HitMe v1.0.0</Text>
       
       <EditProfileModal
         visible={editProfileVisible}
@@ -173,7 +186,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   contentContainer: {
     paddingBottom: 40,
@@ -196,22 +208,20 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: colors.primary,
     width: 36,
     height: 36,
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: colors.background,
+    borderColor: '#fff',
   },
   editNameButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: colors.border,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
   },
   settingsCard: {
-    backgroundColor: colors.card,
     borderRadius: 16,
     marginHorizontal: 16,
     marginTop: 16,
@@ -225,7 +235,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.text.primary,
     marginBottom: 16,
   },
   settingItem: {
@@ -233,7 +242,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
   },
   settingIconContainer: {
     width: 40,
@@ -247,7 +256,6 @@ const styles = StyleSheet.create({
   },
   versionText: {
     textAlign: 'center',
-    color: colors.text.light,
     marginTop: 40,
     fontSize: 14,
   },
