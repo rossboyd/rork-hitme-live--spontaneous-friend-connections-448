@@ -173,7 +173,7 @@ export const NotificationSimulator = ({
     // Format phone number for WhatsApp - remove all non-numeric characters
     // Keep the plus sign for international format
     const formattedPhone = contactForRequest.phone.startsWith('+') 
-      ? contactForRequest.phone.replace(/\D/g, '')
+      ? contactForRequest.phone.replace(/[^+\d]/g, '')
       : contactForRequest.phone.replace(/\D/g, '');
     
     // Try to open WhatsApp with the contact's phone number
