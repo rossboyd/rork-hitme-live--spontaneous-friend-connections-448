@@ -16,13 +16,11 @@ import { DurationSelector } from '@/components/DurationSelector';
 import { QueueReview } from '@/components/QueueReview';
 import { SlideToLiveToggle } from '@/components/SlideToLiveToggle';
 import { LiveModeStatus } from '@/components/LiveModeStatus';
-import { NotificationSimulator } from '@/components/NotificationSimulator';
 import { useThemeStore } from '@/store/useThemeStore';
 
 export default function HomeScreen() {
   const { 
     inboundRequests, 
-    outboundRequests,
     contacts, 
     isHitMeModeActive, 
     toggleHitMeMode, 
@@ -208,19 +206,6 @@ export default function HomeScreen() {
     }
   };
 
-  const handleSimulateConnection = (requestId: string) => {
-    // Mark the request as completed
-    updateRequestStatus(requestId, 'completed');
-    
-    // Show success message
-    setTimeout(() => {
-      Alert.alert(
-        "Connection Successful",
-        "The request has been marked as completed and removed from your HitList."
-      );
-    }, 1000);
-  };
-
   const getContactById = (contactId: string) => {
     return contacts.find(c => c.id === contactId) || {
       id: contactId,
@@ -242,14 +227,6 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {!isHitMeModeActive && outboundRequests.filter(req => req.status === 'pending').length > 0 && (
-        <NotificationSimulator 
-          outboundRequests={outboundRequests}
-          contacts={contacts}
-          onSimulateConnection={handleSimulateConnection}
-        />
-      )}
-      
       {isHitMeModeActive ? (
         <>
           {timeRemaining !== null && (

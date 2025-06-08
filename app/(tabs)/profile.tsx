@@ -21,7 +21,8 @@ import {
   ChevronRight,
   Camera,
   Edit,
-  Smartphone
+  Smartphone,
+  BellRing
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { EditProfileModal } from '@/components/EditProfileModal';
@@ -166,6 +167,11 @@ export default function ProfileScreen() {
           <Smartphone size={24} color={colors.text.primary} />,
           "Live Activity Preview",
           () => router.push('/live-activity-preview')
+        )}
+        {renderSettingItem(
+          <BellRing size={24} color={colors.text.primary} />,
+          "Test Push Notification",
+          () => router.push('/notification-test')
         )}
       </View>
       
