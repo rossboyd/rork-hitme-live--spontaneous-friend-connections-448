@@ -6,7 +6,7 @@ import {
   TouchableOpacity, 
   Switch,
   Alert,
-  ScrollView,
+  ScrollView as RNScrollView,
   Platform
 } from 'react-native';
 import { Image } from 'expo-image';
@@ -94,7 +94,7 @@ export default function ProfileScreen() {
   );
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.contentContainer}>
+    <RNScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.contentContainer}>
       <View style={styles.profileSection}>
         <View style={styles.avatarContainer}>
           <Image
@@ -103,7 +103,7 @@ export default function ProfileScreen() {
             contentFit="cover"
           />
           <TouchableOpacity 
-            style={styles.cameraButton}
+            style={[styles.cameraButton, { backgroundColor: colors.primary }]}
             onPress={() => setEditProfileVisible(true)}
           >
             <Camera size={20} color="#fff" />
@@ -111,15 +111,15 @@ export default function ProfileScreen() {
         </View>
         
         <TouchableOpacity 
-          style={styles.editNameButton}
+          style={[styles.editNameButton, { backgroundColor: colors.border }]}
           onPress={() => setEditProfileVisible(true)}
         >
           <Edit size={18} color={colors.text.secondary} />
         </TouchableOpacity>
       </View>
       
-      <View style={styles.settingsCard}>
-        <Text style={styles.sectionTitle}>Settings</Text>
+      <View style={[styles.settingsCard, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Settings</Text>
         
         {renderSettingItem(
           <Bell size={24} color={colors.text.primary} />,
@@ -128,7 +128,7 @@ export default function ProfileScreen() {
           <Switch
             value={notificationsEnabled}
             onValueChange={handleNotificationsToggle}
-            trackColor={{ false: colors.border, true: '#00FF00' }}
+            trackColor={{ false: colors.border, true: colors.primary }}
             thumbColor="#FFFFFF"
           />
         )}
@@ -160,8 +160,8 @@ export default function ProfileScreen() {
         )}
       </View>
 
-      <View style={styles.settingsCard}>
-        <Text style={styles.sectionTitle}>Developer</Text>
+      <View style={[styles.settingsCard, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Developer</Text>
         {renderSettingItem(
           <Smartphone size={24} color={colors.text.primary} />,
           "Live Activity Preview",
@@ -169,7 +169,7 @@ export default function ProfileScreen() {
         )}
       </View>
       
-      <Text style={styles.versionText}>HitMe v1.0.0</Text>
+      <Text style={[styles.versionText, { color: colors.text.light }]}>HitMe v1.0.0</Text>
       
       <EditProfileModal
         visible={editProfileVisible}
@@ -177,7 +177,7 @@ export default function ProfileScreen() {
         onClose={() => setEditProfileVisible(false)}
         onUpdate={handleUpdateProfile}
       />
-    </ScrollView>
+    </RNScrollView>
   );
 }
 
@@ -206,22 +206,19 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#00FF00',
     width: 36,
     height: 36,
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: colors.background,
+    borderColor: '#fff',
   },
   editNameButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: colors.border,
   },
   settingsCard: {
-    backgroundColor: colors.card,
     borderRadius: 16,
     marginHorizontal: 16,
     marginTop: 16,
@@ -235,7 +232,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.text.primary,
     marginBottom: 16,
   },
   settingItem: {
@@ -243,7 +239,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: '#E2E8F0',
   },
   settingIconContainer: {
     width: 40,
@@ -257,7 +253,6 @@ const styles = StyleSheet.create({
   },
   versionText: {
     textAlign: 'center',
-    color: colors.text.light,
     marginTop: 40,
     fontSize: 14,
   },
