@@ -4,42 +4,26 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
+  interpolateColor,
 } from 'react-native-reanimated';
-import { THEME_TRANSITION_CONFIG } from '@/utils/animations';
 import { darkTheme, lightTheme } from '@/constants/colors';
 
 export const useThemeTransition = (isDark: boolean) => {
   const progress = useSharedValue(isDark ? 1 : 0);
 
   useEffect(() => {
-    if (Platform.OS === 'web') {
-      progress.value = isDark ? 1 : 0;
-      return;
-    }
-
-    progress.value = withTiming(
-      isDark ? 1 : 0,
-      THEME_TRANSITION_CONFIG
-    );
+    progress.value = withTiming(isDark ? 1 : 0, {
+      duration: 400,
+    });
   }, [isDark]);
 
-  const style = useAnimatedStyle(() => {
-    const backgroundColor = {
-      r: withTiming(
-        isDark ? darkTheme.background : lightTheme.background,
-        THEME_TRANSITION_CONFIG
-      ),
-      g: withTiming(
-        isDark ? darkTheme.text.primary : lightTheme.text.primary,
-        THEME_TRANSITION_CONFIG  
-      ),
-    };
-
-    return {
-      backgroundColor: backgroundColor.r,
-      color: backgroundColor.g,
-    };
-  });
+  const style = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      progress.value,
+      [0, 1],
+      [lightTheme.background, darkTheme.background]
+    ),
+  }));
 
   return style;
 };
