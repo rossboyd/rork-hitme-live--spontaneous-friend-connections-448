@@ -35,17 +35,9 @@ export default function HitListScreen() {
     const active = outboundRequests.filter(req => req.status === 'pending');
     const expired = outboundRequests.filter(req => req.status === 'expired');
     
-    // Sort by urgency (high > medium > low) and then by creation date (newest first)
-    const sortByUrgency = (a: HitRequest, b: HitRequest) => {
-      const urgencyOrder = { high: 3, medium: 2, low: 1 };
-      const urgencyDiff = urgencyOrder[b.urgency] - urgencyOrder[a.urgency];
-      
-      if (urgencyDiff !== 0) return urgencyDiff;
-      return b.createdAt - a.createdAt;
-    };
-    
-    setActiveRequests([...active].sort(sortByUrgency));
-    setExpiredRequests([...expired].sort((a, b) => b.createdAt - a.createdAt));
+    // Sort by creation date (newest first)
+    setActiveRequests([...active].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
+    setExpiredRequests([...expired].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
   }, [outboundRequests]);
 
   const handleAddRequest = () => {

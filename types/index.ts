@@ -21,6 +21,7 @@ export interface Contact {
 
 // Request types
 export type RequestStatus = 'pending' | 'completed' | 'expired' | 'cancelled';
+export type RequestUrgency = 'high' | 'medium' | 'low';
 
 export interface HitRequest {
   id: string;
@@ -28,9 +29,10 @@ export interface HitRequest {
   receiverId: string;
   message?: string;
   status: RequestStatus;
+  urgency?: RequestUrgency;
   duration?: number; // in minutes
-  createdAt: string;
-  expiresAt?: string;
+  createdAt: number; // timestamp in milliseconds
+  expiresAt?: number; // timestamp in milliseconds
 }
 
 // Theme types

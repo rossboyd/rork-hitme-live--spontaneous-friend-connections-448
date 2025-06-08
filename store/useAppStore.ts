@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Contact, HitRequest } from '@/types';
+import { Contact, HitRequest, RequestStatus } from '@/types';
 import { mockContacts } from '@/mocks/contacts';
 import { mockRequests } from '@/mocks/requests';
 
@@ -18,7 +18,7 @@ interface AppState {
   addRequest: (request: HitRequest) => void;
   updateRequest: (id: string, request: Partial<HitRequest>) => void;
   deleteRequest: (id: string) => void;
-  updateRequestStatus: (id: string, status: HitRequest['status']) => void;
+  updateRequestStatus: (id: string, status: RequestStatus) => void;
   expireRequests: () => void;
   deleteOutboundRequest: (id: string) => void;
   updateOutboundRequest: (id: string, updates: Partial<HitRequest>) => void;
@@ -85,14 +85,14 @@ export const useAppStore = create<AppState>()(
             request.id === id ? { ...request, status } : request
           ),
         })),
-      // New function to check and expire requests
+      // Function to check and expire requests
       expireRequests: () => 
         set((state) => {
           const now = Date.now();
           const updatedOutboundRequests = state.outboundRequests.map(request => {
             // If request is pending and has expired, update status
             if (request.status === 'pending' && request.expiresAt && request.expiresAt < now) {
-              return { ...request, status: 'expired' };
+              return { ...request, status: 'expired' as RequestStatus };
             }
             return request;
           });
@@ -100,7 +100,7 @@ export const useAppStore = create<AppState>()(
           const updatedInboundRequests = state.inboundRequests.map(request => {
             // If request is pending and has expired, update status
             if (request.status === 'pending' && request.expiresAt && request.expiresAt < now) {
-              return { ...request, status: 'expired' };
+              return { ...request, status: 'expired' as RequestStatus };
             }
             return request;
           });
