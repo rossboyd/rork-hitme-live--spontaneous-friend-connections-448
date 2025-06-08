@@ -171,12 +171,15 @@ export const NotificationSimulator = ({
     if (!contactForRequest) return;
     
     // Format phone number for WhatsApp - remove all non-numeric characters
-    const formattedPhone = contactForRequest.phone.replace(/\D/g, '');
+    // Keep the plus sign for international format
+    const formattedPhone = contactForRequest.phone.startsWith('+') 
+      ? contactForRequest.phone.substring(1).replace(/\D/g, '')
+      : contactForRequest.phone.replace(/\D/g, '');
     
     // Try to open WhatsApp with the contact's phone number
     try {
       // WhatsApp deep link format: whatsapp://send?phone=XXXXXXXXXXX
-      // Note: Some countries may require country code prefix
+      // Note: WhatsApp requires the phone number without the + sign but with country code
       const whatsappUrl = `whatsapp://send?phone=${formattedPhone}`;
       const canOpen = await Linking.canOpenURL(whatsappUrl);
       
@@ -185,16 +188,7 @@ export const NotificationSimulator = ({
       } else {
         // Fallback to web WhatsApp if app isn't installed
         const webWhatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}`;
-        const canOpenWeb = await Linking.canOpenURL(webWhatsappUrl);
-        
-        if (canOpenWeb) {
-          await Linking.openURL(webWhatsappUrl);
-        } else {
-          Alert.alert(
-            "WhatsApp Not Found",
-            "WhatsApp is not installed on your device and web fallback failed."
-          );
-        }
+        await Linking.openURL(webWhatsappUrl);
       }
       
       // Mark the request as completed

@@ -10,7 +10,8 @@ import { darkTheme } from '@/constants/colors';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const { colors = darkTheme } = useThemeStore();
+  // Always provide default colors to prevent undefined errors
+  const { theme, colors = darkTheme } = useThemeStore();
   
   const [fontsLoaded] = useFonts({
     'PlusJakartaSans-Regular': PlusJakartaSans_400Regular,

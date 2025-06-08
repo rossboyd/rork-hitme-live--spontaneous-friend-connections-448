@@ -22,16 +22,25 @@ import {
   ChevronRight,
   Camera,
   Edit,
-  Smartphone
+  Smartphone,
+  ExternalLink
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { EditProfileModal } from '@/components/EditProfileModal';
 import { Card } from '@/components/common/Card';
+import { NotificationSimulator } from '@/components/NotificationSimulator';
+import { darkTheme } from '@/constants/colors';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, setUser } = useAppStore();
-  const { colors } = useThemeStore();
+  const { 
+    user, 
+    setUser, 
+    outboundRequests, 
+    contacts, 
+    updateRequestStatus 
+  } = useAppStore();
+  const { colors = darkTheme } = useThemeStore();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [editProfileVisible, setEditProfileVisible] = useState(false);
 
@@ -73,6 +82,19 @@ export default function ProfileScreen() {
     setEditProfileVisible(false);
   };
 
+  const handleSimulateConnection = (requestId: string) => {
+    // Mark the request as completed
+    updateRequestStatus(requestId, 'completed');
+    
+    // Show success message
+    setTimeout(() => {
+      Alert.alert(
+        "Connection Successful",
+        "The request has been marked as completed and removed from your HitList."
+      );
+    }, 1000);
+  };
+
   const renderSettingItem = (
     icon: React.ReactNode,
     label: string,
@@ -106,7 +128,7 @@ export default function ProfileScreen() {
             style={[styles.cameraButton, { backgroundColor: colors.primary }]}
             onPress={() => setEditProfileVisible(true)}
           >
-            <Camera size={20} color="#fff" />
+            <Camera size={20} color="#000" />
           </TouchableOpacity>
         </View>
         
@@ -162,6 +184,15 @@ export default function ProfileScreen() {
           <Smartphone size={24} color={colors.text.primary} />,
           "Live Activity Preview",
           () => router.push('/live-activity-preview')
+        )}
+        
+        {/* Added notification simulator to developer section */}
+        {outboundRequests.filter(req => req.status === 'pending').length > 0 && (
+          <NotificationSimulator 
+            outboundRequests={outboundRequests}
+            contacts={contacts}
+            onSimulateConnection={handleSimulateConnection}
+          />
         )}
       </Card>
       

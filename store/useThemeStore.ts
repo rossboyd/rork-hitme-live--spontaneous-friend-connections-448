@@ -10,6 +10,7 @@ interface ThemeState {
   toggleTheme: () => void;
 }
 
+// Create store with default theme values to prevent undefined errors
 export const useThemeStore = create<ThemeState>((set) => ({
   theme: 'dark', // Default to dark theme when offline
   colors: darkTheme, // Default colors

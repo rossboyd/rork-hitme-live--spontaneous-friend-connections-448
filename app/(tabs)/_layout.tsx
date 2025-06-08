@@ -5,6 +5,7 @@ import { useThemeStore } from "@/store/useThemeStore";
 import { darkTheme } from "@/constants/colors";
 
 export default function TabLayout() {
+  // Always provide default colors to prevent undefined errors
   const { colors = darkTheme } = useThemeStore();
 
   return (
