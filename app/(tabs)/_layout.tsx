@@ -1,17 +1,17 @@
-import React from "react";
-import { Tabs } from "expo-router";
-import { Home, ListChecks, Users, User } from "lucide-react-native";
-import { useThemeStore } from "@/store/useThemeStore";
+import React from 'react';
+import { Platform } from 'react-native';
+import { Tabs } from 'expo-router';
+import { Home, ListChecks, Users, User } from 'lucide-react-native';
+import { useThemeStore } from '@/store/useThemeStore';
 import Animated, { 
   useAnimatedStyle, 
-  withTiming,
   withSpring,
-  interpolateColor
+  withTiming,
 } from 'react-native-reanimated';
-import { SPRING_CONFIG, TIMING_CONFIG } from '@/utils/animations';
+import { SPRING_CONFIG } from '@/utils/animations';
 
 export default function TabLayout() {
-  const { colors, theme } = useThemeStore();
+  const { colors } = useThemeStore();
 
   const tabBarStyle = useAnimatedStyle(() => ({
     backgroundColor: colors.card,
@@ -24,10 +24,13 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.text.light,
-        tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopColor: colors.border,
-        },
+        tabBarStyle: Platform.select({
+          web: {
+            backgroundColor: colors.card,
+            borderTopColor: colors.border,
+          },
+          default: tabBarStyle,
+        }),
         headerStyle: {
           backgroundColor: colors.background,
         },
@@ -37,7 +40,6 @@ export default function TabLayout() {
           fontWeight: '600',
           fontFamily: 'PlusJakartaSans-SemiBold',
         },
-        // Add smooth transition for tab press
         tabBarItemStyle: {
           paddingVertical: 8,
         },
@@ -46,7 +48,34 @@ export default function TabLayout() {
         },
       }}
     >
-      {/* ... rest of the code ... */}
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color }) => <Home size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="hitlist"
+        options={{
+          title: 'HitList',
+          tabBarIcon: ({ color }) => <ListChecks size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="contacts"
+        options={{
+          title: 'Contacts',
+          tabBarIcon: ({ color }) => <Users size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color }) => <User size={24} color={color} />,
+        }}
+      />
     </Tabs>
   );
 }
