@@ -1,23 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TextInput, Platform } from 'react-native';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TextInput, 
+  Platform,
+  Keyboard,
+  Pressable
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
-import { Button } from '@/components/common/Button';
+import { Button } from '@/components/common/Card';
 import * as Haptics from 'expo-haptics';
 import { darkTheme } from '@/constants/colors';
 
 // Mock OTP for demo
 const MOCK_OTP = '123456';
+const OTP_LENGTH = 6;
 
 export default function VerifyScreen() {
   const { phone } = useLocalSearchParams<{ phone: string }>();
   const router = useRouter();
   const { setUser } = useAppStore();
-  const [otp, setOtp] = useState('');
+  const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
   const [error, setError] = useState('');
   const [countdown, setCountdown] = useState(30);
   const [isResending, setIsResending] = useState(false);
-  const inputRef = useRef<TextInput>(null);
+  const inputRefs = useRef<Array<TextInput | null>>(Array(OTP_LENGTH).fill(null));
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -27,8 +36,57 @@ export default function VerifyScreen() {
     return () => clearInterval(timer);
   }, []);
 
+  const focusInput = (index: number) => {
+    inputRefs.current[index]?.focus();
+  };
+
+  const handleInputChange = (text: string, index: number) => {
+    if (text.length > 1) {
+      // Handle paste
+      const pastedText = text.slice(0, OTP_LENGTH);
+      const newOtp = [...otp];
+      for (let i = 0; i < pastedText.length; i++) {
+        if (index + i < OTP_LENGTH) {
+          newOtp[index + i] = pastedText[i];
+        }
+      }
+      setOtp(newOtp);
+      setError('');
+      
+      // Focus last input or submit if complete
+      if (pastedText.length + index >= OTP_LENGTH) {
+        Keyboard.dismiss();
+      } else {
+        focusInput(index + pastedText.length);
+      }
+    } else {
+      // Handle single digit
+      const newOtp = [...otp];
+      newOtp[index] = text;
+      setOtp(newOtp);
+      setError('');
+
+      if (text !== '') {
+        if (index < OTP_LENGTH - 1) {
+          focusInput(index + 1);
+        } else {
+          Keyboard.dismiss();
+        }
+      }
+    }
+  };
+
+  const handleKeyPress = (e: any, index: number) => {
+    if (e.nativeEvent.key === 'Backspace' && !otp[index]) {
+      if (index > 0) {
+        focusInput(index - 1);
+      }
+    }
+  };
+
   const handleVerify = () => {
-    if (otp === MOCK_OTP) {
+    const enteredOtp = otp.join('');
+    if (enteredOtp === MOCK_OTP) {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
@@ -44,6 +102,9 @@ export default function VerifyScreen() {
       router.replace('/(tabs)/home');
     } else {
       setError('Invalid code. Please try again.');
+      setOtp(Array(OTP_LENGTH).fill(''));
+      focusInput(0);
+      
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
@@ -55,7 +116,8 @@ export default function VerifyScreen() {
 
     setIsResending(true);
     setError('');
-    setOtp('');
+    setOtp(Array(OTP_LENGTH).fill(''));
+    focusInput(0);
 
     // Simulate OTP resend
     setTimeout(() => {
@@ -71,48 +133,54 @@ export default function VerifyScreen() {
     <View style={[styles.container, { backgroundColor: darkTheme.background }]}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: darkTheme.text.primary }]}>Verify your number</Text>
+          <Text style={[styles.title, { color: darkTheme.text.primary }]}>
+            Verify your number
+          </Text>
           <Text style={[styles.subtitle, { color: darkTheme.text.secondary }]}>
             Enter the code we sent to {phone}
           </Text>
         </View>
 
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <TextInput
-              ref={inputRef}
-              style={[
-                styles.otpInput,
-                { 
-                  backgroundColor: darkTheme.card,
-                  borderColor: error ? darkTheme.accent : darkTheme.border,
-                  color: darkTheme.text.primary
-                }
-              ]}
-              value={otp}
-              onChangeText={(text) => {
-                setOtp(text.replace(/[^\d]/g, ''));
-                setError('');
-              }}
-              placeholder="Enter verification code"
-              placeholderTextColor={darkTheme.text.light}
-              keyboardType="number-pad"
-              maxLength={6}
-              autoFocus
-            />
-            {error ? (
-              <Text style={[styles.errorText, { color: darkTheme.accent }]}>{error}</Text>
-            ) : (
-              <Text style={[styles.helperText, { color: darkTheme.text.light }]}>
-                Enter the 6-digit code
-              </Text>
-            )}
+        <Pressable onPress={() => focusInput(0)}>
+          <View style={styles.otpContainer}>
+            {Array(OTP_LENGTH).fill(0).map((_, index) => (
+              <TextInput
+                key={index}
+                ref={ref => inputRefs.current[index] = ref}
+                style={[
+                  styles.otpInput,
+                  { 
+                    backgroundColor: darkTheme.card,
+                    borderColor: error ? darkTheme.accent : darkTheme.border,
+                    color: darkTheme.text.primary 
+                  },
+                  otp[index] && styles.otpInputFilled
+                ]}
+                value={otp[index]}
+                onChangeText={(text) => handleInputChange(text.replace(/[^\d]/g, ''), index)}
+                onKeyPress={(e) => handleKeyPress(e, index)}
+                keyboardType="number-pad"
+                maxLength={index === 0 ? OTP_LENGTH : 1}
+                selectTextOnFocus
+                selectionColor={darkTheme.primary}
+              />
+            ))}
           </View>
+        </Pressable>
 
+        {error ? (
+          <Text style={[styles.errorText, { color: darkTheme.accent }]}>{error}</Text>
+        ) : (
+          <Text style={[styles.helperText, { color: darkTheme.text.light }]}>
+            Enter the 6-digit code
+          </Text>
+        )}
+
+        <View style={styles.buttonContainer}>
           <Button
             title="Verify"
             onPress={handleVerify}
-            disabled={otp.length !== 6}
+            disabled={otp.some(digit => !digit)}
             style={styles.button}
           />
 
@@ -154,29 +222,35 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     maxWidth: 280,
   },
-  form: {
-    gap: 24,
-  },
-  inputContainer: {
-    gap: 8,
+  otpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
   otpInput: {
+    width: 45,
     height: 56,
     borderRadius: 12,
     borderWidth: 1,
-    paddingHorizontal: 16,
     fontSize: 24,
     fontFamily: 'PlusJakartaSans-Medium',
     textAlign: 'center',
-    letterSpacing: 8,
+  },
+  otpInputFilled: {
+    borderColor: darkTheme.primary,
   },
   errorText: {
     fontSize: 14,
-    marginLeft: 16,
+    textAlign: 'center',
+    marginBottom: 24,
   },
   helperText: {
     fontSize: 14,
-    marginLeft: 16,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  buttonContainer: {
+    gap: 16,
   },
   button: {
     height: 56,
