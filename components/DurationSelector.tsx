@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   selectedOptionText: {
-    color: '#000',
+    color: '#FFFFFF',
   },
   cancelButton: {
     paddingVertical: 16,

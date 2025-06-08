@@ -55,14 +55,7 @@ export const NotificationSimulator = ({
     if (Platform.OS !== 'web' && Notifications) {
       // Request permissions
       const requestPermissions = async () => {
-        const { status } = await Notifications.requestPermissionsAsync({
-          ios: {
-            allowAlert: true,
-            allowBadge: true,
-            allowSound: true,
-            allowAnnouncements: true,
-          },
-        });
+        const { status } = await Notifications.requestPermissionsAsync();
         if (status !== 'granted') {
           Alert.alert(
             'Permission Required',
@@ -138,6 +131,7 @@ export const NotificationSimulator = ({
               },
             },
             trigger: { 
+              type: 'seconds',
               seconds: 1,
             },
           });
@@ -179,13 +173,13 @@ export const NotificationSimulator = ({
     // Format phone number for WhatsApp - remove all non-numeric characters
     // Keep the plus sign for international format
     const formattedPhone = contactForRequest.phone.startsWith('+') 
-      ? contactForRequest.phone.replace(/[^+\d]/g, '')
+      ? contactForRequest.phone.substring(1).replace(/\D/g, '')
       : contactForRequest.phone.replace(/\D/g, '');
     
     // Try to open WhatsApp with the contact's phone number
     try {
       // WhatsApp deep link format: whatsapp://send?phone=XXXXXXXXXXX
-      // Note: WhatsApp requires the phone number with country code
+      // Note: WhatsApp requires the phone number without the + sign but with country code
       const whatsappUrl = `whatsapp://send?phone=${formattedPhone}`;
       const canOpen = await Linking.canOpenURL(whatsappUrl);
       

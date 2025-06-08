@@ -1,66 +1,24 @@
-// User types
+export type UrgencyLevel = 'low' | 'medium' | 'high';
+
 export interface User {
   id: string;
   name: string;
-  phone: string;
-  email?: string;
-  avatar?: string;
-  createdAt: string;
-}
-
-// Contact types
-export interface Contact {
-  id: string;
-  name: string;
-  phone: string;
-  email?: string;
   avatar: string;
-  lastOnline?: string;
-  isOnline?: boolean;
+  phone: string;
 }
-
-// Request types
-export type RequestStatus = 'pending' | 'completed' | 'expired' | 'cancelled';
-export type RequestUrgency = 'high' | 'medium' | 'low';
 
 export interface HitRequest {
   id: string;
   senderId: string;
   receiverId: string;
-  message?: string;
-  status: RequestStatus;
-  urgency: RequestUrgency;
-  duration?: number; // in minutes
-  createdAt: number; // timestamp in milliseconds
-  expiresAt?: number; // timestamp in milliseconds
+  topic: string;
+  urgency: UrgencyLevel;
+  createdAt: number;
+  expiresAt: number | null;
+  status: 'pending' | 'expired' | 'completed' | 'dismissed';
 }
 
-// Theme types
-export interface ThemeColors {
-  primary: string;
-  secondary: string;
-  background: string;
-  card: string;
-  border: string;
-  notification: string;
-  text: {
-    primary: string;
-    secondary: string;
-    light: string;
-  };
-  status: {
-    success: string;
-    warning: string;
-    error: string;
-  };
-  urgency: {
-    high: string;
-    medium: string;
-    low: string;
-  };
-}
-
-export interface Theme {
-  dark: boolean;
-  colors: ThemeColors;
+export interface Contact extends User {
+  lastSeen?: number;
+  lastOnline?: number; // Timestamp when they were last in HitMeMode
 }

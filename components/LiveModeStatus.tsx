@@ -18,7 +18,7 @@ export const LiveModeStatus = ({ timeRemaining, onGoOffline }: LiveModeStatusPro
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: colors.primary }]}>You are Live!</Text>
+      <Text style={[styles.title, { color: colors.primary }]}>You're Live!</Text>
       <View style={[styles.circle, { backgroundColor: colors.primary }]}>
         <Text style={[styles.timeText, { color: "#000" }]}>{timeString}</Text>
       </View>

@@ -2,10 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { Contact } from '@/types';
+import { formatDistanceToNow } from '@/utils/dateUtils';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
-import { ChevronRight, Clock } from 'lucide-react-native';
-import { formatDistanceToNow } from '@/utils/dateUtils';
 
 interface ContactItemProps {
   contact: Contact;
@@ -20,26 +19,14 @@ export const ContactItem = ({
   onPress,
   showLastOnline = false,
   isInHitList = false,
-  onToggleHitList,
+  onToggleHitList
 }: ContactItemProps) => {
   const { colors = darkTheme } = useThemeStore();
 
-  const handlePress = () => {
-    onPress(contact);
-  };
-
-  const handleToggleHitList = (e: any) => {
-    e.stopPropagation();
-    if (onToggleHitList) {
-      onToggleHitList(contact);
-    }
-  };
-
   return (
-    <TouchableOpacity
+    <TouchableOpacity 
       style={[styles.container, { backgroundColor: colors.card }]}
-      onPress={handlePress}
-      activeOpacity={0.7}
+      onPress={() => onPress(contact)}
     >
       <Image
         source={{ uri: contact.avatar }}
@@ -47,18 +34,14 @@ export const ContactItem = ({
         contentFit="cover"
       />
       
-      <View style={styles.infoContainer}>
-        <Text style={[styles.name, { color: colors.text.primary }]}>
-          {contact.name}
-        </Text>
+      <View style={styles.content}>
+        <Text style={[styles.name, { color: colors.text.primary }]}>{contact.name}</Text>
+        <Text style={[styles.phone, { color: colors.text.secondary }]}>{contact.phone}</Text>
         
         {showLastOnline && contact.lastOnline && (
-          <View style={styles.lastOnlineContainer}>
-            <Clock size={12} color={colors.text.light} style={styles.clockIcon} />
-            <Text style={[styles.lastOnline, { color: colors.text.light }]}>
-              Last online {formatDistanceToNow(Date.parse(contact.lastOnline))}
-            </Text>
-          </View>
+          <Text style={[styles.lastOnline, { color: colors.text.light }]}>
+            Last online {formatDistanceToNow(contact.lastOnline)}
+          </Text>
         )}
       </View>
       
@@ -66,25 +49,20 @@ export const ContactItem = ({
         <TouchableOpacity
           style={[
             styles.hitListButton,
-            { 
-              backgroundColor: isInHitList ? colors.primary : 'transparent',
-              borderColor: isInHitList ? colors.primary : colors.border
-            }
+            isInHitList ? 
+              { backgroundColor: colors.primary, borderColor: colors.primary } : 
+              { borderColor: colors.primary }
           ]}
-          onPress={handleToggleHitList}
+          onPress={() => onToggleHitList(contact)}
         >
-          <Text 
-            style={[
-              styles.hitListButtonText, 
-              { color: isInHitList ? '#000' : colors.text.secondary }
-            ]}
-          >
+          <Text style={[
+            styles.hitListButtonText,
+            { color: isInHitList ? '#000' : colors.primary }
+          ]}>
             {isInHitList ? 'In HitList' : 'Add'}
           </Text>
         </TouchableOpacity>
       )}
-      
-      <ChevronRight size={20} color={colors.text.light} />
     </TouchableOpacity>
   );
 };
@@ -97,14 +75,19 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 8,
     borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     marginRight: 16,
   },
-  infoContainer: {
+  content: {
     flex: 1,
   },
   name: {
@@ -112,25 +95,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 4,
   },
-  lastOnlineContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  clockIcon: {
-    marginRight: 4,
+  phone: {
+    fontSize: 14,
+    marginBottom: 4,
   },
   lastOnline: {
     fontSize: 12,
   },
   hitListButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
     borderWidth: 1,
-    marginRight: 12,
   },
   hitListButtonText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '500',
   },
 });

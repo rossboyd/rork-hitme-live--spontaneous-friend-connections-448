@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, Text } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAppStore } from '@/hooks/useAppStore';
+import { useAppStore } from '@/store/useAppStore';
 import { RequestCard } from '@/components/RequestCard';
 import { EmptyState } from '@/components/EmptyState';
 import { Plus, ListChecks } from 'lucide-react-native';
@@ -25,6 +25,7 @@ export default function HitListScreen() {
     // Check for expired requests on mount and every minute
     expireRequests();
     const interval = setInterval(expireRequests, 60000);
+    
     return () => clearInterval(interval);
   }, [expireRequests]);
 
@@ -33,8 +34,16 @@ export default function HitListScreen() {
     const active = outboundRequests.filter(req => req.status === 'pending');
     const expired = outboundRequests.filter(req => req.status === 'expired');
     
-    // Sort by creation date (newest first)
-    setActiveRequests([...active].sort((a, b) => b.createdAt - a.createdAt));
+    // Sort by urgency (high > medium > low) and then by creation date (newest first)
+    const sortByUrgency = (a: HitRequest, b: HitRequest) => {
+      const urgencyOrder = { high: 3, medium: 2, low: 1 };
+      const urgencyDiff = urgencyOrder[b.urgency] - urgencyOrder[a.urgency];
+      
+      if (urgencyDiff !== 0) return urgencyDiff;
+      return b.createdAt - a.createdAt;
+    };
+    
+    setActiveRequests([...active].sort(sortByUrgency));
     setExpiredRequests([...expired].sort((a, b) => b.createdAt - a.createdAt));
   }, [outboundRequests]);
 

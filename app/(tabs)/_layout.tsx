@@ -5,6 +5,7 @@ import { useThemeStore } from "@/store/useThemeStore";
 import { darkTheme } from "@/constants/colors";
 
 export default function TabLayout() {
+  // Always provide default colors to prevent undefined errors
   const { colors = darkTheme } = useThemeStore();
 
   return (
@@ -16,15 +17,15 @@ export default function TabLayout() {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
         },
-        headerStyle: {
-          backgroundColor: colors.background,
-        },
-        headerTintColor: colors.text.primary,
         headerShown: false,
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '500',
         },
+        headerStyle: {
+          backgroundColor: colors.background,
+        },
+        headerTintColor: colors.text.primary,
       }}
       initialRouteName="home"
     >
@@ -66,6 +67,8 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <User size={size} color={color} />
           ),
+          // Hide the header completely to remove the "(tabs)" text
+          headerShown: false,
         }}
       />
     </Tabs>
