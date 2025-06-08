@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  Animated,
+  View, 
+  Text, 
+  StyleSheet, 
+  Animated, 
   PanResponder,
   Platform,
   TouchableOpacity
@@ -54,9 +54,6 @@ export const SlideToLiveToggle = ({
     outputRange: [1, 1.1, 1.15],
     extrapolate: 'clamp'
   });
-  
-  // Calculate thumb border based on threshold
-  const thumbBorderWidth = isThresholdReached ? 2 : 0;
   
   // Create pan responder for upward gesture
   const panResponder = useRef(
@@ -151,14 +148,16 @@ export const SlideToLiveToggle = ({
                 { translateY: dragY },
                 { scale: thumbScale }
               ],
-              borderWidth: thumbBorderWidth,
-              borderColor: colors.primary,
-              backgroundColor: colors.card
+              borderColor: isThresholdReached ? colors.primary : 'transparent',
+              backgroundColor: '#F3F4F6' // Light grey color for thumb
             }
           ]}
           {...panResponder.panHandlers}
         >
-          <Phone size={32} color={isThresholdReached ? colors.primary : colors.text.light} />
+          <Phone 
+            size={32} 
+            color={isThresholdReached ? colors.primary : '#6B7280'} // Darker grey for icon
+          />
         </Animated.View>
       </Animated.View>
       
@@ -201,7 +200,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: TOGGLE_HEIGHT,
     borderRadius: 40,
-    justifyContent: 'flex-end', // Position thumb at bottom
+    justifyContent: 'flex-end',
     alignItems: 'center',
     marginBottom: 20,
   },
@@ -211,6 +210,7 @@ const styles = StyleSheet.create({
     borderRadius: THUMB_SIZE / 2,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
