@@ -11,13 +11,14 @@ import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { ContactItem } from '@/components/ContactItem';
 import { AddRequestModal } from '@/components/AddRequestModal';
-import { colors } from '@/constants/colors';
 import { Search, X } from 'lucide-react-native';
 import { Contact } from '@/types';
+import { useThemeStore } from '@/store/useThemeStore';
 
 export default function ContactsScreen() {
   const router = useRouter();
   const { contacts, addOutboundRequest } = useAppStore();
+  const { colors } = useThemeStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
@@ -73,11 +74,11 @@ export default function ContactsScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.searchContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Search size={20} color={colors.text.light} style={styles.searchIcon} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.text.primary }]}
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholder="Search contacts"
@@ -97,7 +98,7 @@ export default function ContactsScreen() {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No contacts found</Text>
+            <Text style={[styles.emptyText, { color: colors.text.secondary }]}>No contacts found</Text>
           </View>
         }
       />
@@ -115,18 +116,15 @@ export default function ContactsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
     borderRadius: 12,
     margin: 16,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   searchIcon: {
     marginRight: 8,
@@ -134,7 +132,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: colors.text.primary,
     paddingVertical: 8,
   },
   listContent: {
@@ -148,6 +145,5 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: colors.text.secondary,
   },
 });
