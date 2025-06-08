@@ -38,7 +38,22 @@ export default function RootLayout() {
         },
         headerShadowVisible: false,
         headerTintColor: colors.text.primary,
+        headerBackTitle: 'Back',
       }}
-    />
+    >
+      <Stack.Screen
+        name="index"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="verify"
+        options={{
+          headerTitle: '',
+          headerTransparent: true,
+        }}
+      />
+    </Stack>
   );
 }
