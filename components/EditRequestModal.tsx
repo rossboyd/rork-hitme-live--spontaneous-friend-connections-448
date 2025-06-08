@@ -15,6 +15,7 @@ import { Image } from 'expo-image';
 import { X, Edit2, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useThemeStore } from '@/store/useThemeStore';
 import { formatDistanceToNow } from '@/utils/dateUtils';
+import { darkTheme } from '@/constants/colors';
 
 interface EditRequestModalProps {
   visible: boolean;
@@ -38,7 +39,7 @@ export const EditRequestModal = ({
   onClose, 
   onUpdate
 }: EditRequestModalProps) => {
-  const { colors } = useThemeStore();
+  const { colors = darkTheme } = useThemeStore();
   const [topic, setTopic] = useState('');
   const [urgency, setUrgency] = useState<UrgencyLevel>('medium');
   const [expiresIn, setExpiresIn] = useState<number | null>(EXPIRY_OPTIONS[2].value);
@@ -215,7 +216,7 @@ export const EditRequestModal = ({
                       style={[
                         styles.expiryText,
                         { color: colors.text.primary },
-                        expiresIn === option.value && styles.selectedExpiryText
+                        expiresIn === option.value && { color: "#000" }
                       ]}
                     >
                       {option.label}
@@ -230,8 +231,8 @@ export const EditRequestModal = ({
             style={[styles.submitButton, { backgroundColor: colors.primary }]}
             onPress={handleUpdate}
           >
-            <Edit2 size={18} color="#fff" style={styles.editIcon} />
-            <Text style={styles.submitText}>Update Request</Text>
+            <Edit2 size={18} color="#000" style={styles.editIcon} />
+            <Text style={[styles.submitText, { color: "#000" }]}>Update Request</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -375,6 +376,5 @@ const styles = StyleSheet.create({
   submitText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
   },
 });

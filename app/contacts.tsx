@@ -14,11 +14,12 @@ import { AddRequestModal } from '@/components/AddRequestModal';
 import { Search, X } from 'lucide-react-native';
 import { Contact } from '@/types';
 import { useThemeStore } from '@/store/useThemeStore';
+import { darkTheme } from '@/constants/colors';
 
 export default function ContactsScreen() {
   const router = useRouter();
   const { contacts, addOutboundRequest } = useAppStore();
-  const { colors } = useThemeStore();
+  const { colors = darkTheme } = useThemeStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);

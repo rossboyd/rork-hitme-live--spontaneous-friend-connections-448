@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { Contact } from '@/types';
 import { formatDistanceToNow } from '@/utils/dateUtils';
 import { useThemeStore } from '@/store/useThemeStore';
+import { darkTheme } from '@/constants/colors';
 
 interface ContactItemProps {
   contact: Contact;
@@ -20,7 +21,7 @@ export const ContactItem = ({
   isInHitList = false,
   onToggleHitList
 }: ContactItemProps) => {
-  const { colors } = useThemeStore();
+  const { colors = darkTheme } = useThemeStore();
 
   return (
     <TouchableOpacity 
@@ -56,7 +57,7 @@ export const ContactItem = ({
         >
           <Text style={[
             styles.hitListButtonText,
-            { color: isInHitList ? '#fff' : colors.primary }
+            { color: isInHitList ? '#000' : colors.primary }
           ]}>
             {isInHitList ? 'In HitList' : 'Add'}
           </Text>

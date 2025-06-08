@@ -141,8 +141,8 @@ export const AddContactModal = ({
             onPress={handleSubmit}
             disabled={!isFormValid}
           >
-            <User size={18} color="#fff" style={styles.buttonIcon} />
-            <Text style={styles.submitText}>Add Contact</Text>
+            <User size={18} color="#000" style={styles.buttonIcon} />
+            <Text style={[styles.submitText, { color: "#000" }]}>Add Contact</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -240,6 +240,5 @@ const styles = StyleSheet.create({
   submitText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
   },
 });

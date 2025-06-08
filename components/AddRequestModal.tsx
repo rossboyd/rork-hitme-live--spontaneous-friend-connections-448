@@ -14,6 +14,7 @@ import { Contact, UrgencyLevel } from '@/types';
 import { Image } from 'expo-image';
 import { X, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useThemeStore } from '@/store/useThemeStore';
+import { darkTheme } from '@/constants/colors';
 
 interface AddRequestModalProps {
   visible: boolean;
@@ -39,7 +40,7 @@ export const AddRequestModal = ({
   onClose, 
   onSubmit 
 }: AddRequestModalProps) => {
-  const { colors } = useThemeStore();
+  const { colors = darkTheme } = useThemeStore();
   const [topic, setTopic] = useState('');
   const [urgency, setUrgency] = useState<UrgencyLevel>('medium');
   const [expiresIn, setExpiresIn] = useState<number | null>(EXPIRY_OPTIONS[2].value);
@@ -167,7 +168,7 @@ export const AddRequestModal = ({
                       style={[
                         styles.expiryText,
                         { color: colors.text.primary },
-                        expiresIn === option.value && styles.selectedExpiryText
+                        expiresIn === option.value && { color: "#000" }
                       ]}
                     >
                       {option.label}
@@ -182,7 +183,7 @@ export const AddRequestModal = ({
             style={[styles.submitButton, { backgroundColor: colors.primary }]}
             onPress={handleSubmit}
           >
-            <Text style={styles.submitText}>Add to HitList</Text>
+            <Text style={[styles.submitText, { color: "#000" }]}>Add to HitList</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -317,6 +318,5 @@ const styles = StyleSheet.create({
   submitText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
   },
 });

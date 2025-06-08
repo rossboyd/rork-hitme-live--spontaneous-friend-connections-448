@@ -5,6 +5,7 @@ import { Phone, X, Clock, Trash2, Wifi } from 'lucide-react-native';
 import { HitRequest, UrgencyLevel, Contact } from '@/types';
 import { formatDistanceToNow } from '@/utils/dateUtils';
 import { useThemeStore } from '@/store/useThemeStore';
+import { darkTheme } from '@/constants/colors';
 
 interface RequestCardProps {
   request: HitRequest;
@@ -25,7 +26,7 @@ export const RequestCard = ({
   onDelete,
   isInbound = false
 }: RequestCardProps) => {
-  const { colors } = useThemeStore();
+  const { colors = darkTheme } = useThemeStore();
   
   const getUrgencyColor = (urgency: UrgencyLevel) => {
     return colors.urgency[urgency];
@@ -85,8 +86,8 @@ export const RequestCard = ({
                 style={styles.connectButton}
                 onPress={onConnect}
               >
-                <Phone size={16} color="#fff" />
-                <Text style={styles.connectText}>Connect</Text>
+                <Phone size={16} color="#000" />
+                <Text style={[styles.connectText, { color: "#000" }]}>Connect</Text>
               </TouchableOpacity>
             )}
             
@@ -207,7 +208,6 @@ const styles = StyleSheet.create({
   connectText: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#fff',
     marginLeft: 4,
   },
   extendButton: {

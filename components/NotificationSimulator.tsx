@@ -12,6 +12,7 @@ import { Bell, ExternalLink } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { HitRequest, Contact } from '@/types';
 import { useThemeStore } from '@/store/useThemeStore';
+import { darkTheme } from '@/constants/colors';
 
 // Only import Notifications on native platforms
 let Notifications: any = null;
@@ -43,7 +44,7 @@ export const NotificationSimulator = ({
   contacts,
   onSimulateConnection 
 }: NotificationSimulatorProps) => {
-  const { colors } = useThemeStore();
+  const { colors = darkTheme } = useThemeStore();
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
   const lastNotificationRequest = useRef<HitRequest | null>(null);
@@ -201,7 +202,7 @@ export const NotificationSimulator = ({
       activeOpacity={0.7}
     >
       <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
-        <Bell size={20} color="#fff" />
+        <Bell size={20} color="#000" />
       </View>
       <View style={styles.textContainer}>
         <Text style={[styles.title, { color: colors.text.primary }]}>Test Notification</Text>

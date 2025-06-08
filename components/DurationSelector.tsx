@@ -10,6 +10,7 @@ import {
 import { Clock } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useThemeStore } from '@/store/useThemeStore';
+import { darkTheme } from '@/constants/colors';
 
 interface DurationSelectorProps {
   visible: boolean;
@@ -25,7 +26,7 @@ const DURATION_OPTIONS = [
 ];
 
 export const DurationSelector = ({ visible, onClose, onSelect }: DurationSelectorProps) => {
-  const { colors } = useThemeStore();
+  const { colors = darkTheme } = useThemeStore();
   
   const handleSelect = (minutes: number) => {
     if (Platform.OS !== 'web') {
@@ -54,21 +55,21 @@ export const DurationSelector = ({ visible, onClose, onSelect }: DurationSelecto
                 style={[
                   styles.optionButton,
                   { backgroundColor: colors.card, borderColor: colors.border },
-                  index === 1 && styles.selectedOption // Default select 30m
+                  index === 1 && [styles.selectedOption, { backgroundColor: colors.primary }]
                 ]}
                 onPress={() => handleSelect(option.value)}
               >
                 <Text style={[
                   styles.optionLabel,
                   { color: colors.text.primary },
-                  index === 1 && styles.selectedOptionText
+                  index === 1 && { color: "#000" }
                 ]}>
                   {option.label}
                 </Text>
                 <Text style={[
                   styles.optionSublabel,
                   { color: colors.text.secondary },
-                  index === 1 && styles.selectedOptionText
+                  index === 1 && { color: "#000" }
                 ]}>
                   {option.sublabel}
                 </Text>
@@ -125,8 +126,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   selectedOption: {
-    backgroundColor: '#4ADE80',
-    borderColor: '#4ADE80',
+    borderColor: 'transparent',
   },
   optionLabel: {
     fontSize: 20,

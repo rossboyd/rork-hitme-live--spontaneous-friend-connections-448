@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { HitRequest, Contact } from '@/types';
 import { X, Check } from 'lucide-react-native';
 import { useThemeStore } from '@/store/useThemeStore';
+import { darkTheme } from '@/constants/colors';
 
 interface QueueReviewProps {
   visible: boolean;
@@ -26,7 +27,7 @@ export const QueueReview = ({
   selectedIds,
   setSelectedIds,
 }: QueueReviewProps) => {
-  const { colors } = useThemeStore();
+  const { colors = darkTheme } = useThemeStore();
 
   const getContactById = (contactId: string) => {
     return contacts.find(c => c.id === contactId) || {
@@ -103,7 +104,7 @@ export const QueueReview = ({
                     { borderColor: colors.border },
                     isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
                   ]}>
-                    {isSelected && <Check size={16} color="#fff" />}
+                    {isSelected && <Check size={16} color="#000" />}
                   </View>
                 )}
               </TouchableOpacity>
@@ -116,7 +117,7 @@ export const QueueReview = ({
             style={[styles.goLiveButton, { backgroundColor: colors.primary }]}
             onPress={() => onGoLive(selectedIds)}
           >
-            <Text style={styles.goLiveText}>Go Live ({selectedIds.length})</Text>
+            <Text style={[styles.goLiveText, { color: "#000" }]}>Go Live ({selectedIds.length})</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -193,6 +194,5 @@ const styles = StyleSheet.create({
   goLiveText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
   },
 });

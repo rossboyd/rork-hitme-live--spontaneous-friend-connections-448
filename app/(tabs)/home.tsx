@@ -18,6 +18,7 @@ import { SlideToLiveToggle } from '@/components/SlideToLiveToggle';
 import { LiveModeStatus } from '@/components/LiveModeStatus';
 import { NotificationSimulator } from '@/components/NotificationSimulator';
 import { useThemeStore } from '@/store/useThemeStore';
+import { darkTheme } from '@/constants/colors';
 
 export default function HomeScreen() {
   const { 
@@ -42,7 +43,7 @@ export default function HomeScreen() {
     user
   } = useAppStore();
   
-  const { setTheme, colors } = useThemeStore();
+  const { setTheme, colors = darkTheme } = useThemeStore();
   const [pendingRequests, setPendingRequests] = useState<HitRequest[]>([]);
   const [showDurationSelector, setShowDurationSelector] = useState(false);
   const [showQueueReview, setShowQueueReview] = useState(false);

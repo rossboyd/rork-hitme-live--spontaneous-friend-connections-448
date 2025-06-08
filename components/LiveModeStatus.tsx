@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useThemeStore } from '@/store/useThemeStore';
+import { darkTheme } from '@/constants/colors';
 
 interface LiveModeStatusProps {
   timeRemaining: number;
@@ -8,7 +9,7 @@ interface LiveModeStatusProps {
 }
 
 export const LiveModeStatus = ({ timeRemaining, onGoOffline }: LiveModeStatusProps) => {
-  const { colors } = useThemeStore();
+  const { colors = darkTheme } = useThemeStore();
   
   // Format time remaining as MM:SS
   const minutes = Math.floor(timeRemaining / 1000 / 60);
@@ -19,7 +20,7 @@ export const LiveModeStatus = ({ timeRemaining, onGoOffline }: LiveModeStatusPro
     <View style={styles.container}>
       <Text style={[styles.title, { color: colors.primary }]}>You're Live!</Text>
       <View style={[styles.circle, { backgroundColor: colors.primary }]}>
-        <Text style={styles.timeText}>{timeString}</Text>
+        <Text style={[styles.timeText, { color: "#000" }]}>{timeString}</Text>
       </View>
       
       <TouchableOpacity
@@ -54,7 +55,6 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#fff',
     fontFamily: 'PlusJakartaSans-Bold',
   },
   offlineButton: {

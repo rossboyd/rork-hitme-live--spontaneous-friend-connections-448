@@ -10,11 +10,12 @@ import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import { EditRequestModal } from '@/components/EditRequestModal';
 import { useThemeStore } from '@/store/useThemeStore';
+import { darkTheme } from '@/constants/colors';
 
 export default function HitListScreen() {
   const router = useRouter();
   const { outboundRequests, contacts, expireRequests, updateRequestStatus, deleteOutboundRequest, updateOutboundRequest } = useAppStore();
-  const { colors } = useThemeStore();
+  const { colors = darkTheme } = useThemeStore();
   const [activeRequests, setActiveRequests] = useState<HitRequest[]>([]);
   const [expiredRequests, setExpiredRequests] = useState<HitRequest[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<HitRequest | null>(null);
@@ -149,7 +150,7 @@ export default function HitListScreen() {
         style={[styles.addButton, { backgroundColor: colors.primary }]}
         onPress={handleAddRequest}
       >
-        <Plus size={24} color="#fff" />
+        <Plus size={24} color="#000" />
       </TouchableOpacity>
 
       <EditRequestModal

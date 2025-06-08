@@ -19,6 +19,7 @@ import { AddContactModal } from '@/components/AddContactModal';
 import { EmptyState } from '@/components/EmptyState';
 import { AddRequestModal } from '@/components/AddRequestModal';
 import { useThemeStore } from '@/store/useThemeStore';
+import { darkTheme } from '@/constants/colors';
 
 export default function ContactsManagementScreen() {
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function ContactsManagementScreen() {
     outboundRequests, 
     addOutboundRequest 
   } = useAppStore();
-  const { colors } = useThemeStore();
+  const { colors = darkTheme } = useThemeStore();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
@@ -155,7 +156,7 @@ export default function ContactsManagementScreen() {
         style={[styles.addButton, { backgroundColor: colors.primary }]}
         onPress={handleAddContact}
       >
-        <Plus size={24} color="#fff" />
+        <Plus size={24} color="#000" />
       </TouchableOpacity>
       
       <AddContactModal

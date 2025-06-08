@@ -11,6 +11,7 @@ import {
 import { Phone } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useThemeStore } from '@/store/useThemeStore';
+import { darkTheme } from '@/constants/colors';
 
 interface SlideToLiveToggleProps {
   waitingCount: number;
@@ -29,7 +30,7 @@ export const SlideToLiveToggle = ({
   userName = 'You',
   onPreviewQueue
 }: SlideToLiveToggleProps) => {
-  const { colors } = useThemeStore();
+  const { colors = darkTheme } = useThemeStore();
   const [isDragging, setIsDragging] = useState(false);
   const [isThresholdReached, setIsThresholdReached] = useState(false);
   

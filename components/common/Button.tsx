@@ -10,6 +10,7 @@ import {
   StyleProp
 } from 'react-native';
 import { useThemeStore } from '@/store/useThemeStore';
+import { darkTheme } from '@/constants/colors';
 
 interface ButtonProps {
   onPress: () => void;
@@ -34,7 +35,14 @@ export const Button = memo(({
   textStyle,
   icon
 }: ButtonProps) => {
-  const { colors } = useThemeStore();
+  const { colors = darkTheme } = useThemeStore();
+
+  // Determine text color based on variant
+  const getTextColor = () => {
+    if (variant === 'outline') return colors.text.primary;
+    if (variant === 'primary') return '#000'; // Black text on primary (green) buttons
+    return '#fff'; // White text on other button types
+  };
 
   const buttonStyles = [
     styles.button,
@@ -58,7 +66,7 @@ export const Button = memo(({
     styles.text,
     styles[`${size}Text`],
     {
-      color: variant === 'outline' ? colors.text.primary : '#fff',
+      color: getTextColor(),
     },
     textStyle
   ];
@@ -71,7 +79,7 @@ export const Button = memo(({
       activeOpacity={0.7}
     >
       {loading ? (
-        <ActivityIndicator color="#fff" />
+        <ActivityIndicator color={getTextColor()} />
       ) : (
         <>
           {icon}
