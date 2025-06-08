@@ -10,16 +10,16 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
-import { colors } from '@/constants/colors';
-import { X, Edit2, User } from 'lucide-react-native';
+import { X, Edit2 } from 'lucide-react-native';
 import { Image } from 'expo-image';
-import { User as UserType } from '@/types';
+import { User } from '@/types';
+import { useThemeStore } from '@/store/useThemeStore';
 
 interface EditProfileModalProps {
   visible: boolean;
-  user: UserType | null;
+  user: User | null;
   onClose: () => void;
-  onUpdate: (data: Partial<UserType>) => void;
+  onUpdate: (data: Partial<User>) => void;
 }
 
 // Default avatars to choose from
@@ -38,6 +38,7 @@ export const EditProfileModal = ({
   onClose, 
   onUpdate 
 }: EditProfileModalProps) => {
+  const { colors } = useThemeStore();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState('');
@@ -75,9 +76,9 @@ export const EditProfileModal = ({
         style={styles.modalContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.modalContent}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Edit Profile</Text>
+        <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.headerTitle, { color: colors.text.primary }]}>Edit Profile</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <X size={24} color={colors.text.primary} />
             </TouchableOpacity>
@@ -91,14 +92,14 @@ export const EditProfileModal = ({
                 contentFit="cover"
               />
               
-              <Text style={styles.label}>Choose Avatar</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>Choose Avatar</Text>
               <View style={styles.avatarGrid}>
                 {DEFAULT_AVATARS.map((avatar, index) => (
                   <TouchableOpacity
                     key={index}
                     style={[
                       styles.avatarOption,
-                      selectedAvatar === avatar && styles.selectedAvatarOption
+                      selectedAvatar === avatar && [styles.selectedAvatarOption, { borderColor: colors.primary }]
                     ]}
                     onPress={() => setSelectedAvatar(avatar)}
                   >
@@ -113,9 +114,9 @@ export const EditProfileModal = ({
             </View>
             
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Name</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>Name</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text.primary }]}
                 value={name}
                 onChangeText={setName}
                 placeholder="Enter your name"
@@ -124,9 +125,9 @@ export const EditProfileModal = ({
             </View>
             
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Phone Number</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>Phone Number</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text.primary }]}
                 value={phone}
                 onChangeText={setPhone}
                 placeholder="Enter phone number"
@@ -137,7 +138,10 @@ export const EditProfileModal = ({
           </ScrollView>
           
           <TouchableOpacity
-            style={[styles.submitButton, !isFormValid && styles.disabledButton]}
+            style={[
+              styles.submitButton, 
+              { backgroundColor: isFormValid ? colors.primary : colors.border }
+            ]}
             onPress={handleUpdate}
             disabled={!isFormValid}
           >
@@ -157,7 +161,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: colors.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: Platform.OS === 'ios' ? 34 : 24,
@@ -168,14 +171,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
     paddingVertical: 16,
     position: 'relative',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.text.primary,
   },
   closeButton: {
     position: 'absolute',
@@ -207,7 +208,6 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   selectedAvatarOption: {
-    borderColor: colors.primary,
   },
   avatarThumbnail: {
     width: 50,
@@ -221,20 +221,15 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.text.primary,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: colors.card,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    color: colors.text.primary,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   submitButton: {
-    backgroundColor: colors.primary,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -244,7 +239,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   disabledButton: {
-    backgroundColor: colors.border,
+    opacity: 0.6,
   },
   buttonIcon: {
     marginRight: 8,

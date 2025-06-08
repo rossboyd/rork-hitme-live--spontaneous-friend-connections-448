@@ -4,7 +4,6 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import Animated, { 
   useAnimatedStyle,
-  withSpring,
   withRepeat,
   withSequence,
   withTiming
@@ -100,10 +99,7 @@ export const LiveActivitySimulator = ({
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    top: 60,
-    left: 20,
-    right: 20,
+    marginVertical: 20,
   },
   widget: {
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -160,6 +156,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 2,
     overflow: 'hidden',
+    position: 'relative',
   },
   progressFill: {
     height: '100%',

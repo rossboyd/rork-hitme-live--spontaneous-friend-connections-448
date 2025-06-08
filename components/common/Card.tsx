@@ -1,4 +1,3 @@
-// Reusable card component
 import React, { memo } from 'react';
 import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { useThemeStore } from '@/store/useThemeStore';

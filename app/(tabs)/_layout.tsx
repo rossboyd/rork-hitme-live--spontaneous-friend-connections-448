@@ -61,6 +61,8 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <User size={size} color={color} />
           ),
+          // Hide the header completely to remove the "(tabs)" text
+          headerShown: false,
         }}
       />
     </Tabs>

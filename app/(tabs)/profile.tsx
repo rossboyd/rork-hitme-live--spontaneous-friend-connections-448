@@ -6,7 +6,8 @@ import {
   TouchableOpacity, 
   Switch,
   Alert,
-  Platform
+  Platform,
+  ScrollView
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -93,7 +94,7 @@ export default function ProfileScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.profileSection}>
         <View style={styles.avatarContainer}>
           <Image
@@ -108,6 +109,10 @@ export default function ProfileScreen() {
             <Camera size={20} color="#fff" />
           </TouchableOpacity>
         </View>
+        
+        <Text style={[styles.userName, { color: colors.text.primary }]}>
+          {user?.name || "User"}
+        </Text>
         
         <TouchableOpacity 
           style={[styles.editNameButton, { backgroundColor: colors.border }]}
@@ -179,7 +184,7 @@ export default function ProfileScreen() {
         onClose={() => setEditProfileVisible(false)}
         onUpdate={handleUpdateProfile}
       />
-    </View>
+    </ScrollView>
   );
 }
 
@@ -200,6 +205,11 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
+  },
+  userName: {
+    fontSize: 24,
+    fontWeight: '600',
+    marginBottom: 8,
   },
   cameraButton: {
     position: 'absolute',
@@ -245,6 +255,7 @@ const styles = StyleSheet.create({
   versionText: {
     textAlign: 'center',
     marginTop: 40,
+    marginBottom: 40,
     fontSize: 14,
   },
 });
