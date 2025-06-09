@@ -112,9 +112,7 @@ export const SlideToLiveToggle = ({
     <View style={styles.container}>
       <View style={styles.infoContainer}>
         <Text style={[styles.title, { color: colors.text.primary }]}>
-          Hey {userName},
-          {'
-'}
+          Hey {userName},{"\n"}
           You're Offline
         </Text>
         <TouchableOpacity 
