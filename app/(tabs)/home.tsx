@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { 
   View, 
   StyleSheet, 
+  FlatList, 
   Alert, 
   Platform,
   Text
@@ -19,8 +20,6 @@ import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { Stack } from 'expo-router';
 import { CombinedGoLiveModal } from '@/components/CombinedGoLiveModal';
-import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
-import { TouchableOpacity } from 'react-native';
 
 export default function HomeScreen() {
   const { 
@@ -48,7 +47,6 @@ export default function HomeScreen() {
   
   const { setTheme, colors = darkTheme } = useThemeStore();
   const [pendingRequests, setPendingRequests] = useState<HitRequest[]>([]);
-  const [orderedRequests, setOrderedRequests] = useState<HitRequest[]>([]);
   const [showCombinedModal, setShowCombinedModal] = useState(false);
   const [showQueueReview, setShowQueueReview] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
@@ -90,19 +88,6 @@ export default function HomeScreen() {
     // Set all pending request senders as selected by default
     setSelectedIds(sortedRequests.map(req => req.senderId));
   }, [inboundRequests, dismissedRequests]);
-
-  // Initialize orderedRequests when pendingRequests change or when going live
-  useEffect(() => {
-    if (isHitMeModeActive) {
-      const filtered = currentMode 
-        ? pendingRequests.filter(request => {
-            const contact = getContactById(request.senderId);
-            return contact.modes?.includes(currentMode);
-          })
-        : pendingRequests;
-      setOrderedRequests(filtered);
-    }
-  }, [isHitMeModeActive, pendingRequests, currentMode]);
 
   // Timer countdown effect
   useEffect(() => {
@@ -248,35 +233,13 @@ export default function HomeScreen() {
     };
   };
 
-  const handleDragEnd = ({ data }: { data: HitRequest[] }) => {
-    setOrderedRequests(data);
-    if (Platform.OS !== 'web') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const renderDraggableItem = ({ item, drag, isActive }: RenderItemParams<HitRequest>) => (
-    <ScaleDecorator>
-      <TouchableOpacity
-        activeOpacity={0.7}
-        onLongPress={drag}
-        disabled={isActive}
-        style={[
-          styles.draggableItem,
-          isActive && { opacity: 0.7 }
-        ]}
-      >
-        <RequestCard
-          request={item}
-          contact={getContactById(item.senderId)}
-          onConnect={() => handleConnect(item)}
-          onDismiss={() => handleDismiss(item.id)}
-          isInbound={true}
-          isDraggable={true}
-        />
-      </TouchableOpacity>
-    </ScaleDecorator>
-  );
+  // Filter requests based on current mode if one is selected
+  const filteredRequests = isHitMeModeActive && currentMode
+    ? pendingRequests.filter(request => {
+        const contact = getContactById(request.senderId);
+        return contact.modes?.includes(currentMode);
+      })
+    : pendingRequests;
 
   const renderItem = ({ item }: { item: HitRequest }) => (
     <RequestCard
@@ -306,44 +269,21 @@ export default function HomeScreen() {
               />
             )}
             
-            {/* Use DraggableFlatList when in live mode */}
-            {Platform.OS !== 'web' ? (
-              <DraggableFlatList
-                data={orderedRequests}
-                onDragEnd={handleDragEnd}
-                keyExtractor={(item) => item.id}
-                renderItem={renderDraggableItem}
-                contentContainerStyle={styles.listContent}
-                ListEmptyComponent={
-                  <EmptyState
-                    title="Your queue is empty"
-                    message={currentMode 
-                      ? `No one in ${currentMode} mode is waiting to talk to you right now.`
-                      : "No one is waiting to talk to you right now."}
-                    icon={<Users size={48} color={colors.text.light} />}
-                  />
-                }
-              />
-            ) : (
-              // Fallback for web
-              <View style={styles.listContainer}>
-                {orderedRequests.length === 0 ? (
-                  <EmptyState
-                    title="Your queue is empty"
-                    message={currentMode 
-                      ? `No one in ${currentMode} mode is waiting to talk to you right now.`
-                      : "No one is waiting to talk to you right now."}
-                    icon={<Users size={48} color={colors.text.light} />}
-                  />
-                ) : (
-                  orderedRequests.map(item => (
-                    <View key={item.id} style={styles.itemContainer}>
-                      {renderItem({ item })}
-                    </View>
-                  ))
-                )}
-              </View>
-            )}
+            <FlatList
+              data={filteredRequests}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.listContent}
+              ListEmptyComponent={
+                <EmptyState
+                  title="Your queue is empty"
+                  message={currentMode 
+                    ? `No one in ${currentMode} mode is waiting to talk to you right now.`
+                    : "No one is waiting to talk to you right now."}
+                  icon={<Users size={48} color={colors.text.light} />}
+                />
+              }
+            />
           </>
         ) : (
           <View style={styles.fixedContainer}>
@@ -404,14 +344,4 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 0,
   },
-  draggableItem: {
-    marginBottom: 12,
-  },
-  listContainer: {
-    padding: 16,
-    paddingTop: 0,
-  },
-  itemContainer: {
-    marginBottom: 12,
-  }
 });

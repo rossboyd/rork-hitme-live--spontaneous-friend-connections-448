@@ -61,10 +61,6 @@ export const CombinedGoLiveModal = ({
   };
   
   const handleToggleMode = (mode: Mode) => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    
     setSelectedModes(prev => {
       if (prev.includes(mode)) {
         return prev.filter(m => m !== mode);
