@@ -108,7 +108,11 @@ export const SlideToLiveToggle = ({
   return (
     <View style={styles.container}>
       <View style={styles.infoContainer}>
-        <Text style={[styles.title, { color: colors.text.primary }]}>Hey {userName}, You're Offline</Text>
+        <Text style={[styles.title, { color: colors.text.primary }]}>
+          Hey {userName},
+          {'\n'}
+          You're Offline
+        </Text>
         <TouchableOpacity 
           onPress={handlePreviewQueue}
           disabled={waitingCount === 0 || !onPreviewQueue}
@@ -180,6 +184,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 8,
     textAlign: 'center',
+    lineHeight: 32,
   },
   subtitle: {
     fontSize: 16,

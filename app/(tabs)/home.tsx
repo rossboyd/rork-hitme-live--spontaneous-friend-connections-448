@@ -4,7 +4,8 @@ import {
   StyleSheet, 
   FlatList, 
   Alert, 
-  Platform
+  Platform,
+  Text
 } from 'react-native';
 import { useAppStore } from '@/store/useAppStore';
 import { RequestCard } from '@/components/RequestCard';
@@ -233,6 +234,8 @@ export default function HomeScreen() {
       <Stack.Screen options={{ headerBackVisible: false }} />
       
       <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={[styles.appLogo, { color: colors.primary }]}>HitMeApp</Text>
+        
         {isHitMeModeActive ? (
           <>
             {timeRemaining !== null && (
@@ -294,6 +297,13 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  appLogo: {
+    fontSize: 28,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginTop: 16,
+    fontFamily: 'PlusJakartaSans-Bold',
   },
   fixedContainer: {
     flex: 1,
