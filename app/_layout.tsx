@@ -54,25 +54,6 @@ export default function RootLayout() {
           headerTransparent: true,
         }}
       />
-      {/* Add screens for route groups to fix "(tabs)" header issue */}
-      <Stack.Screen
-        name="(tabs)"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="contact-detail"
-        options={{
-          headerTitle: 'Contact Details',
-        }}
-      />
-      <Stack.Screen
-        name="live-activity-preview"
-        options={{
-          headerTitle: 'Live Activity Preview',
-        }}
-      />
     </Stack>
   );
 }
