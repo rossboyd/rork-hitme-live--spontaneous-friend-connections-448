@@ -36,4 +36,14 @@ export const typography = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
   },
+  tab: {
+    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontSize: 16,
+    lineHeight: 20,
+  },
+  tabCount: {
+    fontFamily: 'PlusJakartaSans-Bold',
+    fontSize: 12,
+    lineHeight: 16,
+  },
 });

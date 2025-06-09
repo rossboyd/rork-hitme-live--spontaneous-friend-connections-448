@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Text, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { RequestCard } from '@/components/RequestCard';
 import { EmptyState } from '@/components/EmptyState';
-import { Plus, ListChecks, Star } from 'lucide-react-native';
+import { Plus, ListChecks, Star, Clock } from 'lucide-react-native';
 import { HitRequest } from '@/types';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
@@ -12,6 +12,10 @@ import { EditRequestModal } from '@/components/EditRequestModal';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { useRequestFilters } from '@/hooks/useRequestFilters';
+import { typography } from '@/styles/typography';
+
+// Tab types
+type TabType = 'active' | 'favorites' | 'expired';
 
 export default function HitListScreen() {
   const router = useRouter();
@@ -19,6 +23,7 @@ export default function HitListScreen() {
   const { colors = darkTheme } = useThemeStore();
   const [selectedRequest, setSelectedRequest] = useState<HitRequest | null>(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('active');
 
   // Use the filter hook to get categorized requests
   const { favoriteRequests, pendingRequests, expiredRequests } = useRequestFilters(outboundRequests);
@@ -84,110 +89,90 @@ export default function HitListScreen() {
     </TouchableOpacity>
   );
 
-  const renderEmptyState = () => (
-    <EmptyState
-      title="Your HitList is empty"
-      message="Add people to your HitList to let them know you want to talk."
-      icon={<ListChecks size={48} color={colors.text.light} />}
-    />
-  );
+  const renderEmptyState = () => {
+    let title = "No requests found";
+    let message = "There are no requests in this category.";
+    let icon = <ListChecks size={48} color={colors.text.light} />;
 
-  const hasAnyRequests = favoriteRequests.length > 0 || pendingRequests.length > 0 || expiredRequests.length > 0;
+    if (activeTab === 'active') {
+      title = "No active requests";
+      message = "Add people to your HitList to let them know you want to talk.";
+    } else if (activeTab === 'favorites') {
+      title = "No favorites yet";
+      message = "Mark requests as favorites to keep them permanently.";
+      icon = <Star size={48} color={colors.text.light} />;
+    } else if (activeTab === 'expired') {
+      title = "No expired requests";
+      message = "Expired requests will appear here.";
+      icon = <Clock size={48} color={colors.text.light} />;
+    }
+
+    return (
+      <EmptyState
+        title={title}
+        message={message}
+        icon={icon}
+      />
+    );
+  };
+
+  // Get the current tab data
+  const getCurrentTabData = () => {
+    switch (activeTab) {
+      case 'favorites':
+        return favoriteRequests;
+      case 'active':
+        return pendingRequests;
+      case 'expired':
+        return expiredRequests;
+      default:
+        return pendingRequests;
+    }
+  };
+
+  const tabData = getCurrentTabData();
+  const hasData = tabData.length > 0;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <Text style={[styles.appName, { color: colors.text.primary }]}>HitMeApp</Text>
         <Text style={[styles.welcomeText, { color: colors.text.secondary }]}>
-          Hey {user?.name || "there"}. {"\n"}You're Offline
+          Hey {user?.name || "there"}. {"You're Offline"}
         </Text>
       </View>
 
+      {/* Tab Navigation */}
+      <View style={styles.tabContainer}>
+        <TabButton 
+          title="Active" 
+          count={pendingRequests.length}
+          isActive={activeTab === 'active'} 
+          onPress={() => setActiveTab('active')}
+          colors={colors}
+        />
+        <TabButton 
+          title="Favorites" 
+          count={favoriteRequests.length}
+          isActive={activeTab === 'favorites'} 
+          onPress={() => setActiveTab('favorites')}
+          colors={colors}
+        />
+        <TabButton 
+          title="Expired" 
+          count={expiredRequests.length}
+          isActive={activeTab === 'expired'} 
+          onPress={() => setActiveTab('expired')}
+          colors={colors}
+        />
+      </View>
+
       <FlatList
-        data={[]}
+        data={tabData}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
-        ListEmptyComponent={!hasAnyRequests ? renderEmptyState : null}
-        ListHeaderComponent={
-          hasAnyRequests ? (
-            <View>
-              {favoriteRequests.length > 0 && (
-                <View style={styles.sectionContainer}>
-                  <View style={styles.sectionHeader}>
-                    <Star size={16} color={colors.primary} />
-                    <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>
-                      Favorites
-                    </Text>
-                  </View>
-                  {favoriteRequests.map(request => (
-                    <TouchableOpacity 
-                      key={request.id}
-                      activeOpacity={0.7}
-                      onPress={() => handleEditRequest(request)}
-                    >
-                      <RequestCard
-                        request={request}
-                        contact={getContactById(request.receiverId)}
-                        onExtend={() => handleExtendRequest(request.id)}
-                        onDelete={() => handleDeleteRequest(request.id)}
-                        isInbound={false}
-                        isFavorite={true}
-                      />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-              
-              {pendingRequests.length > 0 && (
-                <View style={styles.sectionContainer}>
-                  <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>
-                    {pendingRequests.length} Active Requests
-                  </Text>
-                  {pendingRequests.map(request => (
-                    <TouchableOpacity 
-                      key={request.id}
-                      activeOpacity={0.7}
-                      onPress={() => handleEditRequest(request)}
-                    >
-                      <RequestCard
-                        request={request}
-                        contact={getContactById(request.receiverId)}
-                        onExtend={() => handleExtendRequest(request.id)}
-                        onDelete={() => handleDeleteRequest(request.id)}
-                        isInbound={false}
-                        isFavorite={false}
-                      />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-            </View>
-          ) : null
-        }
-        ListFooterComponent={
-          expiredRequests.length > 0 ? (
-            <View style={styles.sectionContainer}>
-              <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Expired</Text>
-              {expiredRequests.map(request => (
-                <TouchableOpacity 
-                  key={request.id}
-                  activeOpacity={0.7}
-                  onPress={() => handleEditRequest(request)}
-                >
-                  <RequestCard
-                    request={request}
-                    contact={getContactById(request.receiverId)}
-                    onExtend={() => handleExtendRequest(request.id)}
-                    onDelete={() => handleDeleteRequest(request.id)}
-                    isInbound={false}
-                    isFavorite={false}
-                  />
-                </TouchableOpacity>
-              ))}
-            </View>
-          ) : null
-        }
+        ListEmptyComponent={renderEmptyState}
       />
       
       <TouchableOpacity 
@@ -211,6 +196,42 @@ export default function HitListScreen() {
   );
 }
 
+// Tab Button Component
+interface TabButtonProps {
+  title: string;
+  count: number;
+  isActive: boolean;
+  onPress: () => void;
+  colors: typeof darkTheme;
+}
+
+const TabButton = ({ title, count, isActive, onPress, colors }: TabButtonProps) => {
+  return (
+    <TouchableOpacity 
+      style={[
+        styles.tabButton,
+        isActive && { borderBottomColor: colors.primary, borderBottomWidth: 2 }
+      ]} 
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <Text style={[
+        styles.tabText, 
+        { color: isActive ? colors.text.primary : colors.text.light }
+      ]}>
+        {title}
+      </Text>
+      {count > 0 && (
+        <View style={[styles.countBadge, { backgroundColor: isActive ? colors.primary : colors.text.light }]}>
+          <Text style={[styles.countText, { color: isActive ? '#000' : colors.background }]}>
+            {count}
+          </Text>
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -229,22 +250,39 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
   },
+  tabContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(150, 150, 150, 0.2)',
+  },
+  tabButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginRight: 24,
+    position: 'relative',
+  },
+  tabText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  countBadge: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 6,
+    paddingHorizontal: 4,
+  },
+  countText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
   listContent: {
     padding: 16,
     paddingBottom: 80,
-  },
-  sectionContainer: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 6,
   },
   addButton: {
     position: 'absolute',
