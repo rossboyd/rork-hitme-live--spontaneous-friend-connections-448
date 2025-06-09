@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { HitRequest, Contact, User, Mode } from '@/types';
+import { HitRequest, Contact, User, Mode, RequestStatus } from '@/types';
 import { mockContacts } from '@/mocks/contacts';
 import { mockRequests } from '@/mocks/requests';
 
@@ -28,7 +28,7 @@ interface RequestsSlice {
   addOutboundRequest: (request: Omit<HitRequest, 'id' | 'createdAt' | 'status'>) => void;
   deleteOutboundRequest: (requestId: string) => void;
   updateOutboundRequest: (requestId: string, updates: Partial<HitRequest>) => void;
-  updateRequestStatus: (requestId: string, status: HitRequest['status']) => void;
+  updateRequestStatus: (requestId: string, status: RequestStatus) => void;
   dismissRequest: (requestId: string) => void;
   expireRequests: () => void;
 }
@@ -153,7 +153,7 @@ export const useAppStore = create<AppState>()(
       })),
       dismissRequest: (requestId) => set((state) => ({
         inboundRequests: state.inboundRequests.map(req => 
-          req.id === requestId ? { ...req, status: 'dismissed' } : req
+          req.id === requestId ? { ...req, status: 'dismissed' as RequestStatus } : req
         )
       })),
       expireRequests: () => set((state) => {
@@ -161,12 +161,12 @@ export const useAppStore = create<AppState>()(
         return {
           outboundRequests: state.outboundRequests.map(req => 
             req.expiresAt && req.expiresAt < now && req.status === 'pending'
-              ? { ...req, status: 'expired' }
+              ? { ...req, status: 'expired' as RequestStatus }
               : req
           ),
           inboundRequests: state.inboundRequests.map(req => 
             req.expiresAt && req.expiresAt < now && req.status === 'pending'
-              ? { ...req, status: 'expired' }
+              ? { ...req, status: 'expired' as RequestStatus }
               : req
           )
         };
