@@ -37,22 +37,15 @@ export default function RootLayout() {
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboardingGroup = segments[0] === 'onboarding';
     const inTabsGroup = segments[0] === '(tabs)';
-    const isRootScreen = segments.length === 0 || segments[0] === '';
-    const isVerifyScreen = segments[0] === 'verify';
 
-    // If user hasn't completed onboarding and isn't in the onboarding flow or initial screens
-    if (!hasCompletedOnboarding && 
-        !inOnboardingGroup && 
-        !isVerifyScreen && 
-        !isRootScreen) {
+    // If user hasn't completed onboarding and isn't in the onboarding flow
+    if (!hasCompletedOnboarding && !inOnboardingGroup && segments[0] !== 'verify' && segments[0] !== '') {
       router.replace('/onboarding/welcome');
-      return;
     }
     
     // If user has completed onboarding but is still in the onboarding flow
-    if (hasCompletedOnboarding && (inOnboardingGroup || isVerifyScreen)) {
+    if (hasCompletedOnboarding && (inOnboardingGroup || segments[0] === 'verify')) {
       router.replace('/(tabs)/home');
-      return;
     }
   }, [fontsLoaded, hasCompletedOnboarding, segments, router]);
 
@@ -71,15 +64,12 @@ export default function RootLayout() {
         headerBackTitle: 'Back',
       }}
     >
-      {/* Root screen */}
       <Stack.Screen
         name="index"
         options={{
           headerShown: false,
         }}
       />
-      
-      {/* Verification screen */}
       <Stack.Screen
         name="verify"
         options={{
@@ -87,54 +77,10 @@ export default function RootLayout() {
           headerTransparent: true,
         }}
       />
-      
-      {/* Onboarding group - hide the group name from header */}
       <Stack.Screen
         name="onboarding"
         options={{
           headerShown: false,
-        }}
-      />
-      
-      {/* Tabs group - hide the group name from header */}
-      <Stack.Screen
-        name="(tabs)"
-        options={{
-          headerShown: false,
-        }}
-      />
-      
-      {/* Auth group - hide the group name from header */}
-      <Stack.Screen
-        name="(auth)"
-        options={{
-          headerShown: false,
-        }}
-      />
-      
-      {/* Modal screens */}
-      <Stack.Screen
-        name="modal"
-        options={{
-          presentation: 'modal',
-          headerTitle: 'Modal',
-        }}
-      />
-      
-      {/* Contact detail screen */}
-      <Stack.Screen
-        name="contact-detail"
-        options={{
-          headerTitle: 'Contact Details',
-        }}
-      />
-      
-      {/* Live activity preview */}
-      <Stack.Screen
-        name="live-activity-preview"
-        options={{
-          headerTitle: 'Live Activity Preview',
-          presentation: 'modal',
         }}
       />
     </Stack>

@@ -13,25 +13,6 @@ export default function OnboardingLayout() {
         contentStyle: { backgroundColor: colors.background },
         animation: 'slide_from_right',
       }}
-    >
-      <Stack.Screen 
-        name="welcome" 
-        options={{
-          title: "Welcome",
-        }}
-      />
-      <Stack.Screen 
-        name="profile" 
-        options={{
-          title: "Your Profile",
-        }}
-      />
-      <Stack.Screen 
-        name="notifications" 
-        options={{
-          title: "Notifications",
-        }}
-      />
-    </Stack>
+    />
   );
 }
