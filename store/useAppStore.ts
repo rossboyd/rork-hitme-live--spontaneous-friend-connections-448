@@ -62,8 +62,13 @@ type AppState = UserSlice & ContactsSlice & RequestsSlice & HitMeModeSlice & Onb
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
-      // User slice - initialize as null to require sign-in
-      user: null,
+      // User slice
+      user: {
+        id: 'user-1',
+        name: 'You',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80',
+        phone: '+44987654321',
+      },
       setUser: (user) => set({ user }),
 
       // Contacts slice
@@ -186,7 +191,12 @@ export const useAppStore = create<AppState>()(
         pendingNotifications: [],
         dismissedRequests: [],
         hasCompletedOnboarding: false,
-        user: null // Reset to null instead of mock user
+        user: {
+          id: 'user-1',
+          name: 'You',
+          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80',
+          phone: '+44987654321',
+        }
       }),
     }),
     {
