@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Image } from 'expo-image';
 import { Contact } from '@/types';
 import { formatDistanceToNow } from '@/utils/dateUtils';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
+import { Avatar } from '@/components/common/Avatar';
 
 interface ContactItemProps {
   contact: Contact;
@@ -28,10 +28,10 @@ export const ContactItem = ({
       style={[styles.container, { backgroundColor: colors.card }]}
       onPress={() => onPress(contact)}
     >
-      <Image
-        source={{ uri: contact.avatar }}
-        style={styles.avatar}
-        contentFit="cover"
+      <Avatar
+        name={contact.name}
+        avatar={contact.avatar}
+        size={56}
       />
       
       <View style={styles.content}>
@@ -81,14 +81,9 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    marginRight: 16,
-  },
   content: {
     flex: 1,
+    marginLeft: 16,
   },
   name: {
     fontSize: 16,

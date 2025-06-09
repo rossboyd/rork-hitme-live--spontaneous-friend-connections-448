@@ -45,12 +45,18 @@ interface HitMeModeSlice {
   clearDismissedRequests: () => void;
 }
 
+interface OnboardingSlice {
+  hasCompletedOnboarding: boolean;
+  setHasCompletedOnboarding: (value: boolean) => void;
+  resetOnboarding: () => void;
+}
+
 interface DebugSlice {
   resetToMockData: () => void;
 }
 
 // Combine all slices into one interface
-type AppState = UserSlice & ContactsSlice & RequestsSlice & HitMeModeSlice & DebugSlice;
+type AppState = UserSlice & ContactsSlice & RequestsSlice & HitMeModeSlice & OnboardingSlice & DebugSlice;
 
 // Create the store with proper typing
 export const useAppStore = create<AppState>()(
@@ -165,6 +171,15 @@ export const useAppStore = create<AppState>()(
         dismissedRequests: []
       }),
 
+      // Onboarding slice
+      hasCompletedOnboarding: false,
+      setHasCompletedOnboarding: (value) => set({
+        hasCompletedOnboarding: value
+      }),
+      resetOnboarding: () => set({
+        hasCompletedOnboarding: false
+      }),
+
       // Debug slice
       resetToMockData: () => set({
         contacts: [...mockContacts],
@@ -175,6 +190,7 @@ export const useAppStore = create<AppState>()(
         hitMeEndTime: null,
         pendingNotifications: [],
         dismissedRequests: [],
+        hasCompletedOnboarding: false,
         user: {
           id: 'user-1',
           name: 'You',
@@ -192,6 +208,7 @@ export const useAppStore = create<AppState>()(
         outboundRequests: state.outboundRequests,
         inboundRequests: state.inboundRequests,
         hitMeDuration: state.hitMeDuration,
+        hasCompletedOnboarding: state.hasCompletedOnboarding,
       }),
     }
   )

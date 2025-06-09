@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { Image } from 'expo-image';
 import { Phone, X, Clock, Trash2, Wifi } from 'lucide-react-native';
 import { HitRequest, UrgencyLevel, Contact } from '@/types';
 import { formatDistanceToNow } from '@/utils/dateUtils';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
+import { Avatar } from '@/components/common/Avatar';
 
 interface RequestCardProps {
   request: HitRequest;
@@ -40,11 +40,10 @@ export const RequestCard = ({
       { backgroundColor: colors.card },
       isExpired && styles.expiredCard
     ]}>
-      <Image
-        source={{ uri: contact.avatar }}
-        style={styles.avatar}
-        contentFit="cover"
-        transition={200}
+      <Avatar
+        name={contact.name}
+        avatar={contact.avatar}
+        size={56}
       />
       
       <View style={styles.content}>
@@ -139,14 +138,9 @@ const styles = StyleSheet.create({
   expiredCard: {
     opacity: 0.7,
   },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    marginRight: 16,
-  },
   content: {
     flex: 1,
+    marginLeft: 16,
   },
   header: {
     flexDirection: 'row',

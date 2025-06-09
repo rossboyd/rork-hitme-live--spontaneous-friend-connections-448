@@ -102,7 +102,8 @@ export default function VerifyScreen() {
         avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80',
       });
 
-      router.replace('/(tabs)/home');
+      // Navigate to onboarding flow instead of directly to home
+      router.replace('/onboarding/welcome');
     } else {
       setError('Invalid code. Please try again.');
       setOtp(Array(OTP_LENGTH).fill(''));

@@ -10,13 +10,13 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
-import { Image } from 'expo-image';
 import { Edit2, Trash2, Phone, MessageSquare, Plus } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { formatDistanceToNow } from '@/utils/dateUtils';
 import { EditContactModal } from '@/components/EditContactModal';
 import { AddRequestModal } from '@/components/AddRequestModal';
 import { useThemeStore } from '@/store/useThemeStore';
+import { Avatar } from '@/components/common/Avatar';
 
 export default function ContactDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -131,10 +131,10 @@ export default function ContactDetailScreen() {
       
       <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-          <Image
-            source={{ uri: contact.avatar }}
-            style={styles.avatar}
-            contentFit="cover"
+          <Avatar
+            name={contact.name}
+            avatar={contact.avatar}
+            size={120}
           />
           
           <Text style={[styles.name, { color: colors.text.primary }]}>{contact.name}</Text>
@@ -242,16 +242,11 @@ const styles = StyleSheet.create({
     padding: 24,
     borderBottomWidth: 1,
   },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 16,
-  },
   name: {
     fontSize: 24,
     fontWeight: '600',
     marginBottom: 4,
+    marginTop: 16,
   },
   phone: {
     fontSize: 16,

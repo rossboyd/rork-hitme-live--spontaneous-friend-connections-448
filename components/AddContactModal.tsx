@@ -11,9 +11,9 @@ import {
   Platform
 } from 'react-native';
 import { X, User } from 'lucide-react-native';
-import { Image } from 'expo-image';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
+import { Avatar } from '@/components/common/Avatar';
 
 interface AddContactModalProps {
   visible: boolean;
@@ -83,10 +83,10 @@ export const AddContactModal = ({
           
           <ScrollView style={styles.scrollView}>
             <View style={styles.avatarSection}>
-              <Image
-                source={{ uri: selectedAvatar }}
-                style={styles.selectedAvatar}
-                contentFit="cover"
+              <Avatar
+                name={name || "New Contact"}
+                avatar={selectedAvatar}
+                size={100}
               />
               
               <Text style={[styles.label, { color: colors.text.primary }]}>Choose Avatar</Text>
@@ -100,10 +100,10 @@ export const AddContactModal = ({
                     ]}
                     onPress={() => setSelectedAvatar(avatar)}
                   >
-                    <Image
-                      source={{ uri: avatar }}
-                      style={styles.avatarThumbnail}
-                      contentFit="cover"
+                    <Avatar
+                      name={name || "New Contact"}
+                      avatar={avatar}
+                      size={50}
                     />
                   </TouchableOpacity>
                 ))}
@@ -186,12 +186,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
   },
-  selectedAvatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 16,
-  },
   avatarGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -205,11 +199,6 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   selectedAvatarOption: {
-  },
-  avatarThumbnail: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
   },
   formGroup: {
     marginBottom: 20,

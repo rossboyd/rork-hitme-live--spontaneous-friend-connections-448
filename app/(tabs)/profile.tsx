@@ -9,7 +9,6 @@ import {
   Platform,
   ScrollView
 } from 'react-native';
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { useThemeStore } from '@/store/useThemeStore';
@@ -31,6 +30,7 @@ import { EditProfileModal } from '@/components/EditProfileModal';
 import { Card } from '@/components/common/Card';
 import { NotificationSimulator } from '@/components/NotificationSimulator';
 import { darkTheme } from '@/constants/colors';
+import { Avatar } from '@/components/common/Avatar';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -40,7 +40,8 @@ export default function ProfileScreen() {
     outboundRequests, 
     contacts, 
     updateRequestStatus,
-    resetToMockData
+    resetToMockData,
+    resetOnboarding
   } = useAppStore();
   const { colors = darkTheme } = useThemeStore();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -70,6 +71,8 @@ export default function ProfileScreen() {
           text: "Log Out",
           style: "destructive",
           onPress: () => {
+            // Reset onboarding state
+            resetOnboarding();
             // Navigate to the sign-in screen
             router.replace('/');
           }
@@ -153,10 +156,10 @@ export default function ProfileScreen() {
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.profileSection}>
         <View style={styles.avatarContainer}>
-          <Image
-            source={{ uri: user?.avatar }}
-            style={styles.avatar}
-            contentFit="cover"
+          <Avatar
+            name={user?.name || "User"}
+            avatar={user?.avatar}
+            size={120}
           />
           <TouchableOpacity 
             style={[styles.cameraButton, { backgroundColor: colors.primary }]}
@@ -226,6 +229,18 @@ export default function ProfileScreen() {
           handleResetData
         )}
         
+        {renderSettingItem(
+          <RotateCcw size={24} color={colors.text.primary} />,
+          "Reset Onboarding",
+          () => {
+            resetOnboarding();
+            Alert.alert(
+              "Onboarding Reset",
+              "You'll see the onboarding flow next time you restart the app."
+            );
+          }
+        )}
+        
         {/* Added notification simulator to developer section */}
         {outboundRequests.filter(req => req.status === 'pending').length > 0 && (
           <NotificationSimulator 
@@ -271,11 +286,6 @@ const styles = StyleSheet.create({
   avatarContainer: {
     position: 'relative',
     marginBottom: 16,
-  },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
   },
   userName: {
     fontSize: 24,

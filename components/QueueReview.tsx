@@ -8,11 +8,11 @@ import {
   ScrollView,
   Dimensions
 } from 'react-native';
-import { Image } from 'expo-image';
 import { HitRequest, Contact } from '@/types';
 import { X, Check } from 'lucide-react-native';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
+import { Avatar } from '@/components/common/Avatar';
 
 interface QueueReviewProps {
   visible: boolean;
@@ -105,10 +105,10 @@ export const QueueReview = ({
                   onPress={() => !previewMode && toggleContact(request.senderId)}
                   disabled={previewMode}
                 >
-                  <Image
-                    source={{ uri: contact.avatar }}
-                    style={styles.avatar}
-                    contentFit="cover"
+                  <Avatar
+                    name={contact.name}
+                    avatar={contact.avatar}
+                    size={48}
                   />
                   <View style={styles.contactInfo}>
                     <Text style={[styles.contactName, { color: colors.text.primary }]}>
@@ -189,11 +189,6 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 12,
     marginBottom: 12,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
   },
   contactInfo: {
     flex: 1,
