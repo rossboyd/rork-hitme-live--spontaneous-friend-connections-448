@@ -12,25 +12,21 @@ import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { Bell, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 
 export default function NotificationsPermissionScreen() {
   const router = useRouter();
-  const setHasCompletedOnboarding = useAppStore(state => state.setHasCompletedOnboarding);
-  const loadMockData = useAppStore(state => state.loadMockData);
-  
-  // Use static theme to prevent infinite loop
-  const colors = darkTheme;
+  const { setHasCompletedOnboarding } = useAppStore();
+  const { colors = darkTheme } = useThemeStore();
   
   const handleAllowNotifications = () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     
-    // Load mock data before completing onboarding
-    loadMockData();
-    
-    // Mark onboarding as completed
+    // In a real app, this would request notification permissions
+    // For now, we'll just mark onboarding as completed
     setHasCompletedOnboarding(true);
     
     // Navigate to the main app
@@ -38,9 +34,6 @@ export default function NotificationsPermissionScreen() {
   };
   
   const handleSkip = () => {
-    // Load mock data before completing onboarding
-    loadMockData();
-    
     // Mark onboarding as completed even if user skips notifications
     setHasCompletedOnboarding(true);
     

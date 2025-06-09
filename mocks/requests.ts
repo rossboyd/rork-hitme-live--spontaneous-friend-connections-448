@@ -6,7 +6,6 @@ export const mockRequests: HitRequest[] = [
     id: 'request-1',
     senderId: 'contact-1',
     receiverId: 'user-1',
-    message: 'Project update',
     topic: 'Project update',
     urgency: 'medium',
     createdAt: Date.now() - 1000 * 60 * 60 * 2, // 2 hours ago
@@ -17,7 +16,6 @@ export const mockRequests: HitRequest[] = [
     id: 'request-2',
     senderId: 'contact-2',
     receiverId: 'user-1',
-    message: 'Quick question about the meeting',
     topic: 'Quick question about the meeting',
     urgency: 'low',
     createdAt: Date.now() - 1000 * 60 * 60 * 5, // 5 hours ago
@@ -28,11 +26,12 @@ export const mockRequests: HitRequest[] = [
     id: 'request-3',
     senderId: 'contact-3',
     receiverId: 'user-1',
-    message: 'Urgent client issue',
     topic: 'Urgent client issue',
     urgency: 'high',
     createdAt: Date.now() - 1000 * 60 * 30, // 30 minutes ago
     expiresAt: Date.now() + 1000 * 60 * 60 * 12, // Expires in 12 hours
     status: 'pending',
   }
+  
+  // Removed all outbound requests as requested
 ];

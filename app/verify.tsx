@@ -9,7 +9,7 @@ import {
   Platform,
   KeyboardAvoidingView
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import * as Haptics from 'expo-haptics';
 import { useThemeStore } from '@/store/useThemeStore';
@@ -17,17 +17,15 @@ import { darkTheme } from '@/constants/colors';
 
 export default function VerifyScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
-  const setUser = useAppStore(state => state.setUser);
-  const hasCompletedOnboarding = useAppStore(state => state.hasCompletedOnboarding);
+  const { setUser } = useAppStore();
   const { colors = darkTheme } = useThemeStore();
   
   const [otp, setOtp] = useState('');
   const [countdown, setCountdown] = useState(30);
   const [isResendActive, setIsResendActive] = useState(false);
   
-  // Get phone number from params or use a default
-  const phoneNumber = params.phone as string || '+44987654321';
+  // Simulate phone number from previous screen
+  const phoneNumber = '+44987654321';
   
   useEffect(() => {
     // Start countdown for resend button
@@ -57,13 +55,8 @@ export default function VerifyScreen() {
       phone: phoneNumber,
     });
     
-    // If user has already completed onboarding, go to home
-    // Otherwise, go to profile setup
-    if (hasCompletedOnboarding) {
-      router.replace('/(tabs)/home');
-    } else {
-      router.replace('/onboarding/profile');
-    }
+    // Navigate to onboarding instead of home
+    router.replace('/onboarding/welcome');
   };
   
   const handleResendCode = () => {

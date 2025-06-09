@@ -1,12 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   View, 
   StyleSheet, 
   Alert, 
   Platform,
-  Text,
-  TouchableOpacity,
-  FlatList
+  Text
 } from 'react-native';
 import { useAppStore } from '@/store/useAppStore';
 import { RequestCard } from '@/components/RequestCard';
@@ -22,31 +20,33 @@ import { darkTheme } from '@/constants/colors';
 import { Stack } from 'expo-router';
 import { CombinedGoLiveModal } from '@/components/CombinedGoLiveModal';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
+import { TouchableOpacity } from 'react-native';
 
 export default function HomeScreen() {
-  // Use individual selectors to prevent unnecessary re-renders
-  const inboundRequests = useAppStore(state => state.inboundRequests);
-  const contacts = useAppStore(state => state.contacts);
-  const isHitMeModeActive = useAppStore(state => state.isHitMeModeActive);
-  const toggleHitMeMode = useAppStore(state => state.toggleHitMeMode);
-  const dismissRequest = useAppStore(state => state.dismissRequest);
-  const updateRequestStatus = useAppStore(state => state.updateRequestStatus);
-  const expireRequests = useAppStore(state => state.expireRequests);
-  const hitMeDuration = useAppStore(state => state.hitMeDuration);
-  const setHitMeDuration = useAppStore(state => state.setHitMeDuration);
-  const hitMeEndTime = useAppStore(state => state.hitMeEndTime);
-  const setHitMeEndTime = useAppStore(state => state.setHitMeEndTime);
-  const pendingNotifications = useAppStore(state => state.pendingNotifications);
-  const setPendingNotifications = useAppStore(state => state.setPendingNotifications);
-  const dismissedRequests = useAppStore(state => state.dismissedRequests);
-  const addToDismissedRequests = useAppStore(state => state.addToDismissedRequests);
-  const clearDismissedRequests = useAppStore(state => state.clearDismissedRequests);
-  const updateContactLastOnline = useAppStore(state => state.updateContactLastOnline);
-  const user = useAppStore(state => state.user);
-  const currentMode = useAppStore(state => state.currentMode);
-  const setCurrentMode = useAppStore(state => state.setCurrentMode);
+  const { 
+    inboundRequests, 
+    contacts, 
+    isHitMeModeActive, 
+    toggleHitMeMode, 
+    dismissRequest, 
+    updateRequestStatus,
+    expireRequests,
+    hitMeDuration,
+    setHitMeDuration,
+    hitMeEndTime,
+    setHitMeEndTime,
+    pendingNotifications,
+    setPendingNotifications,
+    dismissedRequests,
+    addToDismissedRequests,
+    clearDismissedRequests,
+    updateContactLastOnline,
+    user,
+    currentMode,
+    setCurrentMode
+  } = useAppStore();
   
-  const { setTheme, colors = darkTheme, theme } = useThemeStore();
+  const { setTheme, colors = darkTheme } = useThemeStore();
   const [pendingRequests, setPendingRequests] = useState<HitRequest[]>([]);
   const [orderedRequests, setOrderedRequests] = useState<HitRequest[]>([]);
   const [showCombinedModal, setShowCombinedModal] = useState(false);
@@ -55,18 +55,10 @@ export default function HomeScreen() {
   const [previewMode, setPreviewMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedModes, setSelectedModes] = useState<Mode[]>([]);
-  const [activeTab, setActiveTab] = useState<'active' | 'favorites' | 'expired'>('active');
 
-  // Use ref to track last theme to prevent infinite loops
-  const lastThemeRef = useRef(theme);
-
-  // Set theme based on HitMeMode status with guard to prevent infinite loops
+  // Set theme based on HitMeMode status
   useEffect(() => {
-    const desiredTheme = isHitMeModeActive ? 'light' : 'dark';
-    if (lastThemeRef.current !== desiredTheme) {
-      lastThemeRef.current = desiredTheme;
-      setTheme(desiredTheme);
-    }
+    setTheme(isHitMeModeActive ? 'light' : 'dark');
   }, [isHitMeModeActive, setTheme]);
 
   useEffect(() => {
@@ -78,25 +70,10 @@ export default function HomeScreen() {
   }, [expireRequests]);
 
   useEffect(() => {
-    // Filter and sort requests based on active tab
-    let filtered: HitRequest[] = [];
-    
-    if (activeTab === 'active') {
-      filtered = inboundRequests.filter(req => 
-        req.status === 'pending' && !dismissedRequests.includes(req.id)
-      );
-    } else if (activeTab === 'favorites') {
-      filtered = inboundRequests.filter(req => {
-        const contact = getContactById(req.senderId);
-        return req.status === 'pending' && 
-               !dismissedRequests.includes(req.id) && 
-               contact.isFavorite === true;
-      });
-    } else if (activeTab === 'expired') {
-      filtered = inboundRequests.filter(req => 
-        req.status === 'expired' || req.status === 'dismissed'
-      );
-    }
+    // Filter and sort requests
+    const pending = inboundRequests.filter(req => 
+      req.status === 'pending' && !dismissedRequests.includes(req.id)
+    );
     
     // Sort by urgency (high > medium > low) and then by creation date (newest first)
     const sortByUrgency = (a: HitRequest, b: HitRequest) => {
@@ -107,12 +84,12 @@ export default function HomeScreen() {
       return b.createdAt - a.createdAt;
     };
     
-    const sortedRequests = [...filtered].sort(sortByUrgency);
+    const sortedRequests = [...pending].sort(sortByUrgency);
     setPendingRequests(sortedRequests);
     
     // Set all pending request senders as selected by default
     setSelectedIds(sortedRequests.map(req => req.senderId));
-  }, [inboundRequests, dismissedRequests, activeTab]);
+  }, [inboundRequests, dismissedRequests]);
 
   // Initialize orderedRequests when pendingRequests change or when going live
   useEffect(() => {
@@ -311,61 +288,6 @@ export default function HomeScreen() {
     />
   );
 
-  const renderTabBar = () => (
-    <View style={styles.tabBar}>
-      <TouchableOpacity
-        style={[
-          styles.tab,
-          activeTab === 'active' && [styles.activeTab, { borderBottomColor: colors.primary }]
-        ]}
-        onPress={() => setActiveTab('active')}
-      >
-        <Text 
-          style={[
-            styles.tabText, 
-            { color: activeTab === 'active' ? colors.primary : colors.text.secondary }
-          ]}
-        >
-          Active
-        </Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity
-        style={[
-          styles.tab,
-          activeTab === 'favorites' && [styles.activeTab, { borderBottomColor: colors.primary }]
-        ]}
-        onPress={() => setActiveTab('favorites')}
-      >
-        <Text 
-          style={[
-            styles.tabText, 
-            { color: activeTab === 'favorites' ? colors.primary : colors.text.secondary }
-          ]}
-        >
-          Favorites
-        </Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity
-        style={[
-          styles.tab,
-          activeTab === 'expired' && [styles.activeTab, { borderBottomColor: colors.primary }]
-        ]}
-        onPress={() => setActiveTab('expired')}
-      >
-        <Text 
-          style={[
-            styles.tabText, 
-            { color: activeTab === 'expired' ? colors.primary : colors.text.secondary }
-          ]}
-        >
-          Expired
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   return (
     <>
       {/* Disable back button by setting headerBackVisible to false */}
@@ -384,7 +306,7 @@ export default function HomeScreen() {
               />
             )}
             
-            {/* Use DraggableFlatList when in live mode - ONLY for mobile */}
+            {/* Use DraggableFlatList when in live mode */}
             {Platform.OS !== 'web' ? (
               <DraggableFlatList
                 data={orderedRequests}
@@ -403,13 +325,9 @@ export default function HomeScreen() {
                 }
               />
             ) : (
-              // Fallback for web - regular FlatList
-              <FlatList
-                data={orderedRequests}
-                keyExtractor={(item) => item.id}
-                renderItem={renderItem}
-                contentContainerStyle={styles.listContent}
-                ListEmptyComponent={
+              // Fallback for web
+              <View style={styles.listContainer}>
+                {orderedRequests.length === 0 ? (
                   <EmptyState
                     title="Your queue is empty"
                     message={currentMode 
@@ -417,46 +335,26 @@ export default function HomeScreen() {
                       : "No one is waiting to talk to you right now."}
                     icon={<Users size={48} color={colors.text.light} />}
                   />
-                }
-              />
+                ) : (
+                  orderedRequests.map(item => (
+                    <View key={item.id} style={styles.itemContainer}>
+                      {renderItem({ item })}
+                    </View>
+                  ))
+                )}
+              </View>
             )}
           </>
         ) : (
-          <>
-            {renderTabBar()}
-            
-            <FlatList
-              data={pendingRequests}
-              keyExtractor={(item) => item.id}
-              renderItem={renderItem}
-              contentContainerStyle={styles.listContent}
-              ListEmptyComponent={
-                <EmptyState
-                  title={
-                    activeTab === 'active' ? "No active requests" :
-                    activeTab === 'favorites' ? "No favorite requests" :
-                    "No expired requests"
-                  }
-                  message={
-                    activeTab === 'active' ? "When someone wants to talk to you, their request will appear here." :
-                    activeTab === 'favorites' ? "Favorite contacts with active requests will appear here." :
-                    "Expired and dismissed requests will appear here."
-                  }
-                  icon={<Users size={48} color={colors.text.light} />}
-                />
-              }
+          <View style={styles.fixedContainer}>
+            <SlideToLiveToggle 
+              waitingCount={pendingRequests.length}
+              onSlideComplete={handleSlideComplete}
+              userName={user?.name.split(' ')[0]}
+              onPreviewQueue={handlePreviewQueue}
+              currentMode={currentMode}
             />
-            
-            <View style={styles.fixedContainer}>
-              <SlideToLiveToggle 
-                waitingCount={pendingRequests.length}
-                onSlideComplete={handleSlideComplete}
-                userName={user?.name.split(' ')[0]}
-                onPreviewQueue={handlePreviewQueue}
-                currentMode={currentMode}
-              />
-            </View>
-          </>
+          </View>
         )}
         
         <CombinedGoLiveModal
@@ -497,40 +395,23 @@ const styles = StyleSheet.create({
     fontFamily: 'PlusJakartaSans-Bold',
   },
   fixedContainer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 0,
-    right: 0,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
+    overflow: 'hidden', // Prevent scrolling
   },
   listContent: {
     padding: 16,
     paddingTop: 0,
-    paddingBottom: 100, // Add padding to avoid overlap with the slide toggle
   },
   draggableItem: {
     marginBottom: 12,
   },
-  tabBar: {
-    flexDirection: 'row',
-    marginTop: 8,
-    marginBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(150, 150, 150, 0.2)',
+  listContainer: {
+    padding: 16,
+    paddingTop: 0,
   },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-  },
-  tabText: {
-    fontSize: 16,
-    fontWeight: '500',
-    fontFamily: 'PlusJakartaSans-Medium',
-  },
+  itemContainer: {
+    marginBottom: 12,
+  }
 });

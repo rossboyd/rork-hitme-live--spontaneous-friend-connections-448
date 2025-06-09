@@ -19,7 +19,7 @@ export interface User {
   email?: string;
 }
 
-export type RequestStatus = 'pending' | 'completed' | 'expired' | 'rejected' | 'dismissed';
+export type RequestStatus = 'pending' | 'completed' | 'expired' | 'rejected';
 export type RequestUrgency = 'low' | 'medium' | 'high';
 
 export interface HitRequest {
@@ -31,7 +31,6 @@ export interface HitRequest {
   urgency: RequestUrgency;
   createdAt: number;
   expiresAt: number;
-  topic?: string;
 }
 
 export interface AppState {

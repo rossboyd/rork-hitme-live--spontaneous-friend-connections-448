@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { HitRequest, Contact, User, Mode, RequestStatus } from '@/types';
+import { HitRequest, Contact, User, Mode } from '@/types';
 import { mockContacts } from '@/mocks/contacts';
 import { mockRequests } from '@/mocks/requests';
 
@@ -28,7 +28,7 @@ interface RequestsSlice {
   addOutboundRequest: (request: Omit<HitRequest, 'id' | 'createdAt' | 'status'>) => void;
   deleteOutboundRequest: (requestId: string) => void;
   updateOutboundRequest: (requestId: string, updates: Partial<HitRequest>) => void;
-  updateRequestStatus: (requestId: string, status: RequestStatus) => void;
+  updateRequestStatus: (requestId: string, status: HitRequest['status']) => void;
   dismissRequest: (requestId: string) => void;
   expireRequests: () => void;
 }
@@ -50,9 +50,7 @@ interface HitMeModeSlice {
 }
 
 interface OnboardingSlice {
-  isFirstLaunch: boolean;
   hasCompletedOnboarding: boolean;
-  setIsFirstLaunch: (value: boolean) => void;
   setHasCompletedOnboarding: (value: boolean) => void;
   resetOnboarding: () => void;
 }
@@ -70,7 +68,12 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       // User slice
-      user: null,
+      user: {
+        id: 'user-1',
+        name: 'You',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80',
+        phone: '+44987654321',
+      },
       setUser: (user) => set({ user }),
 
       // Contacts slice
@@ -131,7 +134,7 @@ export const useAppStore = create<AppState>()(
         outboundRequests: [...state.outboundRequests, {
           id: `request-${Date.now()}`,
           createdAt: Date.now(),
-          status: 'pending' as RequestStatus,
+          status: 'pending',
           ...request,
         }]
       })),
@@ -153,7 +156,7 @@ export const useAppStore = create<AppState>()(
       })),
       dismissRequest: (requestId) => set((state) => ({
         inboundRequests: state.inboundRequests.map(req => 
-          req.id === requestId ? { ...req, status: 'dismissed' as RequestStatus } : req
+          req.id === requestId ? { ...req, status: 'dismissed' } : req
         )
       })),
       expireRequests: () => set((state) => {
@@ -161,12 +164,12 @@ export const useAppStore = create<AppState>()(
         return {
           outboundRequests: state.outboundRequests.map(req => 
             req.expiresAt && req.expiresAt < now && req.status === 'pending'
-              ? { ...req, status: 'expired' as RequestStatus }
+              ? { ...req, status: 'expired' }
               : req
           ),
           inboundRequests: state.inboundRequests.map(req => 
             req.expiresAt && req.expiresAt < now && req.status === 'pending'
-              ? { ...req, status: 'expired' as RequestStatus }
+              ? { ...req, status: 'expired' }
               : req
           )
         };
@@ -202,17 +205,12 @@ export const useAppStore = create<AppState>()(
       }),
 
       // Onboarding slice
-      isFirstLaunch: true,
       hasCompletedOnboarding: false,
-      setIsFirstLaunch: (value) => set({
-        isFirstLaunch: value
-      }),
       setHasCompletedOnboarding: (value) => set({
         hasCompletedOnboarding: value
       }),
       resetOnboarding: () => set({
-        hasCompletedOnboarding: false,
-        isFirstLaunch: true
+        hasCompletedOnboarding: false
       }),
 
       // Debug slice
@@ -226,9 +224,13 @@ export const useAppStore = create<AppState>()(
         pendingNotifications: [],
         dismissedRequests: [],
         hasCompletedOnboarding: false,
-        isFirstLaunch: true,
         currentMode: null,
-        user: null
+        user: {
+          id: 'user-1',
+          name: 'You',
+          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80',
+          phone: '+44987654321',
+        }
       }),
       loadMockData: () => set((state) => ({
         contacts: [...mockContacts],
@@ -245,7 +247,6 @@ export const useAppStore = create<AppState>()(
         inboundRequests: state.inboundRequests,
         hitMeDuration: state.hitMeDuration,
         hasCompletedOnboarding: state.hasCompletedOnboarding,
-        isFirstLaunch: state.isFirstLaunch,
         currentMode: state.currentMode,
       }),
     }

@@ -22,7 +22,7 @@ export default function LoginScreen() {
   const [countryCode, setCountryCode] = useState('+44');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState('');
-  const { hasCompletedOnboarding } = useAppStore();
+  const { setUser } = useAppStore();
 
   const handlePhoneSubmit = () => {
     const fullPhone = countryCode + phoneNumber;
@@ -73,13 +73,10 @@ export default function LoginScreen() {
           <View style={styles.container}>
             <View style={styles.header}>
               <Text style={[styles.title, { color: darkTheme.text.primary }]}>
-                {hasCompletedOnboarding ? 'Welcome back' : 'Log in / Sign up'}
+                Log in / Sign up
               </Text>
               <Text style={[styles.subtitle, { color: darkTheme.text.secondary }]}>
-                {hasCompletedOnboarding 
-                  ? "Enter your phone number to sign in"
-                  : "You'll be able to connect with friends, get notifications when they're available, and do other nice things"
-                }
+                You'll be able to connect with friends, get notifications when they're available, and do other nice things
               </Text>
             </View>
 

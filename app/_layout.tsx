@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans';
+import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -11,15 +12,10 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   // Always provide default colors to prevent undefined errors
-  const colors = darkTheme;
-  const hasCompletedOnboarding = useAppStore(state => state.hasCompletedOnboarding);
-  const isFirstLaunch = useAppStore(state => state.isFirstLaunch);
-  const user = useAppStore(state => state.user);
-  const setIsFirstLaunch = useAppStore(state => state.setIsFirstLaunch);
-  
+  const { theme, colors = darkTheme } = useThemeStore();
+  const { hasCompletedOnboarding, user } = useAppStore();
   const segments = useSegments();
   const router = useRouter();
-  const lastRouteRef = useRef<string>('');
   
   const [fontsLoaded] = useFonts({
     'PlusJakartaSans-Regular': PlusJakartaSans_400Regular,
@@ -38,7 +34,6 @@ export default function RootLayout() {
   useEffect(() => {
     if (!fontsLoaded) return;
 
-    const currentPath = segments.join('/');
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboardingGroup = segments[0] === 'onboarding';
     const inTabsGroup = segments[0] === '(tabs)';
@@ -49,46 +44,19 @@ export default function RootLayout() {
       segments[0] === 'verify' || 
       segments[0] === '' || // root/index (likely login)
       segments[0] === 'phone' || 
-      segments[0] === 'login';
+      segments[0] === 'login' || 
+      segments[0] === 'permissions';
 
-    // Prevent infinite redirects by checking if we're already at the target route
-    const navigateIfDifferent = (targetPath: string) => {
-      if (lastRouteRef.current !== targetPath && currentPath !== targetPath) {
-        lastRouteRef.current = targetPath;
-        router.replace(targetPath as any);
-      }
-    };
-
-    // First-time users should start at welcome screen
-    if (isFirstLaunch && segments[0] !== 'onboarding' && segments[0] !== 'welcome') {
-      navigateIfDifferent('/onboarding/welcome');
-      return;
-    }
-    
-    // If user has verified but hasn't completed onboarding
-    if (user && !hasCompletedOnboarding && !inOnboardingGroup && !isAuthRoute) {
-      navigateIfDifferent('/onboarding/profile');
-      return;
+    // If user hasn't completed onboarding and isn't in the onboarding flow or auth flow
+    if (!hasCompletedOnboarding && !inOnboardingGroup && !isAuthRoute) {
+      router.replace('/onboarding/welcome');
     }
     
     // If user has completed onboarding but is still in the onboarding flow
-    if (hasCompletedOnboarding && (inOnboardingGroup || segments[0] === 'welcome')) {
-      navigateIfDifferent('/(tabs)/home');
-      return;
+    if (hasCompletedOnboarding && (inOnboardingGroup || segments[0] === 'verify')) {
+      router.replace('/(tabs)/home');
     }
-    
-    // If user is authenticated and has completed onboarding, ensure they're in the main app
-    if (user && hasCompletedOnboarding && isAuthRoute) {
-      navigateIfDifferent('/(tabs)/home');
-      return;
-    }
-    
-    // If user is not authenticated and not in auth flow, redirect to login
-    if (!user && !isAuthRoute && segments[0] !== 'onboarding' && segments[0] !== 'welcome') {
-      navigateIfDifferent('/');
-      return;
-    }
-  }, [fontsLoaded, hasCompletedOnboarding, isFirstLaunch, segments, router, user]);
+  }, [fontsLoaded, hasCompletedOnboarding, segments, router]);
 
   if (!fontsLoaded) {
     return null;
@@ -120,12 +88,6 @@ export default function RootLayout() {
       />
       <Stack.Screen
         name="onboarding"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="welcome"
         options={{
           headerShown: false,
         }}
