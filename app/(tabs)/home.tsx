@@ -18,6 +18,7 @@ import { SlideToLiveToggle } from '@/components/SlideToLiveToggle';
 import { LiveModeStatus } from '@/components/LiveModeStatus';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
+import { Stack } from 'expo-router';
 
 export default function HomeScreen() {
   const { 
@@ -227,61 +228,66 @@ export default function HomeScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {isHitMeModeActive ? (
-        <>
-          {timeRemaining !== null && (
-            <LiveModeStatus 
-              timeRemaining={timeRemaining} 
-              onGoOffline={handleGoOffline} 
-            />
-          )}
-          
-          <FlatList
-            data={pendingRequests}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContent}
-            ListEmptyComponent={
-              <EmptyState
-                title="Your queue is empty"
-                message="No one is waiting to talk to you right now."
-                icon={<Users size={48} color={colors.text.light} />}
+    <>
+      {/* Disable back button by setting headerBackVisible to false */}
+      <Stack.Screen options={{ headerBackVisible: false }} />
+      
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        {isHitMeModeActive ? (
+          <>
+            {timeRemaining !== null && (
+              <LiveModeStatus 
+                timeRemaining={timeRemaining} 
+                onGoOffline={handleGoOffline} 
               />
-            }
-          />
-        </>
-      ) : (
-        <View style={styles.fixedContainer}>
-          <SlideToLiveToggle 
-            waitingCount={pendingRequests.length}
-            onSlideComplete={handleSlideComplete}
-            userName={user?.name.split(' ')[0]}
-            onPreviewQueue={handlePreviewQueue}
-          />
-        </View>
-      )}
-      
-      <DurationSelector
-        visible={showDurationSelector}
-        onClose={() => setShowDurationSelector(false)}
-        onSelect={handleDurationSelect}
-      />
-      
-      <QueueReview
-        visible={showQueueReview}
-        requests={pendingRequests}
-        contacts={contacts}
-        onClose={() => {
-          setShowQueueReview(false);
-          setPreviewMode(false);
-        }}
-        onGoLive={previewMode ? undefined : handleGoLive}
-        previewMode={previewMode}
-        selectedIds={selectedIds}
-        setSelectedIds={setSelectedIds}
-      />
-    </View>
+            )}
+            
+            <FlatList
+              data={pendingRequests}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.listContent}
+              ListEmptyComponent={
+                <EmptyState
+                  title="Your queue is empty"
+                  message="No one is waiting to talk to you right now."
+                  icon={<Users size={48} color={colors.text.light} />}
+                />
+              }
+            />
+          </>
+        ) : (
+          <View style={styles.fixedContainer}>
+            <SlideToLiveToggle 
+              waitingCount={pendingRequests.length}
+              onSlideComplete={handleSlideComplete}
+              userName={user?.name.split(' ')[0]}
+              onPreviewQueue={handlePreviewQueue}
+            />
+          </View>
+        )}
+        
+        <DurationSelector
+          visible={showDurationSelector}
+          onClose={() => setShowDurationSelector(false)}
+          onSelect={handleDurationSelect}
+        />
+        
+        <QueueReview
+          visible={showQueueReview}
+          requests={pendingRequests}
+          contacts={contacts}
+          onClose={() => {
+            setShowQueueReview(false);
+            setPreviewMode(false);
+          }}
+          onGoLive={previewMode ? undefined : handleGoLive}
+          previewMode={previewMode}
+          selectedIds={selectedIds}
+          setSelectedIds={setSelectedIds}
+        />
+      </View>
+    </>
   );
 }
 
