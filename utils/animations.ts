@@ -1,10 +1,11 @@
 // Shared animation configurations
 import { Platform } from 'react-native';
-import { 
-  WithSpringConfig, 
-  WithTimingConfig 
+import {
+  WithSpringConfig,
+  WithTimingConfig
 } from 'react-native-reanimated';
 
+// Spring animation configuration
 export const SPRING_CONFIG: WithSpringConfig = {
   damping: 20,
   mass: 1,
@@ -14,8 +15,9 @@ export const SPRING_CONFIG: WithSpringConfig = {
   restSpeedThreshold: 2,
 };
 
+// Timing animation configuration
 export const TIMING_CONFIG: WithTimingConfig = {
-  duration: 250,
+  duration: 550,
 };
 
 // Config used for page transition animations
@@ -31,5 +33,6 @@ export const getAnimationConfig = (isSpring = true) => {
   if (Platform.OS === 'web') {
     return TIMING_CONFIG;
   }
+  
   return isSpring ? SPRING_CONFIG : TIMING_CONFIG;
 };

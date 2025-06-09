@@ -230,8 +230,19 @@ export default function HomeScreen() {
 
   return (
     <>
-      {/* Disable back button by setting headerBackVisible to false */}
-      <Stack.Screen options={{ headerBackVisible: false }} />
+      {/* Set proper header title for the Home screen */}
+      <Stack.Screen 
+        options={{ 
+          headerShown: true,
+          headerTitle: "HitMeApp",
+          headerTitleStyle: {
+            fontFamily: 'PlusJakartaSans-Bold',
+            fontSize: 20,
+            color: colors.primary,
+          },
+          headerBackVisible: false,
+        }} 
+      />
       
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <Text style={[styles.appLogo, { color: colors.primary }]}>HitMeApp</Text>
