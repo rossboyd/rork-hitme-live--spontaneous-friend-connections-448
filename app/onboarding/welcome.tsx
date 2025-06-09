@@ -5,12 +5,10 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   Image,
-  ScrollView,
-  Platform
+  ScrollView
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronRight } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 
@@ -19,11 +17,7 @@ export default function WelcomeScreen() {
   const { colors = darkTheme } = useThemeStore();
   
   const handleGetStarted = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    
-    router.push('/onboarding/profile');
+    router.replace('/onboarding/profile');
   };
   
   return (
@@ -39,23 +33,44 @@ export default function WelcomeScreen() {
         <Image
           source={{ uri: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80' }}
           style={styles.illustration}
+          resizeMode="cover"
         />
       </View>
       
       <View style={styles.textContainer}>
         <Text style={[styles.title, { color: colors.text.primary }]}>
-          Connect when it matters
+          Welcome to HitMe
         </Text>
-        <Text style={[styles.description, { color: colors.text.secondary }]}>
-          Let your friends know when you're available to chat, and get notified when they are too.
+        <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
+          The easiest way to let your friends know when you're available to chat
         </Text>
+      </View>
+      
+      <View style={styles.featuresContainer}>
+        {[
+          { title: "Go Live", description: "Let friends know when you're free to talk" },
+          { title: "Stay Connected", description: "Get notified when friends are available" },
+          { title: "No Scheduling", description: "Spontaneous connections when it works for you" }
+        ].map((feature, index) => (
+          <View key={index} style={styles.featureItem}>
+            <View style={[styles.featureDot, { backgroundColor: colors.primary }]} />
+            <View style={styles.featureText}>
+              <Text style={[styles.featureTitle, { color: colors.text.primary }]}>
+                {feature.title}
+              </Text>
+              <Text style={[styles.featureDescription, { color: colors.text.secondary }]}>
+                {feature.description}
+              </Text>
+            </View>
+          </View>
+        ))}
       </View>
       
       <TouchableOpacity
         style={[styles.getStartedButton, { backgroundColor: colors.primary }]}
         onPress={handleGetStarted}
       >
-        <Text style={styles.getStartedText}>Get Started</Text>
+        <Text style={styles.getStartedButtonText}>Get Started</Text>
         <ChevronRight size={20} color="#000" />
       </TouchableOpacity>
     </ScrollView>
@@ -69,11 +84,11 @@ const styles = StyleSheet.create({
   content: {
     padding: 24,
     flexGrow: 1,
-    justifyContent: 'center',
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 32,
+    marginTop: 16,
   },
   logo: {
     fontSize: 36,
@@ -82,27 +97,52 @@ const styles = StyleSheet.create({
   },
   illustrationContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 32,
   },
   illustration: {
     width: '100%',
-    height: 300,
-    borderRadius: 20,
+    height: 240,
+    borderRadius: 16,
   },
   textContainer: {
-    marginBottom: 40,
+    marginBottom: 32,
   },
   title: {
     fontSize: 32,
     fontWeight: '700',
-    marginBottom: 16,
-    textAlign: 'center',
+    marginBottom: 12,
     fontFamily: 'PlusJakartaSans-Bold',
   },
-  description: {
+  subtitle: {
     fontSize: 16,
-    textAlign: 'center',
+    fontFamily: 'PlusJakartaSans-Regular',
     lineHeight: 24,
+  },
+  featuresContainer: {
+    marginBottom: 32,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  featureDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginTop: 6,
+    marginRight: 12,
+  },
+  featureText: {
+    flex: 1,
+  },
+  featureTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 4,
+    fontFamily: 'PlusJakartaSans-SemiBold',
+  },
+  featureDescription: {
+    fontSize: 14,
     fontFamily: 'PlusJakartaSans-Regular',
   },
   getStartedButton: {
@@ -112,7 +152,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  getStartedText: {
+  getStartedButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#000',
