@@ -52,7 +52,7 @@ export default function HomeScreen() {
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [selectedModes, setSelectedModes] = useState<(Mode | null)[]>([]);
+  const [selectedModes, setSelectedModes] = useState<Mode[]>([]);
 
   // Set theme based on HitMeMode status
   useEffect(() => {
@@ -127,7 +127,7 @@ export default function HomeScreen() {
     }
   };
 
-  const handleGoLiveSettings = (minutes: number, modes: (Mode | null)[]) => {
+  const handleGoLiveSettings = (minutes: number, modes: Mode[]) => {
     setHitMeDuration(minutes);
     setSelectedModes(modes);
     setShowCombinedModal(false);
@@ -150,9 +150,9 @@ export default function HomeScreen() {
     setHitMeEndTime(endTime);
     
     // Set current mode based on selected modes
-    // If multiple modes are selected or "All" is selected, set to null (all contacts)
+    // If multiple modes are selected, set to null (all contacts)
     // Otherwise, set to the single selected mode
-    if (selectedModes.length === 1 && selectedModes[0] !== null) {
+    if (selectedModes.length === 1) {
       setCurrentMode(selectedModes[0]);
     } else {
       setCurrentMode(null);

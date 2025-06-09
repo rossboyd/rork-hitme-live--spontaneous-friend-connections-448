@@ -1,27 +1,66 @@
-export type UrgencyLevel = 'low' | 'medium' | 'high';
+export type Mode = 'work' | 'social' | 'family';
 
-export type Mode = 'work' | 'family' | 'social';
+export interface Contact {
+  id: string;
+  name: string;
+  avatar: string;
+  phone: string;
+  email?: string;
+  lastOnline?: number;
+  modes?: Mode[];
+  isFavorite?: boolean;
+}
 
 export interface User {
   id: string;
   name: string;
   avatar: string;
   phone: string;
+  email?: string;
 }
+
+export type RequestStatus = 'pending' | 'completed' | 'expired' | 'rejected';
+export type RequestUrgency = 'low' | 'medium' | 'high';
 
 export interface HitRequest {
   id: string;
   senderId: string;
   receiverId: string;
-  topic: string;
-  urgency: UrgencyLevel;
+  message: string;
+  status: RequestStatus;
+  urgency: RequestUrgency;
   createdAt: number;
-  expiresAt: number | null;
-  status: 'pending' | 'expired' | 'completed' | 'dismissed';
+  expiresAt: number;
 }
 
-export interface Contact extends User {
-  lastSeen?: number;
-  lastOnline?: number; // Timestamp when they were last in HitMeMode
-  modes?: Mode[]; // Associated modes for this contact
+export interface AppState {
+  user: User | null;
+  contacts: Contact[];
+  inboundRequests: HitRequest[];
+  outboundRequests: HitRequest[];
+  isHitMeModeActive: boolean;
+  hitMeDuration: number; // in minutes
+  hitMeEndTime: number | null;
+  pendingNotifications: string[];
+  dismissedRequests: string[];
+  currentMode: Mode | null;
+  
+  // Actions
+  setUser: (user: User) => void;
+  addContact: (contact: Contact) => void;
+  updateContact: (id: string, updates: Partial<Contact>) => void;
+  removeContact: (id: string) => void;
+  addRequest: (request: HitRequest) => void;
+  updateRequestStatus: (id: string, status: RequestStatus) => void;
+  dismissRequest: (id: string) => void;
+  toggleHitMeMode: () => void;
+  setHitMeDuration: (minutes: number) => void;
+  setHitMeEndTime: (timestamp: number | null) => void;
+  expireRequests: () => void;
+  setPendingNotifications: (contactIds: string[]) => void;
+  addToDismissedRequests: (requestId: string) => void;
+  clearDismissedRequests: () => void;
+  updateContactLastOnline: (contactId: string) => void;
+  setCurrentMode: (mode: Mode | null) => void;
+  toggleContactFavorite: (contactId: string) => void;
 }

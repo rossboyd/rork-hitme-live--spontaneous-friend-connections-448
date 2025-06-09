@@ -6,21 +6,20 @@ import {
   TouchableOpacity,
   Platform
 } from 'react-native';
-import { Briefcase, Home, Users, X } from 'lucide-react-native';
+import { Briefcase, Home, Users } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { Mode } from '@/types';
 
 interface ModeSelectorProps {
-  selectedModes: (Mode | null)[];
-  onToggleMode: (mode: Mode | null) => void;
+  selectedModes: Mode[];
+  onToggleMode: (mode: Mode) => void;
   onSelectAll: () => void;
-  onClearAll: () => void;
 }
 
 interface ModeOption {
-  id: Mode | null;
+  id: Mode;
   label: string;
   icon: React.ReactNode;
 }
@@ -28,12 +27,11 @@ interface ModeOption {
 export const ModeSelector = ({ 
   selectedModes,
   onToggleMode,
-  onSelectAll,
-  onClearAll
+  onSelectAll
 }: ModeSelectorProps) => {
   const { colors = darkTheme } = useThemeStore();
   
-  const handleToggle = (mode: Mode | null) => {
+  const handleToggle = (mode: Mode) => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -55,11 +53,6 @@ export const ModeSelector = ({
       id: 'family',
       label: 'Family',
       icon: <Home size={16} color={colors.text.primary} />
-    },
-    {
-      id: null,
-      label: 'All',
-      icon: <X size={16} color={colors.text.primary} />
     }
   ];
   
@@ -67,14 +60,24 @@ export const ModeSelector = ({
   
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: colors.text.primary }]}>
-        Select Modes
-      </Text>
+      <View style={styles.headerContainer}>
+        <Text style={[styles.title, { color: colors.text.primary }]}>
+          Select Modes
+        </Text>
+        <TouchableOpacity 
+          style={styles.selectAllButton} 
+          onPress={onSelectAll}
+        >
+          <Text style={[styles.selectAllText, { color: colors.primary }]}>
+            Select All
+          </Text>
+        </TouchableOpacity>
+      </View>
       
       <View style={styles.pillsContainer}>
         {modeOptions.map((option) => (
           <TouchableOpacity
-            key={option.id || 'all'}
+            key={option.id}
             style={[
               styles.pill,
               { 
@@ -103,68 +106,49 @@ export const ModeSelector = ({
           </TouchableOpacity>
         ))}
       </View>
-      
-      <View style={styles.actionsContainer}>
-        <TouchableOpacity 
-          style={styles.actionButton} 
-          onPress={onSelectAll}
-        >
-          <Text style={[styles.actionText, { color: colors.primary }]}>
-            Select All
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.actionButton} 
-          onPress={onClearAll}
-        >
-          <Text style={[styles.actionText, { color: colors.text.secondary }]}>
-            Clear All
-          </Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 20,
+    marginBottom: 16,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   title: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 12,
+  },
+  selectAllButton: {
+    paddingVertical: 4,
+  },
+  selectAllText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   pillsContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 12,
+    justifyContent: 'center',
+    gap: 10,
   },
   pill: {
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 12,
+    flex: 1,
   },
   pillContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
   },
   pillText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    gap: 16,
-  },
-  actionButton: {
-    paddingVertical: 4,
-  },
-  actionText: {
     fontSize: 14,
     fontWeight: '500',
   },
