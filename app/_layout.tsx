@@ -37,18 +37,9 @@ export default function RootLayout() {
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboardingGroup = segments[0] === 'onboarding';
     const inTabsGroup = segments[0] === '(tabs)';
-    
-    // Auth-related routes that should bypass onboarding redirect
-    const isAuthRoute = 
-      inAuthGroup || 
-      segments[0] === 'verify' || 
-      segments[0] === '' || // root/index (likely login)
-      segments[0] === 'phone' || 
-      segments[0] === 'login' || 
-      segments[0] === 'permissions';
 
-    // If user hasn't completed onboarding and isn't in the onboarding flow or auth flow
-    if (!hasCompletedOnboarding && !inOnboardingGroup && !isAuthRoute) {
+    // If user hasn't completed onboarding and isn't in the onboarding flow
+    if (!hasCompletedOnboarding && !inOnboardingGroup && segments[0] !== 'verify' && segments[0] !== '') {
       router.replace('/onboarding/welcome');
     }
     
