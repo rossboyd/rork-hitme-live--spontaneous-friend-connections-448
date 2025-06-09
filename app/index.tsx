@@ -19,7 +19,7 @@ import { darkTheme } from '@/constants/colors';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [countryCode, setCountryCode] = useState('+1');
+  const [countryCode, setCountryCode] = useState('+44');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState('');
   const { setUser } = useAppStore();
@@ -86,12 +86,12 @@ export default function LoginScreen() {
                   style={[styles.countrySelect, { backgroundColor: darkTheme.card }]}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.flagEmoji}>🇺🇸</Text>
+                  <Text style={styles.flagEmoji}>🇬🇧</Text>
                   <TextInput
                     style={[styles.countryInput, { color: darkTheme.text.primary }]}
                     value={countryCode}
                     onChangeText={formatCountryCode}
-                    placeholder="+1"
+                    placeholder="+44"
                     placeholderTextColor={darkTheme.text.light}
                     keyboardType="phone-pad"
                     maxLength={4}
