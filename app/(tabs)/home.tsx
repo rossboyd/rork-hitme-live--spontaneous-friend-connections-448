@@ -302,6 +302,7 @@ export default function HomeScreen() {
           visible={showDurationSelector}
           onClose={() => setShowDurationSelector(false)}
           onSelect={handleDurationSelect}
+          initialDuration={hitMeDuration}
         />
         
         <QueueReview

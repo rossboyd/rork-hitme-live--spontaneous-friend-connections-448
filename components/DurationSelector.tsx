@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
   Modal, 
   TouchableOpacity, 
-  Platform
+  Platform,
+  ScrollView,
+  Dimensions
 } from 'react-native';
-import { Clock } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
@@ -16,24 +17,119 @@ interface DurationSelectorProps {
   visible: boolean;
   onClose: () => void;
   onSelect: (minutes: number) => void;
+  initialDuration?: number; // in minutes
 }
 
-const DURATION_OPTIONS = [
-  { label: '15m', sublabel: '15 minutes', value: 15 },
-  { label: '30m', sublabel: '30 minutes', value: 30 },
-  { label: '45m', sublabel: '45 minutes', value: 45 },
-  { label: '1h', sublabel: '1 hour', value: 60 },
-];
+const MAX_HOURS = 12;
+const ITEM_HEIGHT = 50;
+const VISIBLE_ITEMS = 5;
 
-export const DurationSelector = ({ visible, onClose, onSelect }: DurationSelectorProps) => {
+export const DurationSelector = ({ 
+  visible, 
+  onClose, 
+  onSelect,
+  initialDuration = 30 // Default to 30 minutes
+}: DurationSelectorProps) => {
   const { colors = darkTheme } = useThemeStore();
   
-  const handleSelect = (minutes: number) => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  // Calculate initial hours and minutes
+  const initialHours = Math.floor(initialDuration / 60);
+  const initialMinutes = initialDuration % 60;
+  
+  const [selectedHours, setSelectedHours] = useState(initialHours);
+  const [selectedMinutes, setSelectedMinutes] = useState(initialMinutes);
+  
+  const hoursScrollRef = useRef<ScrollView>(null);
+  const minutesScrollRef = useRef<ScrollView>(null);
+  
+  // Reset to initial values when modal opens
+  useEffect(() => {
+    if (visible) {
+      setSelectedHours(initialHours);
+      setSelectedMinutes(initialMinutes);
+      
+      // Scroll to initial positions with a slight delay to ensure refs are ready
+      setTimeout(() => {
+        hoursScrollRef.current?.scrollTo({ 
+          y: initialHours * ITEM_HEIGHT, 
+          animated: false 
+        });
+        minutesScrollRef.current?.scrollTo({ 
+          y: initialMinutes * ITEM_HEIGHT, 
+          animated: false 
+        });
+      }, 50);
     }
-    onSelect(minutes);
+  }, [visible, initialHours, initialMinutes]);
+  
+  const handleConfirm = () => {
+    const totalMinutes = (selectedHours * 60) + selectedMinutes;
+    
+    // Ensure at least 1 minute is selected
+    if (totalMinutes < 1) {
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+      return;
+    }
+    
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    
+    onSelect(totalMinutes);
   };
+  
+  const handleHoursScroll = (event: any) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const index = Math.round(offsetY / ITEM_HEIGHT);
+    
+    if (index !== selectedHours) {
+      setSelectedHours(index);
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    }
+  };
+  
+  const handleMinutesScroll = (event: any) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const index = Math.round(offsetY / ITEM_HEIGHT);
+    
+    if (index !== selectedMinutes) {
+      setSelectedMinutes(index);
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    }
+  };
+  
+  const handleHoursScrollEnd = (event: any) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const index = Math.round(offsetY / ITEM_HEIGHT);
+    
+    hoursScrollRef.current?.scrollTo({ 
+      y: index * ITEM_HEIGHT, 
+      animated: true 
+    });
+  };
+  
+  const handleMinutesScrollEnd = (event: any) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const index = Math.round(offsetY / ITEM_HEIGHT);
+    
+    minutesScrollRef.current?.scrollTo({ 
+      y: index * ITEM_HEIGHT, 
+      animated: true 
+    });
+  };
+  
+  // Generate arrays for hours and minutes
+  const hours = Array.from({ length: MAX_HOURS + 1 }, (_, i) => i);
+  const minutes = Array.from({ length: 60 }, (_, i) => i);
+  
+  // Calculate padding to center the selected item
+  const paddingVertical = (VISIBLE_ITEMS - 1) / 2 * ITEM_HEIGHT;
   
   return (
     <Modal
@@ -45,44 +141,100 @@ export const DurationSelector = ({ visible, onClose, onSelect }: DurationSelecto
       <View style={styles.overlay}>
         <View style={[styles.container, { backgroundColor: colors.background }]}>
           <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text.primary }]}>How long will you be available?</Text>
+            <Text style={[styles.title, { color: colors.text.primary }]}>
+              How long will you be available?
+            </Text>
           </View>
           
-          <View style={styles.optionsGrid}>
-            {DURATION_OPTIONS.map((option, index) => (
-              <TouchableOpacity
-                key={option.value}
-                style={[
-                  styles.optionButton,
-                  { backgroundColor: colors.card, borderColor: colors.border },
-                  index === 1 && [styles.selectedOption, { backgroundColor: colors.primary }]
-                ]}
-                onPress={() => handleSelect(option.value)}
+          <View style={styles.pickerContainer}>
+            {/* Selection indicator overlay */}
+            <View style={[styles.selectionIndicator, { borderColor: colors.primary }]} />
+            
+            {/* Hours picker */}
+            <View style={styles.pickerColumn}>
+              <ScrollView
+                ref={hoursScrollRef}
+                showsVerticalScrollIndicator={false}
+                snapToInterval={ITEM_HEIGHT}
+                decelerationRate="fast"
+                contentContainerStyle={{ paddingVertical }}
+                onScroll={handleHoursScroll}
+                onMomentumScrollEnd={handleHoursScrollEnd}
+                scrollEventThrottle={16}
               >
-                <Text style={[
-                  styles.optionLabel,
-                  { color: colors.text.primary },
-                  index === 1 && { color: "#000" }
-                ]}>
-                  {option.label}
-                </Text>
-                <Text style={[
-                  styles.optionSublabel,
-                  { color: colors.text.secondary },
-                  index === 1 && { color: "#000" }
-                ]}>
-                  {option.sublabel}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                {hours.map((hour) => (
+                  <View key={`hour-${hour}`} style={styles.pickerItem}>
+                    <Text style={[
+                      styles.pickerText,
+                      { color: colors.text.primary },
+                      selectedHours === hour && { color: colors.primary, fontWeight: '600' }
+                    ]}>
+                      {hour}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+              <Text style={[styles.pickerLabel, { color: colors.text.secondary }]}>
+                hours
+              </Text>
+            </View>
+            
+            {/* Minutes picker */}
+            <View style={styles.pickerColumn}>
+              <ScrollView
+                ref={minutesScrollRef}
+                showsVerticalScrollIndicator={false}
+                snapToInterval={ITEM_HEIGHT}
+                decelerationRate="fast"
+                contentContainerStyle={{ paddingVertical }}
+                onScroll={handleMinutesScroll}
+                onMomentumScrollEnd={handleMinutesScrollEnd}
+                scrollEventThrottle={16}
+              >
+                {minutes.map((minute) => (
+                  <View key={`minute-${minute}`} style={styles.pickerItem}>
+                    <Text style={[
+                      styles.pickerText,
+                      { color: colors.text.primary },
+                      selectedMinutes === minute && { color: colors.primary, fontWeight: '600' }
+                    ]}>
+                      {minute < 10 ? `0${minute}` : minute}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+              <Text style={[styles.pickerLabel, { color: colors.text.secondary }]}>
+                minutes
+              </Text>
+            </View>
           </View>
           
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={onClose}
-          >
-            <Text style={[styles.cancelText, { color: colors.text.secondary }]}>Cancel</Text>
-          </TouchableOpacity>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[styles.button, styles.cancelButton, { borderColor: colors.border }]}
+              onPress={onClose}
+            >
+              <Text style={[styles.buttonText, { color: colors.text.secondary }]}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.button, styles.confirmButton, { backgroundColor: colors.primary }]}
+              onPress={handleConfirm}
+            >
+              <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>
+                Confirm
+              </Text>
+            </TouchableOpacity>
+          </View>
+          
+          <Text style={[styles.durationSummary, { color: colors.text.secondary }]}>
+            {selectedHours > 0 && `${selectedHours} ${selectedHours === 1 ? 'hour' : 'hours'}`}
+            {selectedHours > 0 && selectedMinutes > 0 && ' and '}
+            {selectedMinutes > 0 && `${selectedMinutes} ${selectedMinutes === 1 ? 'minute' : 'minutes'}`}
+            {selectedHours === 0 && selectedMinutes === 0 && 'Select a duration'}
+          </Text>
         </View>
       </View>
     </Modal>
@@ -110,41 +262,71 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
-  optionsGrid: {
+  pickerContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-  },
-  optionButton: {
-    width: '48%',
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    marginBottom: 16,
+    justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
+    height: ITEM_HEIGHT * VISIBLE_ITEMS,
+    marginBottom: 24,
+    position: 'relative',
   },
-  selectedOption: {
-    borderColor: 'transparent',
+  selectionIndicator: {
+    position: 'absolute',
+    height: ITEM_HEIGHT,
+    left: 0,
+    right: 0,
+    top: '50%',
+    marginTop: -ITEM_HEIGHT / 2,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#3B82F6',
+    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+    zIndex: 1,
   },
-  optionLabel: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 4,
+  pickerColumn: {
+    flex: 1,
+    height: '100%',
+    alignItems: 'center',
   },
-  optionSublabel: {
+  pickerItem: {
+    height: ITEM_HEIGHT,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pickerText: {
+    fontSize: 22,
+    fontWeight: '400',
+  },
+  pickerLabel: {
     fontSize: 14,
+    marginTop: 8,
   },
-  selectedOptionText: {
-    color: '#FFFFFF',
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 8,
   },
   cancelButton: {
-    paddingVertical: 16,
-    alignItems: 'center',
+    borderWidth: 1,
   },
-  cancelText: {
+  confirmButton: {
+    backgroundColor: '#3B82F6',
+  },
+  buttonText: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
+  },
+  durationSummary: {
+    textAlign: 'center',
+    fontSize: 16,
+    marginTop: 8,
   },
 });
