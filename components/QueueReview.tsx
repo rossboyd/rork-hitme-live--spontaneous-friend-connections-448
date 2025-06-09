@@ -1,22 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
   TouchableOpacity, 
   Modal, 
-  ScrollView,
-  Dimensions,
+  FlatList,
   Platform
 } from 'react-native';
 import { HitRequest, Contact, Mode } from '@/types';
-import { X, Check, Filter, Briefcase, Home, Users, Clock, ChevronUp, ChevronDown } from 'lucide-react-native';
+import { X, Check, Filter, Briefcase, Home, Users, Clock } from 'lucide-react-native';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { Avatar } from '@/components/common/Avatar';
 import { formatDistanceToNow } from '@/utils/dateUtils';
 import * as Haptics from 'expo-haptics';
-import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 
 interface QueueReviewProps {
   visible: boolean;
@@ -30,9 +28,6 @@ interface QueueReviewProps {
   currentMode: Mode | null;
 }
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const MODAL_HEIGHT = SCREEN_HEIGHT * 0.6; // 60% of screen height
-
 export const QueueReview = ({
   visible,
   requests,
@@ -45,20 +40,14 @@ export const QueueReview = ({
   currentMode
 }: QueueReviewProps) => {
   const { colors = darkTheme } = useThemeStore();
-  const [orderedRequests, setOrderedRequests] = useState<HitRequest[]>([]);
 
-  // Initialize orderedRequests when requests change or modal becomes visible
-  React.useEffect(() => {
-    if (visible) {
-      const filtered = currentMode 
-        ? requests.filter(request => {
-            const contact = getContactById(request.senderId);
-            return contact.modes?.includes(currentMode);
-          })
-        : requests;
-      setOrderedRequests(filtered);
-    }
-  }, [visible, requests, currentMode]);
+  // Filter requests based on current mode
+  const filteredRequests = currentMode 
+    ? requests.filter(request => {
+        const contact = getContactById(request.senderId);
+        return contact.modes?.includes(currentMode);
+      })
+    : requests;
 
   const getContactById = (contactId: string) => {
     return contacts.find(c => c.id === contactId) || {
@@ -78,13 +67,6 @@ export const QueueReview = ({
     
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
-
-  const handleDragEnd = ({ data }: { data: HitRequest[] }) => {
-    setOrderedRequests(data);
-    if (Platform.OS !== 'web') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
   };
 
@@ -114,85 +96,73 @@ export const QueueReview = ({
     }
   };
 
-  const renderItem = ({ item, drag, isActive }: RenderItemParams<HitRequest>) => {
+  const renderItem = ({ item }: { item: HitRequest }) => {
     const contact = getContactById(item.senderId);
     const isSelected = selectedIds.includes(item.senderId);
     const contactModes = contact.modes || [];
 
     return (
-      <ScaleDecorator>
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onLongPress={!previewMode ? drag : undefined}
-          disabled={previewMode || isActive}
-          onPress={() => !previewMode && toggleContact(item.senderId)}
-          style={[
-            styles.contactItem,
-            { backgroundColor: colors.card },
-            isSelected && { borderColor: colors.primary, borderWidth: 2 },
-            isActive && { opacity: 0.7 }
-          ]}
-        >
-          {!previewMode && (
-            <View style={styles.dragHandle}>
-              <ChevronUp size={14} color={colors.text.light} />
-              <ChevronDown size={14} color={colors.text.light} />
-            </View>
-          )}
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => !previewMode && toggleContact(item.senderId)}
+        style={[
+          styles.contactItem,
+          { backgroundColor: colors.card },
+          isSelected && { borderColor: colors.primary, borderWidth: 2 }
+        ]}
+      >
+        <Avatar
+          name={contact.name}
+          avatar={contact.avatar}
+          size={48}
+        />
+        
+        <View style={styles.contactInfo}>
+          <Text style={[styles.contactName, { color: colors.text.primary }]}>
+            {contact.name}
+          </Text>
+          <Text style={[styles.topic, { color: colors.text.secondary }]}>
+            {item.topic}
+          </Text>
           
-          <Avatar
-            name={contact.name}
-            avatar={contact.avatar}
-            size={48}
-          />
-          
-          <View style={styles.contactInfo}>
-            <Text style={[styles.contactName, { color: colors.text.primary }]}>
-              {contact.name}
+          {/* Online status / Last seen */}
+          <View style={styles.statusContainer}>
+            <Clock size={12} color={colors.text.light} />
+            <Text style={[styles.lastSeen, { color: colors.text.light }]}>
+              {contact.lastOnline 
+                ? `Last seen ${formatDistanceToNow(contact.lastOnline)}`
+                : "Never online"}
             </Text>
-            <Text style={[styles.topic, { color: colors.text.secondary }]}>
-              {item.topic}
-            </Text>
-            
-            {/* Online status / Last seen */}
-            <View style={styles.statusContainer}>
-              <Clock size={12} color={colors.text.light} />
-              <Text style={[styles.lastSeen, { color: colors.text.light }]}>
-                {contact.lastOnline 
-                  ? `Last seen ${formatDistanceToNow(contact.lastOnline)}`
-                  : "Never online"}
-              </Text>
-            </View>
-            
-            {/* Contact modes */}
-            {contactModes.length > 0 && (
-              <View style={styles.modesContainer}>
-                {contactModes.map((mode) => (
-                  <View 
-                    key={mode} 
-                    style={[styles.modeTag, { backgroundColor: colors.background }]}
-                  >
-                    {renderModeIcon(mode)}
-                    <Text style={[styles.modeTagText, { color: colors.text.secondary }]}>
-                      {mode.charAt(0).toUpperCase() + mode.slice(1)}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
           </View>
           
-          {!previewMode && (
-            <View style={[
-              styles.checkbox,
-              { borderColor: colors.border },
-              isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
-            ]}>
-              {isSelected && <Check size={16} color="#000" />}
+          {/* Contact modes */}
+          {contactModes.length > 0 && (
+            <View style={styles.modesContainer}>
+              {contactModes.map((mode) => (
+                <View 
+                  key={mode} 
+                  style={[styles.modeTag, { backgroundColor: colors.background }]}
+                >
+                  {renderModeIcon(mode)}
+                  <Text style={[styles.modeTagText, { color: colors.text.secondary }]}>
+                    {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                  </Text>
+                </View>
+              ))}
             </View>
           )}
-        </TouchableOpacity>
-      </ScaleDecorator>
+        </View>
+        
+        {!previewMode && (
+          <View style={[
+            styles.checkbox,
+            { borderColor: colors.border },
+            isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
+          ]}>
+            {isSelected && <Check size={16} color="#000" />}
+          </View>
+        )}
+      </TouchableOpacity>
     );
   };
 
@@ -207,10 +177,7 @@ export const QueueReview = ({
         <View 
           style={[
             styles.container, 
-            { 
-              backgroundColor: colors.background,
-              height: MODAL_HEIGHT
-            }
+            { backgroundColor: colors.background }
           ]}
         >
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
@@ -234,13 +201,13 @@ export const QueueReview = ({
             
             <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
               {previewMode
-                ? `${orderedRequests.length} people waiting to talk`
-                : !previewMode && orderedRequests.length > 0 
-                  ? "Drag to reorder priority. Select who to notify when you go live."
+                ? `${filteredRequests.length} people waiting to talk`
+                : !previewMode && filteredRequests.length > 0 
+                  ? "Select who to notify when you go live."
                   : "Select who to notify when you go live"}
             </Text>
 
-            {orderedRequests.length === 0 ? (
+            {filteredRequests.length === 0 ? (
               <View style={styles.emptyState}>
                 <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
                   {currentMode 
@@ -249,19 +216,16 @@ export const QueueReview = ({
                 </Text>
               </View>
             ) : (
-              <DraggableFlatList
-                data={orderedRequests}
-                onDragEnd={handleDragEnd}
+              <FlatList
+                data={filteredRequests}
                 keyExtractor={(item) => item.id}
                 renderItem={renderItem}
-                containerStyle={{ flex: 1 }}
                 contentContainerStyle={{ paddingBottom: 20 }}
-                disabled={previewMode}
               />
             )}
           </View>
 
-          {!previewMode && onGoLive && orderedRequests.length > 0 && (
+          {!previewMode && onGoLive && filteredRequests.length > 0 && (
             <View style={styles.footer}>
               <TouchableOpacity
                 style={[styles.goLiveButton, { backgroundColor: colors.primary }]}
@@ -293,6 +257,7 @@ const styles = StyleSheet.create({
   container: {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+    maxHeight: '70%',
   },
   header: {
     flexDirection: 'row',
@@ -337,10 +302,6 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 12,
     marginBottom: 12,
-  },
-  dragHandle: {
-    marginRight: 8,
-    alignItems: 'center',
   },
   contactInfo: {
     flex: 1,
