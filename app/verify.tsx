@@ -20,7 +20,8 @@ const MOCK_OTP = '123456';
 const OTP_LENGTH = 6;
 
 export default function VerifyScreen() {
-  const { phone } = useLocalSearchParams<{ phone: string }>();
+  const params = useLocalSearchParams();
+  const phone = params.phone as string;
   const router = useRouter();
   const { setUser } = useAppStore();
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));

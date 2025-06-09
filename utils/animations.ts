@@ -18,6 +18,14 @@ export const TIMING_CONFIG: WithTimingConfig = {
   duration: 250,
 };
 
+// Config used for page transition animations
+export const PAGE_TRANSITION_CONFIG: WithTimingConfig = {
+  duration: 400,
+};
+
+// Delay between staggered item animations
+export const STAGGER_DELAY = 50;
+
 // Safe animation config for web
 export const getAnimationConfig = (isSpring = true) => {
   if (Platform.OS === 'web') {
