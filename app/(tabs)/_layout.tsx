@@ -16,7 +16,7 @@ export default function TabLayout() {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
         },
-        headerShown: false,
+        headerShown: false, // Hide header for all tab screens
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '500',

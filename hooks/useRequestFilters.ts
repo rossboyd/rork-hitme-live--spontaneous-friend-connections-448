@@ -1,3 +1,4 @@
+// Hook to handle request filtering logic
 import { useMemo } from 'react';
 import { HitRequest } from '@/types';
 
@@ -6,6 +7,7 @@ export const useRequestFilters = (
   dismissedIds: string[] = []
 ) => {
   const favoriteRequests = useMemo(() => {
+    // Favorites are pending requests with no expiry date
     const favorites = requests.filter(req => 
       req.status === 'pending' && 
       req.expiresAt === null && 
@@ -22,6 +24,7 @@ export const useRequestFilters = (
   }, [requests, dismissedIds]);
 
   const pendingRequests = useMemo(() => {
+    // Regular pending requests that are not favorites (have expiry date)
     const pending = requests.filter(req => 
       req.status === 'pending' && 
       req.expiresAt !== null && 

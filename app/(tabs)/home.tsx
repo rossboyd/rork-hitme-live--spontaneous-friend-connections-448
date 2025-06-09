@@ -4,8 +4,7 @@ import {
   StyleSheet, 
   Alert, 
   Platform,
-  Text,
-  FlatList
+  Text
 } from 'react-native';
 import { useAppStore } from '@/store/useAppStore';
 import { RequestCard } from '@/components/RequestCard';
@@ -57,21 +56,26 @@ export default function HomeScreen() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedModes, setSelectedModes] = useState<Mode[]>([]);
 
+  // Set theme based on HitMeMode status
   useEffect(() => {
     setTheme(isHitMeModeActive ? 'light' : 'dark');
   }, [isHitMeModeActive, setTheme]);
 
   useEffect(() => {
+    // Check for expired requests on mount and every minute
     expireRequests();
     const interval = setInterval(expireRequests, 60000);
+    
     return () => clearInterval(interval);
   }, [expireRequests]);
 
   useEffect(() => {
+    // Filter and sort requests
     const pending = inboundRequests.filter(req => 
       req.status === 'pending' && !dismissedRequests.includes(req.id)
     );
     
+    // Sort by urgency (high > medium > low) and then by creation date (newest first)
     const sortByUrgency = (a: HitRequest, b: HitRequest) => {
       const urgencyOrder = { high: 3, medium: 2, low: 1 };
       const urgencyDiff = urgencyOrder[b.urgency] - urgencyOrder[a.urgency];
@@ -82,9 +86,12 @@ export default function HomeScreen() {
     
     const sortedRequests = [...pending].sort(sortByUrgency);
     setPendingRequests(sortedRequests);
+    
+    // Set all pending request senders as selected by default
     setSelectedIds(sortedRequests.map(req => req.senderId));
   }, [inboundRequests, dismissedRequests]);
 
+  // Initialize orderedRequests when pendingRequests change or when going live
   useEffect(() => {
     if (isHitMeModeActive) {
       const filtered = currentMode 
@@ -97,6 +104,7 @@ export default function HomeScreen() {
     }
   }, [isHitMeModeActive, pendingRequests, currentMode]);
 
+  // Timer countdown effect
   useEffect(() => {
     if (isHitMeModeActive && hitMeEndTime) {
       const updateTimer = () => {
@@ -105,7 +113,7 @@ export default function HomeScreen() {
         
         if (remaining <= 0) {
           setTimeRemaining(0);
-          toggleHitMeMode();
+          toggleHitMeMode(); // Auto turn off
           setHitMeEndTime(null);
           clearDismissedRequests();
           setCurrentMode(null);
@@ -138,6 +146,8 @@ export default function HomeScreen() {
     setHitMeDuration(minutes);
     setSelectedModes(modes);
     setShowCombinedModal(false);
+    
+    // Show queue review before going live
     setPreviewMode(false);
     setShowQueueReview(true);
   };
@@ -150,17 +160,23 @@ export default function HomeScreen() {
     toggleHitMeMode();
     setShowQueueReview(false);
     
+    // Set end time based on selected duration
     const endTime = Date.now() + (hitMeDuration * 60 * 1000);
     setHitMeEndTime(endTime);
     
+    // Set current mode based on selected modes
+    // If multiple modes are selected, set to null (all contacts)
+    // Otherwise, set to the single selected mode
     if (selectedModes.length === 1) {
       setCurrentMode(selectedModes[0]);
     } else {
       setCurrentMode(null);
     }
     
+    // Set pending notifications
     setPendingNotifications(notifyIds);
     
+    // Simulate sending notifications
     if (notifyIds.length > 0) {
       setTimeout(() => {
         Alert.alert(
@@ -172,6 +188,7 @@ export default function HomeScreen() {
       }, 1500);
     }
     
+    // Update lastOnline timestamp when going live
     if (user) {
       updateContactLastOnline(user.id);
     }
@@ -193,6 +210,7 @@ export default function HomeScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
     
+    // In a real app, this would initiate a call
     Alert.alert(
       "Connecting",
       `Connecting with ${getContactById(request.senderId).name}...`,
@@ -213,8 +231,10 @@ export default function HomeScreen() {
     }
     
     if (isHitMeModeActive) {
+      // When in live mode, add to dismissed list instead of fully dismissing
       addToDismissedRequests(requestId);
     } else {
+      // When not in live mode, fully dismiss the request
       dismissRequest(requestId);
     }
   };
@@ -258,7 +278,7 @@ export default function HomeScreen() {
     </ScaleDecorator>
   );
 
-  const renderStaticItem = ({ item }: { item: HitRequest }) => (
+  const renderItem = ({ item }: { item: HitRequest }) => (
     <RequestCard
       request={item}
       contact={getContactById(item.senderId)}
@@ -268,18 +288,9 @@ export default function HomeScreen() {
     />
   );
 
-  const EmptyQueueComponent = () => (
-    <EmptyState
-      title="Your queue is empty"
-      message={currentMode 
-        ? `No one in ${currentMode} mode is waiting to talk to you right now.`
-        : "No one is waiting to talk to you right now."}
-      icon={<Users size={48} color={colors.text.light} />}
-    />
-  );
-
   return (
     <>
+      {/* Disable back button by setting headerBackVisible to false */}
       <Stack.Screen options={{ headerBackVisible: false }} />
       
       <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -295,6 +306,7 @@ export default function HomeScreen() {
               />
             )}
             
+            {/* Use DraggableFlatList when in live mode */}
             {Platform.OS !== 'web' ? (
               <DraggableFlatList
                 data={orderedRequests}
@@ -302,16 +314,35 @@ export default function HomeScreen() {
                 keyExtractor={(item) => item.id}
                 renderItem={renderDraggableItem}
                 contentContainerStyle={styles.listContent}
-                ListEmptyComponent={EmptyQueueComponent}
+                ListEmptyComponent={
+                  <EmptyState
+                    title="Your queue is empty"
+                    message={currentMode 
+                      ? `No one in ${currentMode} mode is waiting to talk to you right now.`
+                      : "No one is waiting to talk to you right now."}
+                    icon={<Users size={48} color={colors.text.light} />}
+                  />
+                }
               />
             ) : (
-              <FlatList
-                data={orderedRequests}
-                keyExtractor={(item) => item.id}
-                renderItem={renderStaticItem}
-                contentContainerStyle={styles.listContent}
-                ListEmptyComponent={EmptyQueueComponent}
-              />
+              // Fallback for web
+              <View style={styles.listContainer}>
+                {orderedRequests.length === 0 ? (
+                  <EmptyState
+                    title="Your queue is empty"
+                    message={currentMode 
+                      ? `No one in ${currentMode} mode is waiting to talk to you right now.`
+                      : "No one is waiting to talk to you right now."}
+                    icon={<Users size={48} color={colors.text.light} />}
+                  />
+                ) : (
+                  orderedRequests.map(item => (
+                    <View key={item.id} style={styles.itemContainer}>
+                      {renderItem({ item })}
+                    </View>
+                  ))
+                )}
+              </View>
             )}
           </>
         ) : (
@@ -361,12 +392,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
     marginTop: 16,
+    fontFamily: 'PlusJakartaSans-Bold',
   },
   fixedContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden',
+    overflow: 'hidden', // Prevent scrolling
   },
   listContent: {
     padding: 16,
@@ -375,4 +407,11 @@ const styles = StyleSheet.create({
   draggableItem: {
     marginBottom: 12,
   },
+  listContainer: {
+    padding: 16,
+    paddingTop: 0,
+  },
+  itemContainer: {
+    marginBottom: 12,
+  }
 });

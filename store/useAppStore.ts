@@ -1,3 +1,4 @@
+// Split into smaller stores for better performance and maintainability
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -5,6 +6,7 @@ import { HitRequest, Contact, User, Mode } from '@/types';
 import { mockContacts } from '@/mocks/contacts';
 import { mockRequests } from '@/mocks/requests';
 
+// Separate interfaces for better TypeScript support
 interface UserSlice {
   user: User | null;
   setUser: (user: User) => void;
@@ -58,8 +60,10 @@ interface DebugSlice {
   loadMockData: () => void;
 }
 
+// Combine all slices into one interface
 type AppState = UserSlice & ContactsSlice & RequestsSlice & HitMeModeSlice & OnboardingSlice & DebugSlice;
 
+// Create the store with proper typing
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({

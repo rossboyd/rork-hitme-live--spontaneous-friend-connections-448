@@ -1,74 +1,97 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import 'react-native-reanimated/lib/reanimated2/js-reanimated';
-import { useColorScheme } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { StyleSheet } from 'react-native';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+import { PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans';
+import { useThemeStore } from '@/store/useThemeStore';
+import { darkTheme } from '@/constants/colors';
+import { useAppStore } from '@/store/useAppStore';
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
-
-export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
-};
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+// Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    ...FontAwesome.font,
+  // Always provide default colors to prevent undefined errors
+  const { theme, colors = darkTheme } = useThemeStore();
+  const { hasCompletedOnboarding, user } = useAppStore();
+  const segments = useSegments();
+  const router = useRouter();
+  
+  const [fontsLoaded] = useFonts({
+    'PlusJakartaSans-Regular': PlusJakartaSans_400Regular,
+    'PlusJakartaSans-Medium': PlusJakartaSans_500Medium,
+    'PlusJakartaSans-SemiBold': PlusJakartaSans_600SemiBold,
+    'PlusJakartaSans-Bold': PlusJakartaSans_700Bold,
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
-    if (error) throw error;
-  }, [error]);
-
-  useEffect(() => {
-    if (loaded) {
+    if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [fontsLoaded]);
 
-  if (!loaded) {
+  // Handle authentication and onboarding routing
+  useEffect(() => {
+    if (!fontsLoaded) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+    const inOnboardingGroup = segments[0] === 'onboarding';
+    const inTabsGroup = segments[0] === '(tabs)';
+    
+    // Auth-related routes that should bypass onboarding redirect
+    const isAuthRoute = 
+      inAuthGroup || 
+      segments[0] === 'verify' || 
+      segments[0] === '' || // root/index (likely login)
+      segments[0] === 'phone' || 
+      segments[0] === 'login' || 
+      segments[0] === 'permissions';
+
+    // If user hasn't completed onboarding and isn't in the onboarding flow or auth flow
+    if (!hasCompletedOnboarding && !inOnboardingGroup && !isAuthRoute) {
+      router.replace('/onboarding/welcome');
+    }
+    
+    // If user has completed onboarding but is still in the onboarding flow
+    if (hasCompletedOnboarding && (inOnboardingGroup || segments[0] === 'verify')) {
+      router.replace('/(tabs)/home');
+    }
+  }, [fontsLoaded, hasCompletedOnboarding, segments, router]);
+
+  if (!fontsLoaded) {
     return null;
   }
 
-  return <RootLayoutNav />;
-}
-
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="contacts" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="contact-detail" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="profile" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="live-activity-preview" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="verify" options={{ headerShown: false }} />
-          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-        </Stack>
-      </ThemeProvider>
-    </GestureHandlerRootView>
+    <Stack
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: colors.background,
+        },
+        headerShadowVisible: false,
+        headerTintColor: colors.text.primary,
+        headerBackTitle: 'Back',
+      }}
+    >
+      <Stack.Screen
+        name="index"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="verify"
+        options={{
+          headerTitle: '',
+          headerTransparent: true,
+        }}
+      />
+      <Stack.Screen
+        name="onboarding"
+        options={{
+          headerShown: false,
+        }}
+      />
+    </Stack>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
