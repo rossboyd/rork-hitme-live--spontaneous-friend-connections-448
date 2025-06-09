@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   View, 
   Text, 
@@ -6,14 +6,17 @@ import {
   TouchableOpacity, 
   Modal, 
   ScrollView,
-  Dimensions
+  Dimensions,
+  Platform
 } from 'react-native';
 import { HitRequest, Contact, Mode } from '@/types';
-import { X, Check, Filter, Briefcase, Home, Users, Clock } from 'lucide-react-native';
+import { X, Check, Filter, Briefcase, Home, Users, Clock, ChevronUp, ChevronDown } from 'lucide-react-native';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { Avatar } from '@/components/common/Avatar';
 import { formatDistanceToNow } from '@/utils/dateUtils';
+import * as Haptics from 'expo-haptics';
+import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 
 interface QueueReviewProps {
   visible: boolean;
@@ -42,6 +45,20 @@ export const QueueReview = ({
   currentMode
 }: QueueReviewProps) => {
   const { colors = darkTheme } = useThemeStore();
+  const [orderedRequests, setOrderedRequests] = useState<HitRequest[]>([]);
+
+  // Initialize orderedRequests when requests change or modal becomes visible
+  React.useEffect(() => {
+    if (visible) {
+      const filtered = currentMode 
+        ? requests.filter(request => {
+            const contact = getContactById(request.senderId);
+            return contact.modes?.includes(currentMode);
+          })
+        : requests;
+      setOrderedRequests(filtered);
+    }
+  }, [visible, requests, currentMode]);
 
   const getContactById = (contactId: string) => {
     return contacts.find(c => c.id === contactId) || {
@@ -58,15 +75,18 @@ export const QueueReview = ({
     } else {
       setSelectedIds([...selectedIds, contactId]);
     }
+    
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
   };
 
-  // Filter requests based on current mode if one is selected
-  const filteredRequests = currentMode 
-    ? requests.filter(request => {
-        const contact = getContactById(request.senderId);
-        return contact.modes?.includes(currentMode);
-      })
-    : requests;
+  const handleDragEnd = ({ data }: { data: HitRequest[] }) => {
+    setOrderedRequests(data);
+    if (Platform.OS !== 'web') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
 
   const getModeLabel = () => {
     switch (currentMode) {
@@ -92,6 +112,88 @@ export const QueueReview = ({
       default:
         return null;
     }
+  };
+
+  const renderItem = ({ item, drag, isActive }: RenderItemParams<HitRequest>) => {
+    const contact = getContactById(item.senderId);
+    const isSelected = selectedIds.includes(item.senderId);
+    const contactModes = contact.modes || [];
+
+    return (
+      <ScaleDecorator>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onLongPress={!previewMode ? drag : undefined}
+          disabled={previewMode || isActive}
+          onPress={() => !previewMode && toggleContact(item.senderId)}
+          style={[
+            styles.contactItem,
+            { backgroundColor: colors.card },
+            isSelected && { borderColor: colors.primary, borderWidth: 2 },
+            isActive && { opacity: 0.7 }
+          ]}
+        >
+          {!previewMode && (
+            <View style={styles.dragHandle}>
+              <ChevronUp size={14} color={colors.text.light} />
+              <ChevronDown size={14} color={colors.text.light} />
+            </View>
+          )}
+          
+          <Avatar
+            name={contact.name}
+            avatar={contact.avatar}
+            size={48}
+          />
+          
+          <View style={styles.contactInfo}>
+            <Text style={[styles.contactName, { color: colors.text.primary }]}>
+              {contact.name}
+            </Text>
+            <Text style={[styles.topic, { color: colors.text.secondary }]}>
+              {item.topic}
+            </Text>
+            
+            {/* Online status / Last seen */}
+            <View style={styles.statusContainer}>
+              <Clock size={12} color={colors.text.light} />
+              <Text style={[styles.lastSeen, { color: colors.text.light }]}>
+                {contact.lastOnline 
+                  ? `Last seen ${formatDistanceToNow(contact.lastOnline)}`
+                  : "Never online"}
+              </Text>
+            </View>
+            
+            {/* Contact modes */}
+            {contactModes.length > 0 && (
+              <View style={styles.modesContainer}>
+                {contactModes.map((mode) => (
+                  <View 
+                    key={mode} 
+                    style={[styles.modeTag, { backgroundColor: colors.background }]}
+                  >
+                    {renderModeIcon(mode)}
+                    <Text style={[styles.modeTagText, { color: colors.text.secondary }]}>
+                      {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+          
+          {!previewMode && (
+            <View style={[
+              styles.checkbox,
+              { borderColor: colors.border },
+              isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
+            ]}>
+              {isSelected && <Check size={16} color="#000" />}
+            </View>
+          )}
+        </TouchableOpacity>
+      </ScaleDecorator>
+    );
   };
 
   return (
@@ -120,7 +222,7 @@ export const QueueReview = ({
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.content}>
             {currentMode && (
               <View style={[styles.modeIndicator, { backgroundColor: colors.card }]}>
                 <Filter size={16} color={colors.primary} />
@@ -132,11 +234,13 @@ export const QueueReview = ({
             
             <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
               {previewMode
-                ? `${filteredRequests.length} people waiting to talk`
-                : "Select who to notify when you go live"}
+                ? `${orderedRequests.length} people waiting to talk`
+                : !previewMode && orderedRequests.length > 0 
+                  ? "Drag to reorder priority. Select who to notify when you go live."
+                  : "Select who to notify when you go live"}
             </Text>
 
-            {filteredRequests.length === 0 ? (
+            {orderedRequests.length === 0 ? (
               <View style={styles.emptyState}>
                 <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
                   {currentMode 
@@ -145,84 +249,30 @@ export const QueueReview = ({
                 </Text>
               </View>
             ) : (
-              filteredRequests.map(request => {
-                const contact = getContactById(request.senderId);
-                const isSelected = selectedIds.includes(request.senderId);
-                const contactModes = contact.modes || [];
-
-                return (
-                  <TouchableOpacity
-                    key={request.id}
-                    style={[
-                      styles.contactItem,
-                      { backgroundColor: colors.card },
-                      isSelected && { borderColor: colors.primary, borderWidth: 2 }
-                    ]}
-                    onPress={() => !previewMode && toggleContact(request.senderId)}
-                    disabled={previewMode}
-                  >
-                    <Avatar
-                      name={contact.name}
-                      avatar={contact.avatar}
-                      size={48}
-                    />
-                    <View style={styles.contactInfo}>
-                      <Text style={[styles.contactName, { color: colors.text.primary }]}>
-                        {contact.name}
-                      </Text>
-                      <Text style={[styles.topic, { color: colors.text.secondary }]}>
-                        {request.topic}
-                      </Text>
-                      
-                      {/* Online status / Last seen */}
-                      <View style={styles.statusContainer}>
-                        <Clock size={12} color={colors.text.light} />
-                        <Text style={[styles.lastSeen, { color: colors.text.light }]}>
-                          {contact.lastOnline 
-                            ? `Last seen ${formatDistanceToNow(contact.lastOnline)}`
-                            : "Never online"}
-                        </Text>
-                      </View>
-                      
-                      {/* Contact modes */}
-                      {contactModes.length > 0 && (
-                        <View style={styles.modesContainer}>
-                          {contactModes.map((mode) => (
-                            <View 
-                              key={mode} 
-                              style={[styles.modeTag, { backgroundColor: colors.background }]}
-                            >
-                              {renderModeIcon(mode)}
-                              <Text style={[styles.modeTagText, { color: colors.text.secondary }]}>
-                                {mode.charAt(0).toUpperCase() + mode.slice(1)}
-                              </Text>
-                            </View>
-                          ))}
-                        </View>
-                      )}
-                    </View>
-                    {!previewMode && (
-                      <View style={[
-                        styles.checkbox,
-                        { borderColor: colors.border },
-                        isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
-                      ]}>
-                        {isSelected && <Check size={16} color="#000" />}
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                );
-              })
+              <DraggableFlatList
+                data={orderedRequests}
+                onDragEnd={handleDragEnd}
+                keyExtractor={(item) => item.id}
+                renderItem={renderItem}
+                containerStyle={{ flex: 1 }}
+                contentContainerStyle={{ paddingBottom: 20 }}
+                disabled={previewMode}
+              />
             )}
-          </ScrollView>
+          </View>
 
-          {!previewMode && onGoLive && filteredRequests.length > 0 && (
+          {!previewMode && onGoLive && orderedRequests.length > 0 && (
             <View style={styles.footer}>
               <TouchableOpacity
                 style={[styles.goLiveButton, { backgroundColor: colors.primary }]}
                 onPress={() => onGoLive(selectedIds)}
+                disabled={selectedIds.length === 0}
+                activeOpacity={selectedIds.length > 0 ? 0.7 : 0.5}
               >
-                <Text style={[styles.goLiveText, { color: "#000" }]}>
+                <Text style={[
+                  styles.goLiveText, 
+                  { color: "#000", opacity: selectedIds.length > 0 ? 1 : 0.7 }
+                ]}>
                   Go Live ({selectedIds.length})
                 </Text>
               </TouchableOpacity>
@@ -287,6 +337,10 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 12,
     marginBottom: 12,
+  },
+  dragHandle: {
+    marginRight: 8,
+    alignItems: 'center',
   },
   contactInfo: {
     flex: 1,

@@ -115,14 +115,21 @@ export const DurationSelector = ({
   const renderPickerItem = (value: number, isSelected: boolean, type: 'hour' | 'minute') => {
     const formattedValue = type === 'minute' && value < 10 ? `0${value}` : value.toString();
     
+    // Calculate distance from selected item for fade effect
+    const distance = type === 'hour' 
+      ? Math.abs(value - selectedHours) 
+      : Math.abs(value - selectedMinutes);
+    
+    // Apply opacity based on distance from selected item
+    const opacity = distance === 0 ? 1 : distance === 1 ? 0.5 : 0.2;
+    
     return (
       <View key={`${type}-${value}`} style={styles.pickerItem}>
         <Text 
           style={[
             styles.pickerText,
-            { color: colors.text.primary },
-            isSelected && { color: colors.primary, fontWeight: '600', fontSize: 24 },
-            !isSelected && { opacity: 0.5 }
+            { color: colors.text.primary, opacity },
+            isSelected && { color: colors.primary, fontWeight: '600', fontSize: 24, opacity: 1 }
           ]}
         >
           {formattedValue}

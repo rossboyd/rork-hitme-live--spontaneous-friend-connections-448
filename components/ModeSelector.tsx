@@ -38,25 +38,23 @@ export const ModeSelector = ({
     onToggleMode(mode);
   };
   
-  const getModeOptions = (colors: any): ModeOption[] => [
+  const modeOptions: ModeOption[] = [
     {
       id: 'work',
       label: 'Work',
-      icon: <Briefcase size={16} color={colors.text.primary} />
+      icon: <Briefcase size={16} color={selectedModes.includes('work') ? '#FFFFFF' : colors.text.primary} />
     },
     {
       id: 'social',
       label: 'Social',
-      icon: <Users size={16} color={colors.text.primary} />
+      icon: <Users size={16} color={selectedModes.includes('social') ? '#FFFFFF' : colors.text.primary} />
     },
     {
       id: 'family',
       label: 'Family',
-      icon: <Home size={16} color={colors.text.primary} />
+      icon: <Home size={16} color={selectedModes.includes('family') ? '#FFFFFF' : colors.text.primary} />
     }
   ];
-  
-  const modeOptions = getModeOptions(colors);
   
   return (
     <View style={styles.container}>
