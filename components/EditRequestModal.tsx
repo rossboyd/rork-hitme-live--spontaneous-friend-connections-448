@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Contact, UrgencyLevel, HitRequest } from '@/types';
 import { Image } from 'expo-image';
-import { X, Edit2, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { X, Edit2, ChevronDown, ChevronUp, Star } from 'lucide-react-native';
 import { useThemeStore } from '@/store/useThemeStore';
 import { formatDistanceToNow } from '@/utils/dateUtils';
 import { darkTheme } from '@/constants/colors';
@@ -44,11 +44,13 @@ export const EditRequestModal = ({
   const [urgency, setUrgency] = useState<UrgencyLevel>('medium');
   const [expiresIn, setExpiresIn] = useState<number | null>(EXPIRY_OPTIONS[2].value);
   const [showDetails, setShowDetails] = useState(true);
+  const [isFavorite, setIsFavorite] = useState(false);
   
   useEffect(() => {
     if (request) {
       setTopic(request.topic);
       setUrgency(request.urgency);
+      setIsFavorite(request.expiresAt === null);
       
       // Calculate remaining time or set to null if no expiry
       if (request.expiresAt) {
@@ -80,6 +82,14 @@ export const EditRequestModal = ({
     }
   }, [request, contact]);
   
+  const toggleFavorite = () => {
+    setIsFavorite(!isFavorite);
+    // If marking as favorite, automatically set expiry to "Never"
+    if (!isFavorite) {
+      setExpiresIn(null);
+    }
+  };
+  
   const handleUpdate = () => {
     if (!request) return;
     
@@ -89,7 +99,9 @@ export const EditRequestModal = ({
     };
     
     // Calculate new expiry date if needed
-    if (expiresIn !== null) {
+    if (isFavorite) {
+      updates.expiresAt = null;
+    } else if (expiresIn !== null) {
       updates.expiresAt = Date.now() + expiresIn;
     } else {
       updates.expiresAt = null;
@@ -138,6 +150,26 @@ export const EditRequestModal = ({
                 </Text>
               )}
             </View>
+            
+            <TouchableOpacity 
+              style={[styles.favoriteToggle, { 
+                backgroundColor: isFavorite ? colors.primary + '20' : colors.card,
+                borderColor: isFavorite ? colors.primary : colors.border 
+              }]}
+              onPress={toggleFavorite}
+            >
+              <Star 
+                size={20} 
+                color={isFavorite ? colors.primary : colors.text.secondary} 
+                fill={isFavorite ? colors.primary : 'none'}
+              />
+              <Text style={[
+                styles.favoriteToggleText, 
+                { color: isFavorite ? colors.primary : colors.text.secondary }
+              ]}>
+                {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+              </Text>
+            </TouchableOpacity>
             
             <TouchableOpacity 
               style={[styles.detailsToggle, { backgroundColor: colors.card, borderColor: colors.border }]}
@@ -199,32 +231,42 @@ export const EditRequestModal = ({
               </>
             )}
             
-            <View style={styles.formGroup}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Expires in</Text>
-              <View style={styles.expiryOptions}>
-                {EXPIRY_OPTIONS.map((option) => (
-                  <TouchableOpacity
-                    key={option.label}
-                    style={[
-                      styles.expiryOption,
-                      { borderColor: colors.border },
-                      expiresIn === option.value && [styles.selectedExpiryOption, { backgroundColor: colors.primary, borderColor: colors.primary }]
-                    ]}
-                    onPress={() => setExpiresIn(option.value)}
-                  >
-                    <Text 
+            {!isFavorite && (
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: colors.text.primary }]}>Expires in</Text>
+                <View style={styles.expiryOptions}>
+                  {EXPIRY_OPTIONS.map((option) => (
+                    <TouchableOpacity
+                      key={option.label}
                       style={[
-                        styles.expiryText,
-                        { color: colors.text.primary },
-                        expiresIn === option.value && { color: "#000" }
+                        styles.expiryOption,
+                        { borderColor: colors.border },
+                        expiresIn === option.value && [styles.selectedExpiryOption, { backgroundColor: colors.primary, borderColor: colors.primary }]
                       ]}
+                      onPress={() => setExpiresIn(option.value)}
                     >
-                      {option.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Text 
+                        style={[
+                          styles.expiryText,
+                          { color: colors.text.primary },
+                          expiresIn === option.value && { color: "#000" }
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
-            </View>
+            )}
+            
+            {isFavorite && (
+              <View style={styles.favoriteNote}>
+                <Text style={[styles.favoriteNoteText, { color: colors.text.secondary }]}>
+                  Favorites never expire and will always appear at the top of your HitList.
+                </Text>
+              </View>
+            )}
           </ScrollView>
           
           <TouchableOpacity
@@ -288,6 +330,21 @@ const styles = StyleSheet.create({
   },
   lastOnline: {
     fontSize: 14,
+  },
+  favoriteToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    marginHorizontal: 24,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  favoriteToggleText: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginLeft: 8,
   },
   detailsToggle: {
     flexDirection: 'row',
@@ -360,6 +417,14 @@ const styles = StyleSheet.create({
   },
   selectedExpiryText: {
     color: '#fff',
+  },
+  favoriteNote: {
+    paddingHorizontal: 24,
+    marginBottom: 20,
+  },
+  favoriteNoteText: {
+    fontSize: 14,
+    fontStyle: 'italic',
   },
   submitButton: {
     borderRadius: 12,

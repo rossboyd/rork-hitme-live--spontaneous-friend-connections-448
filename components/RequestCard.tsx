@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { Phone, X, Clock, Trash2, Wifi } from 'lucide-react-native';
+import { Phone, X, Clock, Trash2, Wifi, Star } from 'lucide-react-native';
 import { HitRequest, UrgencyLevel, Contact } from '@/types';
 import { formatDistanceToNow } from '@/utils/dateUtils';
 import { useThemeStore } from '@/store/useThemeStore';
@@ -15,6 +15,7 @@ interface RequestCardProps {
   onExtend?: () => void;
   onDelete?: () => void;
   isInbound?: boolean;
+  isFavorite?: boolean;
 }
 
 export const RequestCard = ({ 
@@ -24,7 +25,8 @@ export const RequestCard = ({
   onDismiss, 
   onExtend,
   onDelete,
-  isInbound = false
+  isInbound = false,
+  isFavorite = false
 }: RequestCardProps) => {
   const { colors = darkTheme } = useThemeStore();
   
@@ -38,7 +40,8 @@ export const RequestCard = ({
     <View style={[
       styles.card, 
       { backgroundColor: colors.card },
-      isExpired && styles.expiredCard
+      isExpired && styles.expiredCard,
+      isFavorite && styles.favoriteCard
     ]}>
       <Avatar
         name={contact.name}
@@ -48,7 +51,12 @@ export const RequestCard = ({
       
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={[styles.name, { color: colors.text.primary }]}>{contact.name}</Text>
+          <View style={styles.nameContainer}>
+            <Text style={[styles.name, { color: colors.text.primary }]}>{contact.name}</Text>
+            {isFavorite && (
+              <Star size={14} color={colors.primary} style={styles.favoriteIcon} />
+            )}
+          </View>
           <View style={[styles.urgencyBadge, { backgroundColor: getUrgencyColor(request.urgency) }]}>
             <Text style={styles.urgencyText}>{request.urgency}</Text>
           </View>
@@ -138,6 +146,10 @@ const styles = StyleSheet.create({
   expiredCard: {
     opacity: 0.7,
   },
+  favoriteCard: {
+    borderLeftWidth: 3,
+    borderLeftColor: '#FFD700', // Gold color for favorites
+  },
   content: {
     flex: 1,
     marginLeft: 16,
@@ -148,9 +160,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
+  nameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   name: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  favoriteIcon: {
+    marginLeft: 6,
   },
   urgencyBadge: {
     paddingHorizontal: 8,

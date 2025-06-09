@@ -4,22 +4,24 @@ import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { RequestCard } from '@/components/RequestCard';
 import { EmptyState } from '@/components/EmptyState';
-import { Plus, ListChecks } from 'lucide-react-native';
+import { Plus, ListChecks, Star } from 'lucide-react-native';
 import { HitRequest } from '@/types';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import { EditRequestModal } from '@/components/EditRequestModal';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
+import { useRequestFilters } from '@/hooks/useRequestFilters';
 
 export default function HitListScreen() {
   const router = useRouter();
-  const { outboundRequests, contacts, expireRequests, updateRequestStatus, deleteOutboundRequest, updateOutboundRequest } = useAppStore();
+  const { outboundRequests, contacts, expireRequests, updateRequestStatus, deleteOutboundRequest, updateOutboundRequest, user } = useAppStore();
   const { colors = darkTheme } = useThemeStore();
-  const [activeRequests, setActiveRequests] = useState<HitRequest[]>([]);
-  const [expiredRequests, setExpiredRequests] = useState<HitRequest[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<HitRequest | null>(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
+
+  // Use the filter hook to get categorized requests
+  const { favoriteRequests, pendingRequests, expiredRequests } = useRequestFilters(outboundRequests);
 
   useEffect(() => {
     // Check for expired requests on mount and every minute
@@ -28,24 +30,6 @@ export default function HitListScreen() {
     
     return () => clearInterval(interval);
   }, [expireRequests]);
-
-  useEffect(() => {
-    // Filter and sort requests
-    const active = outboundRequests.filter(req => req.status === 'pending');
-    const expired = outboundRequests.filter(req => req.status === 'expired');
-    
-    // Sort by urgency (high > medium > low) and then by creation date (newest first)
-    const sortByUrgency = (a: HitRequest, b: HitRequest) => {
-      const urgencyOrder = { high: 3, medium: 2, low: 1 };
-      const urgencyDiff = urgencyOrder[b.urgency] - urgencyOrder[a.urgency];
-      
-      if (urgencyDiff !== 0) return urgencyDiff;
-      return b.createdAt - a.createdAt;
-    };
-    
-    setActiveRequests([...active].sort(sortByUrgency));
-    setExpiredRequests([...expired].sort((a, b) => b.createdAt - a.createdAt));
-  }, [outboundRequests]);
 
   const handleAddRequest = () => {
     router.push('/contacts');
@@ -95,6 +79,7 @@ export default function HitListScreen() {
         onExtend={() => handleExtendRequest(item.id)}
         onDelete={() => handleDeleteRequest(item.id)}
         isInbound={false}
+        isFavorite={item.expiresAt === null}
       />
     </TouchableOpacity>
   );
@@ -107,24 +92,82 @@ export default function HitListScreen() {
     />
   );
 
+  const hasAnyRequests = favoriteRequests.length > 0 || pendingRequests.length > 0 || expiredRequests.length > 0;
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.header}>
+        <Text style={[styles.appName, { color: colors.text.primary }]}>HitMeApp</Text>
+        <Text style={[styles.welcomeText, { color: colors.text.secondary }]}>
+          Hey {user?.name || "there"}. {"\n"}You're Offline
+        </Text>
+      </View>
+
       <FlatList
-        data={[...activeRequests, ...expiredRequests]}
+        data={[]}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
-        ListEmptyComponent={renderEmptyState}
+        ListEmptyComponent={!hasAnyRequests ? renderEmptyState : null}
         ListHeaderComponent={
-          activeRequests.length > 0 || expiredRequests.length > 0 ? (
-            <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>
-              {activeRequests.length} Active Requests
-            </Text>
+          hasAnyRequests ? (
+            <View>
+              {favoriteRequests.length > 0 && (
+                <View style={styles.sectionContainer}>
+                  <View style={styles.sectionHeader}>
+                    <Star size={16} color={colors.primary} />
+                    <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>
+                      Favorites
+                    </Text>
+                  </View>
+                  {favoriteRequests.map(request => (
+                    <TouchableOpacity 
+                      key={request.id}
+                      activeOpacity={0.7}
+                      onPress={() => handleEditRequest(request)}
+                    >
+                      <RequestCard
+                        request={request}
+                        contact={getContactById(request.receiverId)}
+                        onExtend={() => handleExtendRequest(request.id)}
+                        onDelete={() => handleDeleteRequest(request.id)}
+                        isInbound={false}
+                        isFavorite={true}
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+              
+              {pendingRequests.length > 0 && (
+                <View style={styles.sectionContainer}>
+                  <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>
+                    {pendingRequests.length} Active Requests
+                  </Text>
+                  {pendingRequests.map(request => (
+                    <TouchableOpacity 
+                      key={request.id}
+                      activeOpacity={0.7}
+                      onPress={() => handleEditRequest(request)}
+                    >
+                      <RequestCard
+                        request={request}
+                        contact={getContactById(request.receiverId)}
+                        onExtend={() => handleExtendRequest(request.id)}
+                        onDelete={() => handleDeleteRequest(request.id)}
+                        isInbound={false}
+                        isFavorite={false}
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
           ) : null
         }
         ListFooterComponent={
           expiredRequests.length > 0 ? (
-            <View>
+            <View style={styles.sectionContainer}>
               <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Expired</Text>
               {expiredRequests.map(request => (
                 <TouchableOpacity 
@@ -138,6 +181,7 @@ export default function HitListScreen() {
                     onExtend={() => handleExtendRequest(request.id)}
                     onDelete={() => handleDeleteRequest(request.id)}
                     isInbound={false}
+                    isFavorite={false}
                   />
                 </TouchableOpacity>
               ))}
@@ -171,15 +215,36 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  appName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  welcomeText: {
+    fontSize: 16,
+    lineHeight: 24,
+  },
   listContent: {
     padding: 16,
     paddingBottom: 80,
   },
+  sectionContainer: {
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 12,
-    marginTop: 8,
+    marginLeft: 6,
   },
   addButton: {
     position: 'absolute',
