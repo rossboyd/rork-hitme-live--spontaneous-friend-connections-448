@@ -15,7 +15,6 @@ import { useAppStore } from '@/store/useAppStore';
 import { Avatar } from '@/components/common/Avatar';
 import { Camera, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 
 // Default avatars to choose from
@@ -30,8 +29,9 @@ const DEFAULT_AVATARS = [
 
 export default function OnboardingProfileScreen() {
   const router = useRouter();
-  const { user, setUser, setHasCompletedOnboarding, loadMockData } = useAppStore();
-  const { colors = darkTheme } = useThemeStore();
+  const { user, setUser } = useAppStore();
+  // Use static theme to prevent infinite loop
+  const colors = darkTheme;
   
   const [name, setName] = useState(user?.name || '');
   const [selectedAvatar, setSelectedAvatar] = useState(user?.avatar || DEFAULT_AVATARS[0]);
@@ -47,16 +47,12 @@ export default function OnboardingProfileScreen() {
     }
     
     // Update user profile
-    if (user) {
-      setUser({
-        ...user,
-        name: name.trim(),
-        avatar: selectedAvatar,
-      });
-    }
-    
-    // Load mock data before completing onboarding
-    loadMockData();
+    setUser({
+      id: user?.id || `user-${Date.now()}`,
+      name: name.trim(),
+      avatar: selectedAvatar,
+      phone: user?.phone || '+1234567890',
+    });
     
     // Navigate to notifications permission screen
     router.push('/onboarding/notifications');

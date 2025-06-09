@@ -4,7 +4,9 @@ import {
   StyleSheet, 
   Alert, 
   Platform,
-  Text
+  Text,
+  TouchableOpacity,
+  FlatList
 } from 'react-native';
 import { useAppStore } from '@/store/useAppStore';
 import { RequestCard } from '@/components/RequestCard';
@@ -20,7 +22,6 @@ import { darkTheme } from '@/constants/colors';
 import { Stack } from 'expo-router';
 import { CombinedGoLiveModal } from '@/components/CombinedGoLiveModal';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
-import { TouchableOpacity } from 'react-native';
 
 export default function HomeScreen() {
   const { 
@@ -55,6 +56,7 @@ export default function HomeScreen() {
   const [previewMode, setPreviewMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedModes, setSelectedModes] = useState<Mode[]>([]);
+  const [activeTab, setActiveTab] = useState<'active' | 'favorites' | 'expired'>('active');
 
   // Set theme based on HitMeMode status
   useEffect(() => {
@@ -70,10 +72,25 @@ export default function HomeScreen() {
   }, [expireRequests]);
 
   useEffect(() => {
-    // Filter and sort requests
-    const pending = inboundRequests.filter(req => 
-      req.status === 'pending' && !dismissedRequests.includes(req.id)
-    );
+    // Filter and sort requests based on active tab
+    let filtered: HitRequest[] = [];
+    
+    if (activeTab === 'active') {
+      filtered = inboundRequests.filter(req => 
+        req.status === 'pending' && !dismissedRequests.includes(req.id)
+      );
+    } else if (activeTab === 'favorites') {
+      filtered = inboundRequests.filter(req => {
+        const contact = getContactById(req.senderId);
+        return req.status === 'pending' && 
+               !dismissedRequests.includes(req.id) && 
+               contact.isFavorite === true;
+      });
+    } else if (activeTab === 'expired') {
+      filtered = inboundRequests.filter(req => 
+        req.status === 'expired' || req.status === 'dismissed'
+      );
+    }
     
     // Sort by urgency (high > medium > low) and then by creation date (newest first)
     const sortByUrgency = (a: HitRequest, b: HitRequest) => {
@@ -84,12 +101,12 @@ export default function HomeScreen() {
       return b.createdAt - a.createdAt;
     };
     
-    const sortedRequests = [...pending].sort(sortByUrgency);
+    const sortedRequests = [...filtered].sort(sortByUrgency);
     setPendingRequests(sortedRequests);
     
     // Set all pending request senders as selected by default
     setSelectedIds(sortedRequests.map(req => req.senderId));
-  }, [inboundRequests, dismissedRequests]);
+  }, [inboundRequests, dismissedRequests, activeTab]);
 
   // Initialize orderedRequests when pendingRequests change or when going live
   useEffect(() => {
@@ -288,6 +305,61 @@ export default function HomeScreen() {
     />
   );
 
+  const renderTabBar = () => (
+    <View style={styles.tabBar}>
+      <TouchableOpacity
+        style={[
+          styles.tab,
+          activeTab === 'active' && [styles.activeTab, { borderBottomColor: colors.primary }]
+        ]}
+        onPress={() => setActiveTab('active')}
+      >
+        <Text 
+          style={[
+            styles.tabText, 
+            { color: activeTab === 'active' ? colors.primary : colors.text.secondary }
+          ]}
+        >
+          Active
+        </Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity
+        style={[
+          styles.tab,
+          activeTab === 'favorites' && [styles.activeTab, { borderBottomColor: colors.primary }]
+        ]}
+        onPress={() => setActiveTab('favorites')}
+      >
+        <Text 
+          style={[
+            styles.tabText, 
+            { color: activeTab === 'favorites' ? colors.primary : colors.text.secondary }
+          ]}
+        >
+          Favorites
+        </Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity
+        style={[
+          styles.tab,
+          activeTab === 'expired' && [styles.activeTab, { borderBottomColor: colors.primary }]
+        ]}
+        onPress={() => setActiveTab('expired')}
+      >
+        <Text 
+          style={[
+            styles.tabText, 
+            { color: activeTab === 'expired' ? colors.primary : colors.text.secondary }
+          ]}
+        >
+          Expired
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <>
       {/* Disable back button by setting headerBackVisible to false */}
@@ -346,15 +418,41 @@ export default function HomeScreen() {
             )}
           </>
         ) : (
-          <View style={styles.fixedContainer}>
-            <SlideToLiveToggle 
-              waitingCount={pendingRequests.length}
-              onSlideComplete={handleSlideComplete}
-              userName={user?.name.split(' ')[0]}
-              onPreviewQueue={handlePreviewQueue}
-              currentMode={currentMode}
+          <>
+            {renderTabBar()}
+            
+            <FlatList
+              data={pendingRequests}
+              keyExtractor={(item) => item.id}
+              renderItem={renderItem}
+              contentContainerStyle={styles.listContent}
+              ListEmptyComponent={
+                <EmptyState
+                  title={
+                    activeTab === 'active' ? "No active requests" :
+                    activeTab === 'favorites' ? "No favorite requests" :
+                    "No expired requests"
+                  }
+                  message={
+                    activeTab === 'active' ? "When someone wants to talk to you, their request will appear here." :
+                    activeTab === 'favorites' ? "Favorite contacts with active requests will appear here." :
+                    "Expired and dismissed requests will appear here."
+                  }
+                  icon={<Users size={48} color={colors.text.light} />}
+                />
+              }
             />
-          </View>
+            
+            <View style={styles.fixedContainer}>
+              <SlideToLiveToggle 
+                waitingCount={pendingRequests.length}
+                onSlideComplete={handleSlideComplete}
+                userName={user?.name.split(' ')[0]}
+                onPreviewQueue={handlePreviewQueue}
+                currentMode={currentMode}
+              />
+            </View>
+          </>
         )}
         
         <CombinedGoLiveModal
@@ -395,14 +493,18 @@ const styles = StyleSheet.create({
     fontFamily: 'PlusJakartaSans-Bold',
   },
   fixedContainer: {
-    flex: 1,
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden', // Prevent scrolling
+    padding: 16,
   },
   listContent: {
     padding: 16,
     paddingTop: 0,
+    paddingBottom: 100, // Add padding to avoid overlap with the slide toggle
   },
   draggableItem: {
     marginBottom: 12,
@@ -413,5 +515,25 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     marginBottom: 12,
-  }
+  },
+  tabBar: {
+    flexDirection: 'row',
+    marginTop: 8,
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(150, 150, 150, 0.2)',
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  activeTab: {
+    borderBottomWidth: 2,
+  },
+  tabText: {
+    fontSize: 16,
+    fontWeight: '500',
+    fontFamily: 'PlusJakartaSans-Medium',
+  },
 });

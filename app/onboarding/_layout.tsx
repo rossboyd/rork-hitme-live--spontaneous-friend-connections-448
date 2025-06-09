@@ -1,10 +1,11 @@
 import React from 'react';
 import { Stack } from 'expo-router';
-import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 
 export default function OnboardingLayout() {
-  const { colors = darkTheme } = useThemeStore();
+  // Remove the useThemeStore hook to prevent infinite loop
+  // We'll use a static theme for onboarding
+  const colors = darkTheme;
   
   return (
     <Stack

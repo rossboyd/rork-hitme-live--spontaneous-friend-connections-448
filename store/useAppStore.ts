@@ -131,7 +131,7 @@ export const useAppStore = create<AppState>()(
         outboundRequests: [...state.outboundRequests, {
           id: `request-${Date.now()}`,
           createdAt: Date.now(),
-          status: 'pending',
+          status: 'pending' as RequestStatus,
           ...request,
         }]
       })),
