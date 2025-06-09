@@ -54,26 +54,6 @@ export default function RootLayout() {
           headerTransparent: true,
         }}
       />
-      <Stack.Screen
-        name="(tabs)"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="contact-detail"
-        options={{
-          headerTitle: '',
-          presentation: 'modal',
-        }}
-      />
-      <Stack.Screen
-        name="live-activity-preview"
-        options={{
-          headerTitle: 'Live Activity Preview',
-          presentation: 'modal',
-        }}
-      />
     </Stack>
   );
 }

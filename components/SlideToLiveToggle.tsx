@@ -141,14 +141,14 @@ export const SlideToLiveToggle = ({
                 { scale: thumbScale }
               ],
               borderColor: isThresholdReached ? colors.primary : 'transparent',
-              backgroundColor: '#E5E7EB' // Light grey color for thumb
+              backgroundColor: '#F3F4F6' // Light grey color for thumb
             }
           ]}
           {...panResponder.panHandlers}
         >
           <Phone 
             size={32} 
-            color={isThresholdReached ? colors.primary : '#9CA3AF'} 
+            color={isThresholdReached ? colors.primary : '#6B7280'} 
           />
         </Animated.View>
       </Animated.View>
