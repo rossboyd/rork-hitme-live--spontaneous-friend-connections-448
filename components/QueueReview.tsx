@@ -9,10 +9,11 @@ import {
   Dimensions
 } from 'react-native';
 import { HitRequest, Contact, Mode } from '@/types';
-import { X, Check, Filter } from 'lucide-react-native';
+import { X, Check, Filter, Briefcase, Home, Users, Clock } from 'lucide-react-native';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { Avatar } from '@/components/common/Avatar';
+import { formatDistanceToNow } from '@/utils/dateUtils';
 
 interface QueueReviewProps {
   visible: boolean;
@@ -80,6 +81,19 @@ export const QueueReview = ({
     }
   };
 
+  const renderModeIcon = (mode: Mode) => {
+    switch (mode) {
+      case 'work':
+        return <Briefcase size={14} color={colors.primary} />;
+      case 'family':
+        return <Home size={14} color={colors.primary} />;
+      case 'social':
+        return <Users size={14} color={colors.primary} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <Modal
       visible={visible}
@@ -134,6 +148,7 @@ export const QueueReview = ({
               filteredRequests.map(request => {
                 const contact = getContactById(request.senderId);
                 const isSelected = selectedIds.includes(request.senderId);
+                const contactModes = contact.modes || [];
 
                 return (
                   <TouchableOpacity
@@ -158,6 +173,33 @@ export const QueueReview = ({
                       <Text style={[styles.topic, { color: colors.text.secondary }]}>
                         {request.topic}
                       </Text>
+                      
+                      {/* Online status / Last seen */}
+                      <View style={styles.statusContainer}>
+                        <Clock size={12} color={colors.text.light} />
+                        <Text style={[styles.lastSeen, { color: colors.text.light }]}>
+                          {contact.lastOnline 
+                            ? `Last seen ${formatDistanceToNow(contact.lastOnline)}`
+                            : "Never online"}
+                        </Text>
+                      </View>
+                      
+                      {/* Contact modes */}
+                      {contactModes.length > 0 && (
+                        <View style={styles.modesContainer}>
+                          {contactModes.map((mode) => (
+                            <View 
+                              key={mode} 
+                              style={[styles.modeTag, { backgroundColor: colors.background }]}
+                            >
+                              {renderModeIcon(mode)}
+                              <Text style={[styles.modeTagText, { color: colors.text.secondary }]}>
+                                {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
                     </View>
                     {!previewMode && (
                       <View style={[
@@ -257,6 +299,32 @@ const styles = StyleSheet.create({
   },
   topic: {
     fontSize: 14,
+    marginBottom: 6,
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  lastSeen: {
+    fontSize: 12,
+    marginLeft: 4,
+  },
+  modesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  modeTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+  },
+  modeTagText: {
+    fontSize: 12,
+    marginLeft: 4,
   },
   checkbox: {
     width: 24,
