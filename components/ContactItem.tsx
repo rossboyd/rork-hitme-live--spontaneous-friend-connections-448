@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Contact } from '@/types';
+import { Contact, Mode } from '@/types';
 import { formatDistanceToNow } from '@/utils/dateUtils';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { Avatar } from '@/components/common/Avatar';
+import { Briefcase, Home, Users } from 'lucide-react-native';
 
 interface ContactItemProps {
   contact: Contact;
@@ -12,6 +13,7 @@ interface ContactItemProps {
   showLastOnline?: boolean;
   isInHitList?: boolean;
   onToggleHitList?: (contact: Contact) => void;
+  showModes?: boolean;
 }
 
 export const ContactItem = ({
@@ -19,9 +21,24 @@ export const ContactItem = ({
   onPress,
   showLastOnline = false,
   isInHitList = false,
-  onToggleHitList
+  onToggleHitList,
+  showModes = false
 }: ContactItemProps) => {
   const { colors = darkTheme } = useThemeStore();
+  const contactModes = contact.modes || [];
+
+  const renderModeIcon = (mode: Mode) => {
+    switch (mode) {
+      case 'work':
+        return <Briefcase size={14} color={colors.primary} />;
+      case 'family':
+        return <Home size={14} color={colors.primary} />;
+      case 'social':
+        return <Users size={14} color={colors.primary} />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <TouchableOpacity 
@@ -42,6 +59,22 @@ export const ContactItem = ({
           <Text style={[styles.lastOnline, { color: colors.text.light }]}>
             Last online {formatDistanceToNow(contact.lastOnline)}
           </Text>
+        )}
+        
+        {showModes && contactModes.length > 0 && (
+          <View style={styles.modesContainer}>
+            {contactModes.map((mode) => (
+              <View 
+                key={mode} 
+                style={[styles.modeTag, { backgroundColor: colors.background }]}
+              >
+                {renderModeIcon(mode)}
+                <Text style={[styles.modeText, { color: colors.text.secondary }]}>
+                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                </Text>
+              </View>
+            ))}
+          </View>
         )}
       </View>
       
@@ -96,6 +129,23 @@ const styles = StyleSheet.create({
   },
   lastOnline: {
     fontSize: 12,
+  },
+  modesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 4,
+    gap: 6,
+  },
+  modeTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+  },
+  modeText: {
+    fontSize: 12,
+    marginLeft: 4,
   },
   hitListButton: {
     paddingVertical: 8,

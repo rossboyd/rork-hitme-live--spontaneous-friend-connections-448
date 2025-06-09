@@ -17,6 +17,8 @@ import { EditContactModal } from '@/components/EditContactModal';
 import { AddRequestModal } from '@/components/AddRequestModal';
 import { useThemeStore } from '@/store/useThemeStore';
 import { Avatar } from '@/components/common/Avatar';
+import { ModeAssociations } from '@/components/ModeAssociations';
+import { Mode } from '@/types';
 
 export default function ContactDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -26,7 +28,8 @@ export default function ContactDetailScreen() {
     deleteContact, 
     updateContact,
     outboundRequests,
-    addOutboundRequest
+    addOutboundRequest,
+    toggleContactMode
   } = useAppStore();
   const { colors } = useThemeStore();
   
@@ -109,6 +112,13 @@ export default function ContactDetailScreen() {
     );
   };
   
+  const handleToggleMode = (mode: Mode) => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    toggleContactMode(contact.id, mode);
+  };
+  
   const isInHitList = outboundRequests.some(req => 
     req.receiverId === contact.id && req.status === 'pending'
   );
@@ -180,6 +190,13 @@ export default function ContactDetailScreen() {
               {isInHitList ? "In HitList" : "Add to HitList"}
             </Text>
           </TouchableOpacity>
+        </View>
+        
+        <View style={styles.modesContainer}>
+          <ModeAssociations 
+            contact={contact} 
+            onToggleMode={handleToggleMode} 
+          />
         </View>
         
         <View style={[styles.dangerZone, { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }]}>
@@ -281,9 +298,13 @@ const styles = StyleSheet.create({
   activeActionText: {
     color: '#fff',
   },
+  modesContainer: {
+    paddingHorizontal: 16,
+    marginTop: 16,
+  },
   dangerZone: {
     margin: 16,
-    marginTop: 32,
+    marginTop: 16,
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,

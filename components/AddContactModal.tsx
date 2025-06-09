@@ -10,10 +10,11 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
-import { X, User } from 'lucide-react-native';
+import { X, User, Briefcase, Home, Users } from 'lucide-react-native';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { Avatar } from '@/components/common/Avatar';
+import { Mode } from '@/types';
 
 interface AddContactModalProps {
   visible: boolean;
@@ -22,6 +23,7 @@ interface AddContactModalProps {
     name: string;
     phone: string;
     avatar: string;
+    modes?: Mode[];
   }) => void;
 }
 
@@ -44,6 +46,7 @@ export const AddContactModal = ({
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState(DEFAULT_AVATARS[0]);
+  const [selectedModes, setSelectedModes] = useState<Mode[]>([]);
   
   const handleSubmit = () => {
     if (!name.trim() || !phone.trim()) return;
@@ -52,12 +55,22 @@ export const AddContactModal = ({
       name: name.trim(),
       phone: phone.trim(),
       avatar: selectedAvatar,
+      modes: selectedModes.length > 0 ? selectedModes : undefined,
     });
     
     // Reset form
     setName('');
     setPhone('');
     setSelectedAvatar(DEFAULT_AVATARS[0]);
+    setSelectedModes([]);
+  };
+  
+  const toggleMode = (mode: Mode) => {
+    setSelectedModes(current => 
+      current.includes(mode)
+        ? current.filter(m => m !== mode)
+        : [...current, mode]
+    );
   };
   
   const isFormValid = name.trim() !== '' && phone.trim() !== '';
@@ -131,6 +144,51 @@ export const AddContactModal = ({
                 placeholderTextColor={colors.text.light}
                 keyboardType="phone-pad"
               />
+            </View>
+            
+            <View style={styles.formGroup}>
+              <Text style={[styles.label, { color: colors.text.primary }]}>Mode Associations</Text>
+              <Text style={[styles.sublabel, { color: colors.text.secondary }]}>
+                Choose which modes to associate with this contact
+              </Text>
+              
+              <View style={styles.modesContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.modeButton,
+                    { backgroundColor: colors.card },
+                    selectedModes.includes('work') && { borderColor: colors.primary, borderWidth: 2 }
+                  ]}
+                  onPress={() => toggleMode('work')}
+                >
+                  <Briefcase size={24} color={colors.primary} />
+                  <Text style={[styles.modeButtonText, { color: colors.text.primary }]}>Work</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[
+                    styles.modeButton,
+                    { backgroundColor: colors.card },
+                    selectedModes.includes('social') && { borderColor: colors.primary, borderWidth: 2 }
+                  ]}
+                  onPress={() => toggleMode('social')}
+                >
+                  <Users size={24} color={colors.primary} />
+                  <Text style={[styles.modeButtonText, { color: colors.text.primary }]}>Social</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[
+                    styles.modeButton,
+                    { backgroundColor: colors.card },
+                    selectedModes.includes('family') && { borderColor: colors.primary, borderWidth: 2 }
+                  ]}
+                  onPress={() => toggleMode('family')}
+                >
+                  <Home size={24} color={colors.primary} />
+                  <Text style={[styles.modeButtonText, { color: colors.text.primary }]}>Family</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </ScrollView>
           
@@ -209,11 +267,30 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 8,
   },
+  sublabel: {
+    fontSize: 14,
+    marginBottom: 12,
+  },
   input: {
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
     borderWidth: 1,
+  },
+  modesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  modeButton: {
+    width: '30%',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+  },
+  modeButtonText: {
+    marginTop: 8,
+    fontSize: 14,
+    fontWeight: '500',
   },
   submitButton: {
     borderRadius: 12,

@@ -3,178 +3,201 @@ import {
   View, 
   StyleSheet, 
   FlatList, 
-  TextInput,
+  TextInput, 
   TouchableOpacity,
-  Text,
-  Platform
+  Text
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { ContactItem } from '@/components/ContactItem';
-import { colors } from '@/constants/colors';
-import { Search, X, Plus, User } from 'lucide-react-native';
-import { Contact } from '@/types';
-import * as Haptics from 'expo-haptics';
-import { AddContactModal } from '@/components/AddContactModal';
 import { EmptyState } from '@/components/EmptyState';
-import { AddRequestModal } from '@/components/AddRequestModal';
+import { Search, UserPlus, Filter } from 'lucide-react-native';
+import { Contact, Mode } from '@/types';
+import { AddContactModal } from '@/components/AddContactModal';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 
-export default function ContactsManagementScreen() {
+export default function ContactsScreen() {
   const router = useRouter();
-  const { 
-    contacts, 
-    addContact, 
-    outboundRequests, 
-    addOutboundRequest 
-  } = useAppStore();
+  const { contacts, addContact, outboundRequests } = useAppStore();
   const { colors = darkTheme } = useThemeStore();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
-  const [addModalVisible, setAddModalVisible] = useState(false);
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
-  const [addRequestModalVisible, setAddRequestModalVisible] = useState(false);
-
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [modeFilter, setModeFilter] = useState<Mode | null>(null);
+  
   useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setFilteredContacts([...contacts]);
-    } else {
+    let result = [...contacts];
+    
+    // Apply search filter
+    if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      setFilteredContacts(
-        contacts.filter(contact => 
-          contact.name.toLowerCase().includes(query) ||
+      result = result.filter(
+        contact => 
+          contact.name.toLowerCase().includes(query) || 
           contact.phone.includes(query)
-        )
       );
     }
-  }, [searchQuery, contacts]);
-
-  const handleAddContact = () => {
-    setAddModalVisible(true);
-  };
-
-  const handleContactPress = (contact: Contact) => {
-    // Navigate to contact detail view
-    router.push({
-      pathname: '/contact-detail',
-      params: { id: contact.id }
-    });
-  };
-
-  const isContactInHitList = (contactId: string) => {
-    return outboundRequests.some(req => 
-      req.receiverId === contactId && req.status === 'pending'
-    );
-  };
-
-  const handleToggleHitList = (contact: Contact) => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    // Apply mode filter
+    if (modeFilter) {
+      result = result.filter(
+        contact => contact.modes?.includes(modeFilter)
+      );
     }
     
-    // Open the Add Request modal regardless of whether they're in the HitList or not
-    setSelectedContact(contact);
-    setAddRequestModalVisible(true);
+    // Sort alphabetically
+    result.sort((a, b) => a.name.localeCompare(b.name));
+    
+    setFilteredContacts(result);
+  }, [contacts, searchQuery, modeFilter]);
+  
+  const handleContactPress = (contact: Contact) => {
+    router.push(`/contact-detail?id=${contact.id}`);
   };
-
-  const handleSubmitNewContact = (data: Omit<Contact, 'id'>) => {
-    addContact({
+  
+  const handleAddContact = (data: { name: string; phone: string; avatar: string }) => {
+    const newContact: Contact = {
       id: `contact-${Date.now()}`,
       ...data
-    });
-    setAddModalVisible(false);
+    };
+    
+    addContact(newContact);
+    setShowAddModal(false);
   };
-
-  const handleSubmitRequest = (data: {
-    topic: string;
-    urgency: 'low' | 'medium' | 'high';
-    expiresIn: number | null;
-  }) => {
-    if (!selectedContact) return;
-    
-    addOutboundRequest({
-      senderId: 'user-1', // Current user ID
-      receiverId: selectedContact.id,
-      topic: data.topic,
-      urgency: data.urgency,
-      expiresAt: data.expiresIn ? Date.now() + data.expiresIn : null,
-    });
-    
-    setAddRequestModalVisible(false);
-    setSelectedContact(null);
-    
-    if (Platform.OS !== 'web') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
+  
+  const isInHitList = (contactId: string) => {
+    return outboundRequests.some(
+      req => req.receiverId === contactId && req.status === 'pending'
+    );
   };
-
+  
+  const handleToggleHitList = (contact: Contact) => {
+    router.push(`/contact-detail?id=${contact.id}`);
+  };
+  
+  const toggleModeFilter = (mode: Mode) => {
+    setModeFilter(currentMode => currentMode === mode ? null : mode);
+  };
+  
   const renderItem = ({ item }: { item: Contact }) => (
-    <ContactItem 
+    <ContactItem
       contact={item}
       onPress={handleContactPress}
-      showLastOnline
-      isInHitList={isContactInHitList(item.id)}
-      onToggleHitList={() => handleToggleHitList(item)}
+      showLastOnline={true}
+      isInHitList={isInHitList(item.id)}
+      onToggleHitList={handleToggleHitList}
+      showModes={true}
     />
   );
-
+  
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.searchContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Search size={20} color={colors.text.light} style={styles.searchIcon} />
-        <TextInput
-          style={[styles.searchInput, { color: colors.text.primary }]}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Search contacts"
-          placeholderTextColor={colors.text.light}
+    <>
+      <Stack.Screen 
+        options={{ 
+          title: 'Contacts',
+          headerRight: () => (
+            <TouchableOpacity 
+              onPress={() => setShowAddModal(true)}
+              style={styles.headerButton}
+            >
+              <UserPlus size={24} color={colors.primary} />
+            </TouchableOpacity>
+          )
+        }} 
+      />
+      
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={[styles.searchContainer, { backgroundColor: colors.card }]}>
+          <Search size={20} color={colors.text.secondary} />
+          <TextInput
+            style={[styles.searchInput, { color: colors.text.primary }]}
+            placeholder="Search contacts..."
+            placeholderTextColor={colors.text.light}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+        
+        <View style={styles.filterContainer}>
+          <Text style={[styles.filterLabel, { color: colors.text.secondary }]}>Filter by mode:</Text>
+          <View style={styles.modeFilters}>
+            <TouchableOpacity 
+              style={[
+                styles.modeFilter, 
+                { backgroundColor: modeFilter === 'work' ? colors.primary : colors.card }
+              ]}
+              onPress={() => toggleModeFilter('work')}
+            >
+              <Filter size={14} color={modeFilter === 'work' ? '#000' : colors.text.primary} />
+              <Text style={[
+                styles.modeFilterText, 
+                { color: modeFilter === 'work' ? '#000' : colors.text.primary }
+              ]}>
+                Work
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[
+                styles.modeFilter, 
+                { backgroundColor: modeFilter === 'social' ? colors.primary : colors.card }
+              ]}
+              onPress={() => toggleModeFilter('social')}
+            >
+              <Filter size={14} color={modeFilter === 'social' ? '#000' : colors.text.primary} />
+              <Text style={[
+                styles.modeFilterText, 
+                { color: modeFilter === 'social' ? '#000' : colors.text.primary }
+              ]}>
+                Social
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[
+                styles.modeFilter, 
+                { backgroundColor: modeFilter === 'family' ? colors.primary : colors.card }
+              ]}
+              onPress={() => toggleModeFilter('family')}
+            >
+              <Filter size={14} color={modeFilter === 'family' ? '#000' : colors.text.primary} />
+              <Text style={[
+                styles.modeFilterText, 
+                { color: modeFilter === 'family' ? '#000' : colors.text.primary }
+              ]}>
+                Family
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        <FlatList
+          data={filteredContacts}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <EmptyState
+              title="No contacts found"
+              message={searchQuery 
+                ? "Try a different search term" 
+                : modeFilter
+                  ? `No contacts in ${modeFilter} mode`
+                  : "Add your first contact to get started"}
+              icon={<UserPlus size={48} color={colors.text.light} />}
+            />
+          }
         />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <X size={20} color={colors.text.light} />
-          </TouchableOpacity>
-        )}
       </View>
       
-      <FlatList
-        data={filteredContacts}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <EmptyState
-            title="No contacts found"
-            message={searchQuery ? "Try a different search term" : "Add your first contact to get started"}
-            icon={<User size={48} color={colors.text.light} />}
-          />
-        }
-      />
-      
-      <TouchableOpacity 
-        style={[styles.addButton, { backgroundColor: colors.primary }]}
-        onPress={handleAddContact}
-      >
-        <Plus size={24} color="#000" />
-      </TouchableOpacity>
-      
       <AddContactModal
-        visible={addModalVisible}
-        onClose={() => setAddModalVisible(false)}
-        onSubmit={handleSubmitNewContact}
+        visible={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSubmit={handleAddContact}
       />
-      
-      <AddRequestModal
-        visible={addRequestModalVisible}
-        contact={selectedContact}
-        onClose={() => {
-          setAddRequestModalVisible(false);
-          setSelectedContact(null);
-        }}
-        onSubmit={handleSubmitRequest}
-      />
-    </View>
+    </>
   );
 }
 
@@ -182,40 +205,47 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  headerButton: {
+    padding: 8,
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 12,
     margin: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-  },
-  searchIcon: {
-    marginRight: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
   },
   searchInput: {
     flex: 1,
+    marginLeft: 8,
     fontSize: 16,
-    paddingVertical: 8,
+  },
+  filterContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  filterLabel: {
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  modeFilters: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  modeFilter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+  },
+  modeFilterText: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 4,
   },
   listContent: {
-    flexGrow: 1,
-    paddingBottom: 80,
-  },
-  addButton: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
+    paddingVertical: 8,
   },
 });

@@ -11,7 +11,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { RequestCard } from '@/components/RequestCard';
 import { EmptyState } from '@/components/EmptyState';
 import { Users } from 'lucide-react-native';
-import { HitRequest } from '@/types';
+import { HitRequest, Mode } from '@/types';
 import * as Haptics from 'expo-haptics';
 import { DurationSelector } from '@/components/DurationSelector';
 import { QueueReview } from '@/components/QueueReview';
@@ -20,6 +20,7 @@ import { LiveModeStatus } from '@/components/LiveModeStatus';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { Stack } from 'expo-router';
+import { ModeSelector } from '@/components/ModeSelector';
 
 export default function HomeScreen() {
   const { 
@@ -40,13 +41,16 @@ export default function HomeScreen() {
     addToDismissedRequests,
     clearDismissedRequests,
     updateContactLastOnline,
-    user
+    user,
+    currentMode,
+    setCurrentMode
   } = useAppStore();
   
   const { setTheme, colors = darkTheme } = useThemeStore();
   const [pendingRequests, setPendingRequests] = useState<HitRequest[]>([]);
   const [showDurationSelector, setShowDurationSelector] = useState(false);
   const [showQueueReview, setShowQueueReview] = useState(false);
+  const [showModeSelector, setShowModeSelector] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -98,6 +102,7 @@ export default function HomeScreen() {
           toggleHitMeMode(); // Auto turn off
           setHitMeEndTime(null);
           clearDismissedRequests();
+          setCurrentMode(null);
           return;
         }
         
@@ -110,7 +115,7 @@ export default function HomeScreen() {
     } else {
       setTimeRemaining(null);
     }
-  }, [isHitMeModeActive, hitMeEndTime, toggleHitMeMode, setHitMeEndTime, clearDismissedRequests]);
+  }, [isHitMeModeActive, hitMeEndTime, toggleHitMeMode, setHitMeEndTime, clearDismissedRequests, setCurrentMode]);
 
   const handleSlideComplete = () => {
     setShowDurationSelector(true);
@@ -121,6 +126,15 @@ export default function HomeScreen() {
       setPreviewMode(true);
       setShowQueueReview(true);
     }
+  };
+
+  const handleSelectMode = () => {
+    setShowModeSelector(true);
+  };
+
+  const handleModeSelect = (mode: Mode | null) => {
+    setCurrentMode(mode);
+    setShowModeSelector(false);
   };
 
   const handleDurationSelect = (minutes: number) => {
@@ -173,6 +187,7 @@ export default function HomeScreen() {
     toggleHitMeMode();
     setHitMeEndTime(null);
     clearDismissedRequests();
+    setCurrentMode(null);
   };
 
   const handleConnect = (request: HitRequest) => {
@@ -218,6 +233,14 @@ export default function HomeScreen() {
     };
   };
 
+  // Filter requests based on current mode if one is selected
+  const filteredRequests = isHitMeModeActive && currentMode
+    ? pendingRequests.filter(request => {
+        const contact = getContactById(request.senderId);
+        return contact.modes?.includes(currentMode);
+      })
+    : pendingRequests;
+
   const renderItem = ({ item }: { item: HitRequest }) => (
     <RequestCard
       request={item}
@@ -241,19 +264,22 @@ export default function HomeScreen() {
             {timeRemaining !== null && (
               <LiveModeStatus 
                 timeRemaining={timeRemaining} 
-                onGoOffline={handleGoOffline} 
+                onGoOffline={handleGoOffline}
+                currentMode={currentMode}
               />
             )}
             
             <FlatList
-              data={pendingRequests}
+              data={filteredRequests}
               renderItem={renderItem}
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.listContent}
               ListEmptyComponent={
                 <EmptyState
                   title="Your queue is empty"
-                  message="No one is waiting to talk to you right now."
+                  message={currentMode 
+                    ? `No one in ${currentMode} mode is waiting to talk to you right now.`
+                    : "No one is waiting to talk to you right now."}
                   icon={<Users size={48} color={colors.text.light} />}
                 />
               }
@@ -266,6 +292,8 @@ export default function HomeScreen() {
               onSlideComplete={handleSlideComplete}
               userName={user?.name.split(' ')[0]}
               onPreviewQueue={handlePreviewQueue}
+              onSelectMode={handleSelectMode}
+              currentMode={currentMode}
             />
           </View>
         )}
@@ -288,6 +316,14 @@ export default function HomeScreen() {
           previewMode={previewMode}
           selectedIds={selectedIds}
           setSelectedIds={setSelectedIds}
+          currentMode={currentMode}
+        />
+        
+        <ModeSelector
+          visible={showModeSelector}
+          onClose={() => setShowModeSelector(false)}
+          onSelect={handleModeSelect}
+          currentMode={currentMode}
         />
       </View>
     </>

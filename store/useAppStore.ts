@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { HitRequest, Contact, User } from '@/types';
+import { HitRequest, Contact, User, Mode } from '@/types';
 import { mockContacts } from '@/mocks/contacts';
 import { mockRequests } from '@/mocks/requests';
 
@@ -18,6 +18,8 @@ interface ContactsSlice {
   updateContact: (contactId: string, updates: Partial<Contact>) => void;
   deleteContact: (contactId: string) => void;
   updateContactLastOnline: (contactId: string) => void;
+  updateContactModes: (contactId: string, modes: Mode[]) => void;
+  toggleContactMode: (contactId: string, mode: Mode) => void;
 }
 
 interface RequestsSlice {
@@ -37,12 +39,14 @@ interface HitMeModeSlice {
   hitMeEndTime: number | null;
   pendingNotifications: string[];
   dismissedRequests: string[];
+  currentMode: Mode | null;
   toggleHitMeMode: () => void;
   setHitMeDuration: (minutes: number) => void;
   setHitMeEndTime: (timestamp: number | null) => void;
   setPendingNotifications: (requestIds: string[]) => void;
   addToDismissedRequests: (requestId: string) => void;
   clearDismissedRequests: () => void;
+  setCurrentMode: (mode: Mode | null) => void;
 }
 
 interface OnboardingSlice {
@@ -98,6 +102,30 @@ export const useAppStore = create<AppState>()(
             : contact
         )
       })),
+      updateContactModes: (contactId, modes) => set((state) => ({
+        contacts: state.contacts.map(contact => 
+          contact.id === contactId 
+            ? { ...contact, modes } 
+            : contact
+        )
+      })),
+      toggleContactMode: (contactId, mode) => set((state) => {
+        const contact = state.contacts.find(c => c.id === contactId);
+        if (!contact) return state;
+        
+        const currentModes = contact.modes || [];
+        const updatedModes = currentModes.includes(mode)
+          ? currentModes.filter(m => m !== mode)
+          : [...currentModes, mode];
+        
+        return {
+          contacts: state.contacts.map(c => 
+            c.id === contactId 
+              ? { ...c, modes: updatedModes } 
+              : c
+          )
+        };
+      }),
 
       // Requests slice
       outboundRequests: [],
@@ -153,6 +181,7 @@ export const useAppStore = create<AppState>()(
       hitMeEndTime: null,
       pendingNotifications: [],
       dismissedRequests: [],
+      currentMode: null,
       toggleHitMeMode: () => set((state) => ({
         isHitMeModeActive: !state.isHitMeModeActive
       })),
@@ -170,6 +199,9 @@ export const useAppStore = create<AppState>()(
       })),
       clearDismissedRequests: () => set({
         dismissedRequests: []
+      }),
+      setCurrentMode: (mode) => set({
+        currentMode: mode
       }),
 
       // Onboarding slice
@@ -192,6 +224,7 @@ export const useAppStore = create<AppState>()(
         pendingNotifications: [],
         dismissedRequests: [],
         hasCompletedOnboarding: false,
+        currentMode: null,
         user: {
           id: 'user-1',
           name: 'You',
@@ -214,6 +247,7 @@ export const useAppStore = create<AppState>()(
         inboundRequests: state.inboundRequests,
         hitMeDuration: state.hitMeDuration,
         hasCompletedOnboarding: state.hasCompletedOnboarding,
+        currentMode: state.currentMode,
       }),
     }
   )

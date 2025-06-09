@@ -8,8 +8,8 @@ import {
   ScrollView,
   Dimensions
 } from 'react-native';
-import { HitRequest, Contact } from '@/types';
-import { X, Check } from 'lucide-react-native';
+import { HitRequest, Contact, Mode } from '@/types';
+import { X, Check, Filter } from 'lucide-react-native';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { Avatar } from '@/components/common/Avatar';
@@ -23,6 +23,7 @@ interface QueueReviewProps {
   previewMode?: boolean;
   selectedIds: string[];
   setSelectedIds: (ids: string[]) => void;
+  currentMode: Mode | null;
 }
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -37,6 +38,7 @@ export const QueueReview = ({
   previewMode = false,
   selectedIds,
   setSelectedIds,
+  currentMode
 }: QueueReviewProps) => {
   const { colors = darkTheme } = useThemeStore();
 
@@ -54,6 +56,27 @@ export const QueueReview = ({
       setSelectedIds(selectedIds.filter(id => id !== contactId));
     } else {
       setSelectedIds([...selectedIds, contactId]);
+    }
+  };
+
+  // Filter requests based on current mode if one is selected
+  const filteredRequests = currentMode 
+    ? requests.filter(request => {
+        const contact = getContactById(request.senderId);
+        return contact.modes?.includes(currentMode);
+      })
+    : requests;
+
+  const getModeLabel = () => {
+    switch (currentMode) {
+      case 'work':
+        return 'Work Mode';
+      case 'family':
+        return 'Family Mode';
+      case 'social':
+        return 'Social Mode';
+      default:
+        return 'All Contacts';
     }
   };
 
@@ -84,55 +107,74 @@ export const QueueReview = ({
           </View>
 
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            {currentMode && (
+              <View style={[styles.modeIndicator, { backgroundColor: colors.card }]}>
+                <Filter size={16} color={colors.primary} />
+                <Text style={[styles.modeText, { color: colors.text.primary }]}>
+                  {getModeLabel()}
+                </Text>
+              </View>
+            )}
+            
             <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
               {previewMode
-                ? `${requests.length} people waiting to talk`
+                ? `${filteredRequests.length} people waiting to talk`
                 : "Select who to notify when you go live"}
             </Text>
 
-            {requests.map(request => {
-              const contact = getContactById(request.senderId);
-              const isSelected = selectedIds.includes(request.senderId);
+            {filteredRequests.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
+                  {currentMode 
+                    ? `No contacts in ${getModeLabel()} are waiting to talk`
+                    : "No one is waiting to talk with you"}
+                </Text>
+              </View>
+            ) : (
+              filteredRequests.map(request => {
+                const contact = getContactById(request.senderId);
+                const isSelected = selectedIds.includes(request.senderId);
 
-              return (
-                <TouchableOpacity
-                  key={request.id}
-                  style={[
-                    styles.contactItem,
-                    { backgroundColor: colors.card },
-                    isSelected && { borderColor: colors.primary, borderWidth: 2 }
-                  ]}
-                  onPress={() => !previewMode && toggleContact(request.senderId)}
-                  disabled={previewMode}
-                >
-                  <Avatar
-                    name={contact.name}
-                    avatar={contact.avatar}
-                    size={48}
-                  />
-                  <View style={styles.contactInfo}>
-                    <Text style={[styles.contactName, { color: colors.text.primary }]}>
-                      {contact.name}
-                    </Text>
-                    <Text style={[styles.topic, { color: colors.text.secondary }]}>
-                      {request.topic}
-                    </Text>
-                  </View>
-                  {!previewMode && (
-                    <View style={[
-                      styles.checkbox,
-                      { borderColor: colors.border },
-                      isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
-                    ]}>
-                      {isSelected && <Check size={16} color="#000" />}
+                return (
+                  <TouchableOpacity
+                    key={request.id}
+                    style={[
+                      styles.contactItem,
+                      { backgroundColor: colors.card },
+                      isSelected && { borderColor: colors.primary, borderWidth: 2 }
+                    ]}
+                    onPress={() => !previewMode && toggleContact(request.senderId)}
+                    disabled={previewMode}
+                  >
+                    <Avatar
+                      name={contact.name}
+                      avatar={contact.avatar}
+                      size={48}
+                    />
+                    <View style={styles.contactInfo}>
+                      <Text style={[styles.contactName, { color: colors.text.primary }]}>
+                        {contact.name}
+                      </Text>
+                      <Text style={[styles.topic, { color: colors.text.secondary }]}>
+                        {request.topic}
+                      </Text>
                     </View>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
+                    {!previewMode && (
+                      <View style={[
+                        styles.checkbox,
+                        { borderColor: colors.border },
+                        isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
+                      ]}>
+                        {isSelected && <Check size={16} color="#000" />}
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })
+            )}
           </ScrollView>
 
-          {!previewMode && onGoLive && (
+          {!previewMode && onGoLive && filteredRequests.length > 0 && (
             <View style={styles.footer}>
               <TouchableOpacity
                 style={[styles.goLiveButton, { backgroundColor: colors.primary }]}
@@ -179,6 +221,20 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  modeIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  modeText: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 6,
+  },
   subtitle: {
     fontSize: 16,
     marginBottom: 16,
@@ -223,5 +279,14 @@ const styles = StyleSheet.create({
   goLiveText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  emptyText: {
+    fontSize: 16,
+    textAlign: 'center',
   },
 });
