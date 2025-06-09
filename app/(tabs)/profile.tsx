@@ -70,8 +70,7 @@ export default function ProfileScreen() {
           text: "Log Out",
           style: "destructive",
           onPress: () => {
-            // Navigate to the sign-in screen
-            router.replace('/');
+            Alert.alert("Logged Out", "You have been logged out successfully");
           }
         }
       ]
