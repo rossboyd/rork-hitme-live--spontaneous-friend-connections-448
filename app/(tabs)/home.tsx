@@ -378,7 +378,7 @@ export default function HomeScreen() {
               />
             )}
             
-            {/* Use DraggableFlatList when in live mode */}
+            {/* Use DraggableFlatList when in live mode - ONLY for mobile */}
             {Platform.OS !== 'web' ? (
               <DraggableFlatList
                 data={orderedRequests}
@@ -397,9 +397,13 @@ export default function HomeScreen() {
                 }
               />
             ) : (
-              // Fallback for web
-              <View style={styles.listContainer}>
-                {orderedRequests.length === 0 ? (
+              // Fallback for web - regular FlatList
+              <FlatList
+                data={orderedRequests}
+                keyExtractor={(item) => item.id}
+                renderItem={renderItem}
+                contentContainerStyle={styles.listContent}
+                ListEmptyComponent={
                   <EmptyState
                     title="Your queue is empty"
                     message={currentMode 
@@ -407,14 +411,8 @@ export default function HomeScreen() {
                       : "No one is waiting to talk to you right now."}
                     icon={<Users size={48} color={colors.text.light} />}
                   />
-                ) : (
-                  orderedRequests.map(item => (
-                    <View key={item.id} style={styles.itemContainer}>
-                      {renderItem({ item })}
-                    </View>
-                  ))
-                )}
-              </View>
+                }
+              />
             )}
           </>
         ) : (
@@ -507,13 +505,6 @@ const styles = StyleSheet.create({
     paddingBottom: 100, // Add padding to avoid overlap with the slide toggle
   },
   draggableItem: {
-    marginBottom: 12,
-  },
-  listContainer: {
-    padding: 16,
-    paddingTop: 0,
-  },
-  itemContainer: {
     marginBottom: 12,
   },
   tabBar: {

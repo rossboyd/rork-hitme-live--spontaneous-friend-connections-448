@@ -1,4 +1,4 @@
-import { Contact, Mode } from '@/types';
+import { Contact } from '@/types';
 
 export const mockContacts: Contact[] = [
   {
@@ -49,7 +49,7 @@ export const mockContacts: Contact[] = [
   {
     id: 'contact-6',
     name: 'Daniel Brown',
-    avatar: null, // Will show initials
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80',
     phone: '+44678901234',
     lastOnline: Date.now() - 1000 * 60 * 60 * 24 * 5, // 5 days ago
     modes: ['family'],
@@ -58,7 +58,7 @@ export const mockContacts: Contact[] = [
   {
     id: 'contact-7',
     name: 'Sophia Martinez',
-    avatar: null, // Will show initials
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80',
     phone: '+44789012345',
     lastOnline: Date.now() - 1000 * 60 * 60 * 24 * 4, // 4 days ago
     modes: ['work', 'social'],

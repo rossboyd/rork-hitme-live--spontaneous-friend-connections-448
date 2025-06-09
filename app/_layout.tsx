@@ -3,7 +3,6 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans';
-import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -12,7 +11,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   // Always provide default colors to prevent undefined errors
-  const { theme, colors = darkTheme } = useThemeStore();
+  const colors = darkTheme;
   const { hasCompletedOnboarding, isFirstLaunch, user, setIsFirstLaunch } = useAppStore();
   const segments = useSegments();
   const router = useRouter();

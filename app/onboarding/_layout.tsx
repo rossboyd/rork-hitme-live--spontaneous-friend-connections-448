@@ -3,8 +3,7 @@ import { Stack } from 'expo-router';
 import { darkTheme } from '@/constants/colors';
 
 export default function OnboardingLayout() {
-  // Remove the useThemeStore hook to prevent infinite loop
-  // We'll use a static theme for onboarding
+  // Use static theme to prevent infinite loop
   const colors = darkTheme;
   
   return (

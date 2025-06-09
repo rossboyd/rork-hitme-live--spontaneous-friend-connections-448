@@ -31,7 +31,7 @@ export interface HitRequest {
   urgency: RequestUrgency;
   createdAt: number;
   expiresAt: number;
-  topic?: string; // Make topic optional to match both interfaces
+  topic?: string;
 }
 
 export interface AppState {
