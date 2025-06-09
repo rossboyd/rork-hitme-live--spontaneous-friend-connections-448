@@ -3,6 +3,8 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HitRequest, Contact, User } from '@/types';
+import { mockContacts } from '@/mocks/contacts';
+import { mockRequests } from '@/mocks/requests';
 
 // Separate interfaces for better TypeScript support
 interface UserSlice {
@@ -43,8 +45,12 @@ interface HitMeModeSlice {
   clearDismissedRequests: () => void;
 }
 
+interface DebugSlice {
+  resetToMockData: () => void;
+}
+
 // Combine all slices into one interface
-type AppState = UserSlice & ContactsSlice & RequestsSlice & HitMeModeSlice;
+type AppState = UserSlice & ContactsSlice & RequestsSlice & HitMeModeSlice & DebugSlice;
 
 // Create the store with proper typing
 export const useAppStore = create<AppState>()(
@@ -157,6 +163,24 @@ export const useAppStore = create<AppState>()(
       })),
       clearDismissedRequests: () => set({
         dismissedRequests: []
+      }),
+
+      // Debug slice
+      resetToMockData: () => set({
+        contacts: [...mockContacts],
+        outboundRequests: [],
+        inboundRequests: [...mockRequests],
+        isHitMeModeActive: false,
+        hitMeDuration: 30,
+        hitMeEndTime: null,
+        pendingNotifications: [],
+        dismissedRequests: [],
+        user: {
+          id: 'user-1',
+          name: 'You',
+          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80',
+          phone: '+1234567890',
+        }
       }),
     }),
     {

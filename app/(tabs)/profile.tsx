@@ -23,7 +23,8 @@ import {
   Camera,
   Edit,
   Smartphone,
-  ExternalLink
+  ExternalLink,
+  RotateCcw
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { EditProfileModal } from '@/components/EditProfileModal';
@@ -38,7 +39,8 @@ export default function ProfileScreen() {
     setUser, 
     outboundRequests, 
     contacts, 
-    updateRequestStatus 
+    updateRequestStatus,
+    resetToMockData
   } = useAppStore();
   const { colors = darkTheme } = useThemeStore();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -69,6 +71,37 @@ export default function ProfileScreen() {
           style: "destructive",
           onPress: () => {
             Alert.alert("Logged Out", "You have been logged out successfully");
+          }
+        }
+      ]
+    );
+  };
+
+  const handleResetData = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    
+    Alert.alert(
+      "Reset App Data",
+      "This will reset all app data to the original prototype state. This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Reset",
+          style: "destructive",
+          onPress: () => {
+            resetToMockData();
+            if (Platform.OS !== 'web') {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+            Alert.alert(
+              "Data Reset",
+              "App data has been reset to prototype state successfully."
+            );
           }
         }
       ]
@@ -184,6 +217,12 @@ export default function ProfileScreen() {
           <Smartphone size={24} color={colors.text.primary} />,
           "Live Activity Preview",
           () => router.push('/live-activity-preview')
+        )}
+        
+        {renderSettingItem(
+          <RotateCcw size={24} color={colors.text.primary} />,
+          "Reset App Data",
+          handleResetData
         )}
         
         {/* Added notification simulator to developer section */}
