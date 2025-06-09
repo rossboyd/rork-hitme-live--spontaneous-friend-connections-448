@@ -50,7 +50,9 @@ interface HitMeModeSlice {
 }
 
 interface OnboardingSlice {
+  isFirstLaunch: boolean;
   hasCompletedOnboarding: boolean;
+  setIsFirstLaunch: (value: boolean) => void;
   setHasCompletedOnboarding: (value: boolean) => void;
   resetOnboarding: () => void;
 }
@@ -68,12 +70,7 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       // User slice
-      user: {
-        id: 'user-1',
-        name: 'You',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80',
-        phone: '+44987654321',
-      },
+      user: null,
       setUser: (user) => set({ user }),
 
       // Contacts slice
@@ -205,12 +202,17 @@ export const useAppStore = create<AppState>()(
       }),
 
       // Onboarding slice
+      isFirstLaunch: true,
       hasCompletedOnboarding: false,
+      setIsFirstLaunch: (value) => set({
+        isFirstLaunch: value
+      }),
       setHasCompletedOnboarding: (value) => set({
         hasCompletedOnboarding: value
       }),
       resetOnboarding: () => set({
-        hasCompletedOnboarding: false
+        hasCompletedOnboarding: false,
+        isFirstLaunch: true
       }),
 
       // Debug slice
@@ -224,13 +226,9 @@ export const useAppStore = create<AppState>()(
         pendingNotifications: [],
         dismissedRequests: [],
         hasCompletedOnboarding: false,
+        isFirstLaunch: true,
         currentMode: null,
-        user: {
-          id: 'user-1',
-          name: 'You',
-          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80',
-          phone: '+44987654321',
-        }
+        user: null
       }),
       loadMockData: () => set((state) => ({
         contacts: [...mockContacts],
@@ -247,6 +245,7 @@ export const useAppStore = create<AppState>()(
         inboundRequests: state.inboundRequests,
         hitMeDuration: state.hitMeDuration,
         hasCompletedOnboarding: state.hasCompletedOnboarding,
+        isFirstLaunch: state.isFirstLaunch,
         currentMode: state.currentMode,
       }),
     }

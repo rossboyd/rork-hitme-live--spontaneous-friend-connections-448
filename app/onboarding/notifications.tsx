@@ -26,7 +26,7 @@ export default function NotificationsPermissionScreen() {
     }
     
     // In a real app, this would request notification permissions
-    // For now, we'll just mark onboarding as completed
+    // Mark onboarding as completed
     setHasCompletedOnboarding(true);
     
     // Navigate to the main app

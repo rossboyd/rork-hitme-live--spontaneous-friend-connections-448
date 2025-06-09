@@ -13,7 +13,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   // Always provide default colors to prevent undefined errors
   const { theme, colors = darkTheme } = useThemeStore();
-  const { hasCompletedOnboarding, user } = useAppStore();
+  const { hasCompletedOnboarding, isFirstLaunch, user, setIsFirstLaunch } = useAppStore();
   const segments = useSegments();
   const router = useRouter();
   
@@ -44,19 +44,38 @@ export default function RootLayout() {
       segments[0] === 'verify' || 
       segments[0] === '' || // root/index (likely login)
       segments[0] === 'phone' || 
-      segments[0] === 'login' || 
-      segments[0] === 'permissions';
+      segments[0] === 'login';
 
-    // If user hasn't completed onboarding and isn't in the onboarding flow or auth flow
-    if (!hasCompletedOnboarding && !inOnboardingGroup && !isAuthRoute) {
+    // First-time users should start at welcome screen
+    if (isFirstLaunch && segments[0] !== 'onboarding' && segments[0] !== 'welcome') {
       router.replace('/onboarding/welcome');
+      return;
+    }
+    
+    // If user has verified but hasn't completed onboarding
+    if (user && !hasCompletedOnboarding && !inOnboardingGroup && !isAuthRoute) {
+      router.replace('/onboarding/profile');
+      return;
     }
     
     // If user has completed onboarding but is still in the onboarding flow
-    if (hasCompletedOnboarding && (inOnboardingGroup || segments[0] === 'verify')) {
+    if (hasCompletedOnboarding && (inOnboardingGroup || segments[0] === 'welcome')) {
       router.replace('/(tabs)/home');
+      return;
     }
-  }, [fontsLoaded, hasCompletedOnboarding, segments, router]);
+    
+    // If user is authenticated and has completed onboarding, ensure they're in the main app
+    if (user && hasCompletedOnboarding && isAuthRoute) {
+      router.replace('/(tabs)/home');
+      return;
+    }
+    
+    // If user is not authenticated and not in auth flow, redirect to login
+    if (!user && !isAuthRoute && segments[0] !== 'onboarding' && segments[0] !== 'welcome') {
+      router.replace('/');
+      return;
+    }
+  }, [fontsLoaded, hasCompletedOnboarding, isFirstLaunch, segments, router, user]);
 
   if (!fontsLoaded) {
     return null;
@@ -88,6 +107,12 @@ export default function RootLayout() {
       />
       <Stack.Screen
         name="onboarding"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="welcome"
         options={{
           headerShown: false,
         }}

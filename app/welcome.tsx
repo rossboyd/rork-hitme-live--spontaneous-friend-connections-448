@@ -13,17 +13,23 @@ import { ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
+import { useAppStore } from '@/store/useAppStore';
 
-export default function OnboardingWelcomeScreen() {
+export default function WelcomeScreen() {
   const router = useRouter();
   const { colors = darkTheme } = useThemeStore();
+  const { setIsFirstLaunch } = useAppStore();
   
   const handleGetStarted = () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     
-    router.push('/onboarding/profile');
+    // Mark that we've seen the welcome screen
+    setIsFirstLaunch(false);
+    
+    // Navigate to sign in
+    router.push('/');
   };
   
   return (
@@ -44,10 +50,10 @@ export default function OnboardingWelcomeScreen() {
       
       <View style={styles.textContainer}>
         <Text style={[styles.title, { color: colors.text.primary }]}>
-          Almost there!
+          Connect when it matters
         </Text>
         <Text style={[styles.description, { color: colors.text.secondary }]}>
-          Let's set up your profile so your friends can recognize you.
+          Let your friends know when you're available to chat, and get notified when they are too.
         </Text>
       </View>
       
@@ -55,7 +61,7 @@ export default function OnboardingWelcomeScreen() {
         style={[styles.getStartedButton, { backgroundColor: colors.primary }]}
         onPress={handleGetStarted}
       >
-        <Text style={styles.getStartedText}>Continue</Text>
+        <Text style={styles.getStartedText}>Get Started</Text>
         <ChevronRight size={20} color="#000" />
       </TouchableOpacity>
     </ScrollView>

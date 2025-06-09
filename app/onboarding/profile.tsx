@@ -58,11 +58,8 @@ export default function OnboardingProfileScreen() {
     // Load mock data before completing onboarding
     loadMockData();
     
-    // Mark onboarding as completed
-    setHasCompletedOnboarding(true);
-    
-    // Navigate to the main app
-    router.replace('/(tabs)/home');
+    // Navigate to notifications permission screen
+    router.push('/onboarding/notifications');
   };
   
   return (
