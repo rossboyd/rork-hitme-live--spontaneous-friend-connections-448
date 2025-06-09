@@ -4,7 +4,8 @@ import {
   StyleSheet, 
   Alert, 
   Platform,
-  Text
+  Text,
+  FlatList
 } from 'react-native';
 import { useAppStore } from '@/store/useAppStore';
 import { RequestCard } from '@/components/RequestCard';
@@ -20,7 +21,7 @@ import { darkTheme } from '@/constants/colors';
 import { Stack } from 'expo-router';
 import { CombinedGoLiveModal } from '@/components/CombinedGoLiveModal';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
-import { TouchableOpacity, FlatList } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 
 export default function HomeScreen() {
   const { 
@@ -360,7 +361,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
     marginTop: 16,
-    fontFamily: 'PlusJakartaSans-Bold',
   },
   fixedContainer: {
     flex: 1,
