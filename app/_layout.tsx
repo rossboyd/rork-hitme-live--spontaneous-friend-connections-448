@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -12,9 +12,14 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   // Always provide default colors to prevent undefined errors
   const colors = darkTheme;
-  const { hasCompletedOnboarding, isFirstLaunch, user, setIsFirstLaunch } = useAppStore();
+  const hasCompletedOnboarding = useAppStore(state => state.hasCompletedOnboarding);
+  const isFirstLaunch = useAppStore(state => state.isFirstLaunch);
+  const user = useAppStore(state => state.user);
+  const setIsFirstLaunch = useAppStore(state => state.setIsFirstLaunch);
+  
   const segments = useSegments();
   const router = useRouter();
+  const lastRouteRef = useRef<string>('');
   
   const [fontsLoaded] = useFonts({
     'PlusJakartaSans-Regular': PlusJakartaSans_400Regular,
@@ -33,6 +38,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (!fontsLoaded) return;
 
+    const currentPath = segments.join('/');
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboardingGroup = segments[0] === 'onboarding';
     const inTabsGroup = segments[0] === '(tabs)';
@@ -45,33 +51,41 @@ export default function RootLayout() {
       segments[0] === 'phone' || 
       segments[0] === 'login';
 
+    // Prevent infinite redirects by checking if we're already at the target route
+    const navigateIfDifferent = (targetPath: string) => {
+      if (lastRouteRef.current !== targetPath && currentPath !== targetPath) {
+        lastRouteRef.current = targetPath;
+        router.replace(targetPath as any);
+      }
+    };
+
     // First-time users should start at welcome screen
     if (isFirstLaunch && segments[0] !== 'onboarding' && segments[0] !== 'welcome') {
-      router.replace('/onboarding/welcome');
+      navigateIfDifferent('/onboarding/welcome');
       return;
     }
     
     // If user has verified but hasn't completed onboarding
     if (user && !hasCompletedOnboarding && !inOnboardingGroup && !isAuthRoute) {
-      router.replace('/onboarding/profile');
+      navigateIfDifferent('/onboarding/profile');
       return;
     }
     
     // If user has completed onboarding but is still in the onboarding flow
     if (hasCompletedOnboarding && (inOnboardingGroup || segments[0] === 'welcome')) {
-      router.replace('/(tabs)/home');
+      navigateIfDifferent('/(tabs)/home');
       return;
     }
     
     // If user is authenticated and has completed onboarding, ensure they're in the main app
     if (user && hasCompletedOnboarding && isAuthRoute) {
-      router.replace('/(tabs)/home');
+      navigateIfDifferent('/(tabs)/home');
       return;
     }
     
     // If user is not authenticated and not in auth flow, redirect to login
     if (!user && !isAuthRoute && segments[0] !== 'onboarding' && segments[0] !== 'welcome') {
-      router.replace('/');
+      navigateIfDifferent('/');
       return;
     }
   }, [fontsLoaded, hasCompletedOnboarding, isFirstLaunch, segments, router, user]);

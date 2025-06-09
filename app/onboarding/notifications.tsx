@@ -16,7 +16,9 @@ import { darkTheme } from '@/constants/colors';
 
 export default function NotificationsPermissionScreen() {
   const router = useRouter();
-  const { setHasCompletedOnboarding, loadMockData } = useAppStore();
+  const setHasCompletedOnboarding = useAppStore(state => state.setHasCompletedOnboarding);
+  const loadMockData = useAppStore(state => state.loadMockData);
+  
   // Use static theme to prevent infinite loop
   const colors = darkTheme;
   

@@ -18,7 +18,8 @@ import { darkTheme } from '@/constants/colors';
 export default function VerifyScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { setUser, hasCompletedOnboarding } = useAppStore();
+  const setUser = useAppStore(state => state.setUser);
+  const hasCompletedOnboarding = useAppStore(state => state.hasCompletedOnboarding);
   const { colors = darkTheme } = useThemeStore();
   
   const [otp, setOtp] = useState('');

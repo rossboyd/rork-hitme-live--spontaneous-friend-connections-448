@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { 
   View, 
   StyleSheet, 
@@ -24,30 +24,29 @@ import { CombinedGoLiveModal } from '@/components/CombinedGoLiveModal';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 
 export default function HomeScreen() {
-  const { 
-    inboundRequests, 
-    contacts, 
-    isHitMeModeActive, 
-    toggleHitMeMode, 
-    dismissRequest, 
-    updateRequestStatus,
-    expireRequests,
-    hitMeDuration,
-    setHitMeDuration,
-    hitMeEndTime,
-    setHitMeEndTime,
-    pendingNotifications,
-    setPendingNotifications,
-    dismissedRequests,
-    addToDismissedRequests,
-    clearDismissedRequests,
-    updateContactLastOnline,
-    user,
-    currentMode,
-    setCurrentMode
-  } = useAppStore();
+  // Use individual selectors to prevent unnecessary re-renders
+  const inboundRequests = useAppStore(state => state.inboundRequests);
+  const contacts = useAppStore(state => state.contacts);
+  const isHitMeModeActive = useAppStore(state => state.isHitMeModeActive);
+  const toggleHitMeMode = useAppStore(state => state.toggleHitMeMode);
+  const dismissRequest = useAppStore(state => state.dismissRequest);
+  const updateRequestStatus = useAppStore(state => state.updateRequestStatus);
+  const expireRequests = useAppStore(state => state.expireRequests);
+  const hitMeDuration = useAppStore(state => state.hitMeDuration);
+  const setHitMeDuration = useAppStore(state => state.setHitMeDuration);
+  const hitMeEndTime = useAppStore(state => state.hitMeEndTime);
+  const setHitMeEndTime = useAppStore(state => state.setHitMeEndTime);
+  const pendingNotifications = useAppStore(state => state.pendingNotifications);
+  const setPendingNotifications = useAppStore(state => state.setPendingNotifications);
+  const dismissedRequests = useAppStore(state => state.dismissedRequests);
+  const addToDismissedRequests = useAppStore(state => state.addToDismissedRequests);
+  const clearDismissedRequests = useAppStore(state => state.clearDismissedRequests);
+  const updateContactLastOnline = useAppStore(state => state.updateContactLastOnline);
+  const user = useAppStore(state => state.user);
+  const currentMode = useAppStore(state => state.currentMode);
+  const setCurrentMode = useAppStore(state => state.setCurrentMode);
   
-  const { setTheme, colors = darkTheme } = useThemeStore();
+  const { setTheme, colors = darkTheme, theme } = useThemeStore();
   const [pendingRequests, setPendingRequests] = useState<HitRequest[]>([]);
   const [orderedRequests, setOrderedRequests] = useState<HitRequest[]>([]);
   const [showCombinedModal, setShowCombinedModal] = useState(false);
@@ -58,9 +57,16 @@ export default function HomeScreen() {
   const [selectedModes, setSelectedModes] = useState<Mode[]>([]);
   const [activeTab, setActiveTab] = useState<'active' | 'favorites' | 'expired'>('active');
 
-  // Set theme based on HitMeMode status
+  // Use ref to track last theme to prevent infinite loops
+  const lastThemeRef = useRef(theme);
+
+  // Set theme based on HitMeMode status with guard to prevent infinite loops
   useEffect(() => {
-    setTheme(isHitMeModeActive ? 'light' : 'dark');
+    const desiredTheme = isHitMeModeActive ? 'light' : 'dark';
+    if (lastThemeRef.current !== desiredTheme) {
+      lastThemeRef.current = desiredTheme;
+      setTheme(desiredTheme);
+    }
   }, [isHitMeModeActive, setTheme]);
 
   useEffect(() => {
