@@ -21,7 +21,6 @@ export default function TabLayout() {
         },
         headerTintColor: colors.text.primary,
         headerShadowVisible: false,
-        headerBackVisible: false,
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '500',
