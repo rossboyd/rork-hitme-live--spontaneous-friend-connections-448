@@ -37,17 +37,30 @@ export default function RootLayout() {
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboardingGroup = segments[0] === 'onboarding';
     const inTabsGroup = segments[0] === '(tabs)';
+    const isSignInScreen = segments[0] === '' || segments[0] === 'index';
+    const isVerifyScreen = segments[0] === 'verify';
 
-    // If user hasn't completed onboarding and isn't in the onboarding flow
-    if (!hasCompletedOnboarding && !inOnboardingGroup && segments[0] !== 'verify' && segments[0] !== '') {
-      router.replace('/onboarding/welcome');
+    // If no user is set, redirect to sign-in screen unless already there or in verify
+    if (!user && !isSignInScreen && !isVerifyScreen) {
+      router.replace('/');
+      return;
     }
-    
-    // If user has completed onboarding but is still in the onboarding flow
-    if (hasCompletedOnboarding && (inOnboardingGroup || segments[0] === 'verify')) {
-      router.replace('/(tabs)/home');
+
+    // Only handle onboarding routing if user is authenticated
+    if (user) {
+      // If user hasn't completed onboarding and isn't in the onboarding flow
+      if (!hasCompletedOnboarding && !inOnboardingGroup && !isVerifyScreen) {
+        router.replace('/onboarding/welcome');
+        return;
+      }
+      
+      // If user has completed onboarding but is still in the onboarding flow
+      if (hasCompletedOnboarding && (inOnboardingGroup || isVerifyScreen)) {
+        router.replace('/(tabs)/home');
+        return;
+      }
     }
-  }, [fontsLoaded, hasCompletedOnboarding, segments, router]);
+  }, [fontsLoaded, hasCompletedOnboarding, segments, router, user]);
 
   if (!fontsLoaded) {
     return null;
