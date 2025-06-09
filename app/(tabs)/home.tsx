@@ -13,14 +13,13 @@ import { EmptyState } from '@/components/EmptyState';
 import { Users } from 'lucide-react-native';
 import { HitRequest, Mode } from '@/types';
 import * as Haptics from 'expo-haptics';
-import { DurationSelector } from '@/components/DurationSelector';
 import { QueueReview } from '@/components/QueueReview';
 import { SlideToLiveToggle } from '@/components/SlideToLiveToggle';
 import { LiveModeStatus } from '@/components/LiveModeStatus';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { Stack } from 'expo-router';
-import { ModeSelector } from '@/components/ModeSelector';
+import { CombinedGoLiveModal } from '@/components/CombinedGoLiveModal';
 
 export default function HomeScreen() {
   const { 
@@ -48,12 +47,12 @@ export default function HomeScreen() {
   
   const { setTheme, colors = darkTheme } = useThemeStore();
   const [pendingRequests, setPendingRequests] = useState<HitRequest[]>([]);
-  const [showDurationSelector, setShowDurationSelector] = useState(false);
+  const [showCombinedModal, setShowCombinedModal] = useState(false);
   const [showQueueReview, setShowQueueReview] = useState(false);
-  const [showModeSelector, setShowModeSelector] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedModes, setSelectedModes] = useState<(Mode | null)[]>([]);
 
   // Set theme based on HitMeMode status
   useEffect(() => {
@@ -118,7 +117,7 @@ export default function HomeScreen() {
   }, [isHitMeModeActive, hitMeEndTime, toggleHitMeMode, setHitMeEndTime, clearDismissedRequests, setCurrentMode]);
 
   const handleSlideComplete = () => {
-    setShowDurationSelector(true);
+    setShowCombinedModal(true);
   };
 
   const handlePreviewQueue = () => {
@@ -128,18 +127,10 @@ export default function HomeScreen() {
     }
   };
 
-  const handleSelectMode = () => {
-    setShowModeSelector(true);
-  };
-
-  const handleModeSelect = (mode: Mode | null) => {
-    setCurrentMode(mode);
-    setShowModeSelector(false);
-  };
-
-  const handleDurationSelect = (minutes: number) => {
+  const handleGoLiveSettings = (minutes: number, modes: (Mode | null)[]) => {
     setHitMeDuration(minutes);
-    setShowDurationSelector(false);
+    setSelectedModes(modes);
+    setShowCombinedModal(false);
     
     // Show queue review before going live
     setPreviewMode(false);
@@ -157,6 +148,15 @@ export default function HomeScreen() {
     // Set end time based on selected duration
     const endTime = Date.now() + (hitMeDuration * 60 * 1000);
     setHitMeEndTime(endTime);
+    
+    // Set current mode based on selected modes
+    // If multiple modes are selected or "All" is selected, set to null (all contacts)
+    // Otherwise, set to the single selected mode
+    if (selectedModes.length === 1 && selectedModes[0] !== null) {
+      setCurrentMode(selectedModes[0]);
+    } else {
+      setCurrentMode(null);
+    }
     
     // Set pending notifications
     setPendingNotifications(notifyIds);
@@ -292,16 +292,15 @@ export default function HomeScreen() {
               onSlideComplete={handleSlideComplete}
               userName={user?.name.split(' ')[0]}
               onPreviewQueue={handlePreviewQueue}
-              onSelectMode={handleSelectMode}
               currentMode={currentMode}
             />
           </View>
         )}
         
-        <DurationSelector
-          visible={showDurationSelector}
-          onClose={() => setShowDurationSelector(false)}
-          onSelect={handleDurationSelect}
+        <CombinedGoLiveModal
+          visible={showCombinedModal}
+          onClose={() => setShowCombinedModal(false)}
+          onGoLive={handleGoLiveSettings}
           initialDuration={hitMeDuration}
         />
         
@@ -317,13 +316,6 @@ export default function HomeScreen() {
           previewMode={previewMode}
           selectedIds={selectedIds}
           setSelectedIds={setSelectedIds}
-          currentMode={currentMode}
-        />
-        
-        <ModeSelector
-          visible={showModeSelector}
-          onClose={() => setShowModeSelector(false)}
-          onSelect={handleModeSelect}
           currentMode={currentMode}
         />
       </View>

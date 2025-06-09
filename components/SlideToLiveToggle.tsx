@@ -8,7 +8,7 @@ import {
   Platform,
   TouchableOpacity
 } from 'react-native';
-import { Phone, Filter } from 'lucide-react-native';
+import { Phone } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
@@ -19,7 +19,6 @@ interface SlideToLiveToggleProps {
   onSlideComplete: () => void;
   userName?: string;
   onPreviewQueue?: () => void;
-  onSelectMode?: () => void;
   currentMode: Mode | null;
 }
 
@@ -32,7 +31,6 @@ export const SlideToLiveToggle = ({
   onSlideComplete,
   userName = 'You',
   onPreviewQueue,
-  onSelectMode,
   currentMode
 }: SlideToLiveToggleProps) => {
   const { colors = darkTheme } = useThemeStore();
@@ -110,34 +108,13 @@ export const SlideToLiveToggle = ({
     }
   };
 
-  const handleSelectMode = () => {
-    if (onSelectMode) {
-      if (Platform.OS !== 'web') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
-      onSelectMode();
-    }
-  };
-
-  const getModeLabel = () => {
-    switch (currentMode) {
-      case 'work':
-        return 'Work Mode';
-      case 'family':
-        return 'Family Mode';
-      case 'social':
-        return 'Social Mode';
-      default:
-        return 'All Contacts';
-    }
-  };
-
   return (
     <View style={styles.container}>
       <View style={styles.infoContainer}>
         <Text style={[styles.title, { color: colors.text.primary }]}>
           Hey {userName},
-          {'\n'}
+          {'
+'}
           You're Offline
         </Text>
         <TouchableOpacity 
@@ -153,16 +130,6 @@ export const SlideToLiveToggle = ({
             {waitingCount > 0 
               ? `${waitingCount} ${waitingCount === 1 ? 'person is' : 'people are'} waiting to chat`
               : 'No one is waiting to chat with you'}
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.modeSelector, { backgroundColor: colors.card }]}
-          onPress={handleSelectMode}
-        >
-          <Filter size={16} color={colors.primary} />
-          <Text style={[styles.modeText, { color: colors.text.primary }]}>
-            {getModeLabel()}
           </Text>
         </TouchableOpacity>
       </View>
@@ -197,7 +164,7 @@ export const SlideToLiveToggle = ({
       <Text style={[styles.instructionText, { color: colors.text.secondary }]}>
         {isDragging 
           ? isThresholdReached 
-            ? "Release to switch" 
+            ? "Release to go live" 
             : "Keep sliding up"
           : "Slide up to go live"}
       </Text>
@@ -230,19 +197,6 @@ const styles = StyleSheet.create({
   },
   clickableSubtitle: {
     textDecorationLine: 'underline',
-  },
-  modeSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    marginTop: 8,
-  },
-  modeText: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginLeft: 6,
   },
   track: {
     width: 80,

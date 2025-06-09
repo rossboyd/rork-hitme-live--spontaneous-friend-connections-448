@@ -3,8 +3,7 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  TouchableOpacity, 
-  Modal,
+  TouchableOpacity,
   Platform
 } from 'react-native';
 import { Briefcase, Home, Users, X } from 'lucide-react-native';
@@ -14,168 +13,159 @@ import { darkTheme } from '@/constants/colors';
 import { Mode } from '@/types';
 
 interface ModeSelectorProps {
-  visible: boolean;
-  onClose: () => void;
-  onSelect: (mode: Mode | null) => void;
-  currentMode: Mode | null;
+  selectedModes: (Mode | null)[];
+  onToggleMode: (mode: Mode | null) => void;
+  onSelectAll: () => void;
+  onClearAll: () => void;
 }
 
 interface ModeOption {
   id: Mode | null;
   label: string;
   icon: React.ReactNode;
-  description: string;
 }
 
 export const ModeSelector = ({ 
-  visible, 
-  onClose, 
-  onSelect,
-  currentMode
+  selectedModes,
+  onToggleMode,
+  onSelectAll,
+  onClearAll
 }: ModeSelectorProps) => {
   const { colors = darkTheme } = useThemeStore();
   
-  const handleSelect = (mode: Mode | null) => {
+  const handleToggle = (mode: Mode | null) => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    onSelect(mode);
+    onToggleMode(mode);
   };
   
   const getModeOptions = (colors: any): ModeOption[] => [
     {
-      id: null,
-      label: 'All Contacts',
-      icon: <X size={24} color={colors.text.primary} />,
-      description: 'Show all contacts regardless of mode'
-    },
-    {
       id: 'work',
-      label: 'Work Mode',
-      icon: <Briefcase size={24} color={colors.primary} />,
-      description: 'Only show work-related contacts'
+      label: 'Work',
+      icon: <Briefcase size={16} color={colors.text.primary} />
     },
     {
       id: 'social',
-      label: 'Social Mode',
-      icon: <Users size={24} color={colors.primary} />,
-      description: 'Only show social contacts'
+      label: 'Social',
+      icon: <Users size={16} color={colors.text.primary} />
     },
     {
       id: 'family',
-      label: 'Family Mode',
-      icon: <Home size={24} color={colors.primary} />,
-      description: 'Only show family members'
+      label: 'Family',
+      icon: <Home size={16} color={colors.text.primary} />
+    },
+    {
+      id: null,
+      label: 'All',
+      icon: <X size={16} color={colors.text.primary} />
     }
   ];
   
   const modeOptions = getModeOptions(colors);
   
   return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <View style={styles.overlay}>
-        <View style={[styles.container, { backgroundColor: colors.background }]}>
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text.primary }]}>Select Mode</Text>
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <X size={24} color={colors.text.primary} />
-            </TouchableOpacity>
-          </View>
-          
-          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
-            Choose which mode you want to go live with
-          </Text>
-          
-          <View style={styles.optionsList}>
-            {modeOptions.map((option) => (
-              <TouchableOpacity
-                key={option.id || 'all'}
+    <View style={styles.container}>
+      <Text style={[styles.title, { color: colors.text.primary }]}>
+        Select Modes
+      </Text>
+      
+      <View style={styles.pillsContainer}>
+        {modeOptions.map((option) => (
+          <TouchableOpacity
+            key={option.id || 'all'}
+            style={[
+              styles.pill,
+              { 
+                backgroundColor: selectedModes.includes(option.id) 
+                  ? colors.primary 
+                  : colors.card 
+              }
+            ]}
+            onPress={() => handleToggle(option.id)}
+          >
+            <View style={styles.pillContent}>
+              {option.icon}
+              <Text 
                 style={[
-                  styles.optionButton,
-                  { backgroundColor: colors.card },
-                  currentMode === option.id && { borderColor: colors.primary, borderWidth: 2 }
+                  styles.pillText, 
+                  { 
+                    color: selectedModes.includes(option.id) 
+                      ? '#FFFFFF' 
+                      : colors.text.primary 
+                  }
                 ]}
-                onPress={() => handleSelect(option.id)}
               >
-                <View style={styles.optionHeader}>
-                  <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
-                    {option.icon}
-                  </View>
-                  <Text style={[styles.optionLabel, { color: colors.text.primary }]}>
-                    {option.label}
-                  </Text>
-                </View>
-                <Text style={[styles.optionDescription, { color: colors.text.secondary }]}>
-                  {option.description}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+                {option.label}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ))}
       </View>
-    </Modal>
+      
+      <View style={styles.actionsContainer}>
+        <TouchableOpacity 
+          style={styles.actionButton} 
+          onPress={onSelectAll}
+        >
+          <Text style={[styles.actionText, { color: colors.primary }]}>
+            Select All
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.actionButton} 
+          onPress={onClearAll}
+        >
+          <Text style={[styles.actionText, { color: colors.text.secondary }]}>
+            Clear All
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
   container: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 24,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  closeButton: {
-    padding: 4,
-  },
-  subtitle: {
-    fontSize: 16,
     marginBottom: 20,
   },
-  optionsList: {
-    gap: 16,
+  title: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
   },
-  optionButton: {
-    borderRadius: 12,
-    padding: 16,
+  pillsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
   },
-  optionHeader: {
+  pill: {
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  pillContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    gap: 6,
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  optionLabel: {
-    fontSize: 18,
+  pillText: {
+    fontSize: 14,
     fontWeight: '500',
   },
-  optionDescription: {
+  actionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    gap: 16,
+  },
+  actionButton: {
+    paddingVertical: 4,
+  },
+  actionText: {
     fontSize: 14,
+    fontWeight: '500',
   },
 });
