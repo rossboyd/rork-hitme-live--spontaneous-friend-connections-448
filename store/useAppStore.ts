@@ -53,6 +53,7 @@ interface OnboardingSlice {
 
 interface DebugSlice {
   resetToMockData: () => void;
+  loadMockData: () => void;
 }
 
 // Combine all slices into one interface
@@ -198,6 +199,10 @@ export const useAppStore = create<AppState>()(
           phone: '+44987654321',
         }
       }),
+      loadMockData: () => set((state) => ({
+        contacts: [...mockContacts],
+        inboundRequests: [...mockRequests],
+      })),
     }),
     {
       name: 'hit-me-app-storage',

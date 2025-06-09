@@ -30,7 +30,7 @@ const DEFAULT_AVATARS = [
 
 export default function OnboardingProfileScreen() {
   const router = useRouter();
-  const { user, setUser, setHasCompletedOnboarding } = useAppStore();
+  const { user, setUser, setHasCompletedOnboarding, loadMockData } = useAppStore();
   const { colors = darkTheme } = useThemeStore();
   
   const [name, setName] = useState(user?.name || '');
@@ -54,6 +54,9 @@ export default function OnboardingProfileScreen() {
         avatar: selectedAvatar,
       });
     }
+    
+    // Load mock data before completing onboarding
+    loadMockData();
     
     // Mark onboarding as completed
     setHasCompletedOnboarding(true);
