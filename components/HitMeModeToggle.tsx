@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import { colors } from '@/constants/colors';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, useColorScheme } from 'react-native';
+import { useThemeStore } from '@/store/useThemeStore';
 
 interface HitMeModeToggleProps {
   isActive: boolean;
@@ -8,6 +8,7 @@ interface HitMeModeToggleProps {
 }
 
 export const HitMeModeToggle = ({ isActive, onToggle }: HitMeModeToggleProps) => {
+  const { theme } = useThemeStore();
   const animation = React.useRef(new Animated.Value(isActive ? 1 : 0)).current;
   
   React.useEffect(() => {
@@ -20,7 +21,7 @@ export const HitMeModeToggle = ({ isActive, onToggle }: HitMeModeToggleProps) =>
   
   const backgroundColor = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: [colors.border, colors.primary]
+    outputRange: [theme.border, theme.primary]
   });
   
   const translateX = animation.interpolate({
@@ -30,12 +31,16 @@ export const HitMeModeToggle = ({ isActive, onToggle }: HitMeModeToggleProps) =>
   
   return (
     <TouchableOpacity 
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.card }]}
       onPress={onToggle}
       activeOpacity={0.8}
     >
       <View style={styles.content}>
-        <Text style={[styles.text, isActive && styles.activeText]}>
+        <Text style={[
+          styles.text, 
+          { color: theme.text.primary },
+          isActive && { color: theme.primary, fontWeight: '600' }
+        ]}>
           {isActive ? 'HitMeMode Active' : 'Activate HitMeMode'}
         </Text>
         
@@ -54,7 +59,6 @@ export const HitMeModeToggle = ({ isActive, onToggle }: HitMeModeToggleProps) =>
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
     marginHorizontal: 16,
@@ -73,11 +77,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.text.primary,
-  },
-  activeText: {
-    color: colors.primary,
-    fontWeight: '600',
   },
   toggle: {
     width: 44,
