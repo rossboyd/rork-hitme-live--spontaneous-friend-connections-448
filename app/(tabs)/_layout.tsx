@@ -16,22 +16,22 @@ export default function TabLayout() {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
         },
-        headerStyle: {
-          backgroundColor: colors.background,
-        },
-        headerTintColor: colors.text.primary,
-        headerShadowVisible: false,
+        headerShown: false, // Hide header for all tab screens
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '500',
         },
+        headerStyle: {
+          backgroundColor: colors.background,
+        },
+        headerTintColor: colors.text.primary,
       }}
+      initialRouteName="home"
     >
       <Tabs.Screen
         name="home"
         options={{
           title: "Home",
-          headerTitle: "Home",
           tabBarLabel: "Home",
           tabBarIcon: ({ color, size }) => (
             <Home size={size} color={color} />
@@ -42,7 +42,6 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "HitList",
-          headerTitle: "HitList",
           tabBarLabel: "HitList",
           tabBarIcon: ({ color, size }) => (
             <ListChecks size={size} color={color} />
@@ -53,7 +52,6 @@ export default function TabLayout() {
         name="contacts"
         options={{
           title: "Contacts",
-          headerTitle: "Contacts", 
           tabBarLabel: "Contacts",
           tabBarIcon: ({ color, size }) => (
             <Users size={size} color={color} />
@@ -64,7 +62,6 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: "Profile",
-          headerTitle: "Profile",
           tabBarLabel: "Profile",
           tabBarIcon: ({ color, size }) => (
             <User size={size} color={color} />

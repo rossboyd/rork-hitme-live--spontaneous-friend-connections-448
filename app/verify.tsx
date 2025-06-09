@@ -9,8 +9,7 @@ import {
   Pressable,
   TouchableOpacity,
   KeyboardAvoidingView,
-  ScrollView,
-  Dimensions
+  ScrollView
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
@@ -19,13 +18,9 @@ import { darkTheme } from '@/constants/colors';
 
 const MOCK_OTP = '123456';
 const OTP_LENGTH = 6;
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CELL_SIZE = Math.min(SCREEN_WIDTH * 0.12, 60);
-const CELL_SPACING = 10;
 
 export default function VerifyScreen() {
-  const params = useLocalSearchParams();
-  const phone = params.phone as string;
+  const { phone } = useLocalSearchParams<{ phone: string }>();
   const router = useRouter();
   const { setUser } = useAppStore();
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
@@ -36,154 +31,197 @@ export default function VerifyScreen() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+      setCountdown(prev => Math.max(0, prev - 1));
     }, 1000);
 
     return () => clearInterval(timer);
   }, []);
 
-  const handleOtpChange = (value: string, index: number) => {
-    if (Platform.OS !== 'web') {
-      Haptics.selectionAsync();
-    }
+  const focusInput = (index: number) => {
+    inputRefs.current[index]?.focus();
+  };
 
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-    setError('');
+  const handleInputChange = (text: string, index: number) => {
+    if (text.length > 1) {
+      // Handle paste
+      const pastedText = text.slice(0, OTP_LENGTH);
+      const newOtp = [...otp];
+      for (let i = 0; i < pastedText.length; i++) {
+        if (index + i < OTP_LENGTH) {
+          newOtp[index + i] = pastedText[i];
+        }
+      }
+      setOtp(newOtp);
+      setError('');
+      
+      // Focus last input or submit if complete
+      if (pastedText.length + index >= OTP_LENGTH) {
+        Keyboard.dismiss();
+        handleVerify(newOtp.join(''));
+      } else {
+        focusInput(index + pastedText.length);
+      }
+    } else {
+      // Handle single digit
+      const newOtp = [...otp];
+      newOtp[index] = text;
+      setOtp(newOtp);
+      setError('');
 
-    // Auto-focus next input
-    if (value && index < OTP_LENGTH - 1) {
-      inputRefs.current[index + 1]?.focus();
-    }
-
-    // Check if OTP is complete
-    if (newOtp.every(digit => digit) && newOtp.join('') === MOCK_OTP) {
-      handleVerify();
+      if (text !== '') {
+        if (index < OTP_LENGTH - 1) {
+          focusInput(index + 1);
+        } else {
+          Keyboard.dismiss();
+          handleVerify(newOtp.join(''));
+        }
+      }
     }
   };
 
   const handleKeyPress = (e: any, index: number) => {
-    if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
-      // Focus previous input on backspace
-      const newOtp = [...otp];
-      newOtp[index - 1] = '';
-      setOtp(newOtp);
-      inputRefs.current[index - 1]?.focus();
+    if (e.nativeEvent.key === 'Backspace' && !otp[index]) {
+      if (index > 0) {
+        focusInput(index - 1);
+      }
     }
   };
 
-  const handleVerify = () => {
-    const enteredOtp = otp.join('');
-    if (enteredOtp === MOCK_OTP) {
+  const handleVerify = (code: string = otp.join('')) => {
+    if (code === MOCK_OTP) {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
+
+      // Create mock user
       setUser({
         id: 'user-1',
         name: 'You',
-        phone,
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80',
+        phone: phone || '',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80',
       });
+
       router.replace('/(tabs)/home');
     } else {
+      setError('Invalid code. Please try again.');
+      setOtp(Array(OTP_LENGTH).fill(''));
+      focusInput(0);
+      
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
-      setError('Invalid code. Please try again.');
-      setOtp(Array(OTP_LENGTH).fill(''));
-      inputRefs.current[0]?.focus();
     }
   };
 
-  const handleResend = async () => {
+  const handleResend = () => {
     if (countdown > 0) return;
-    
-    setIsResending(true);
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setCountdown(30);
-    setIsResending(false);
+    setIsResending(true);
     setError('');
     setOtp(Array(OTP_LENGTH).fill(''));
-    inputRefs.current[0]?.focus();
+    focusInput(0);
+
+    // Simulate OTP resend
+    setTimeout(() => {
+      setIsResending(false);
+      setCountdown(30);
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    }, 1000);
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: darkTheme.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <Pressable style={styles.content} onPress={Keyboard.dismiss}>
-          <Text style={[styles.title, { color: darkTheme.text.primary }]}>
-            Verify your number
-          </Text>
-          
-          <Text style={[styles.subtitle, { color: darkTheme.text.secondary }]}>
-            We sent a verification code to {phone}
-          </Text>
-
-          <View style={styles.otpContainer}>
-            {otp.map((digit, index) => (
-              <TextInput
-                key={index}
-                ref={(ref) => {
-                  inputRefs.current[index] = ref;
-                }}
-                style={[
-                  styles.otpInput,
-                  { 
-                    backgroundColor: darkTheme.card,
-                    borderColor: error ? darkTheme.accent : darkTheme.border,
-                    color: darkTheme.text.primary
-                  },
-                  digit && styles.otpInputFilled
-                ]}
-                value={digit}
-                onChangeText={(value) => handleOtpChange(value.slice(-1), index)}
-                onKeyPress={(e) => handleKeyPress(e, index)}
-                keyboardType="number-pad"
-                maxLength={1}
-                selectTextOnFocus
-                selectionColor={darkTheme.primary}
-              />
-            ))}
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: darkTheme.text.primary }]}>
+              Verify your number
+            </Text>
+            <Text style={[styles.subtitle, { color: darkTheme.text.secondary }]}>
+              Enter the code we sent to {phone}
+            </Text>
           </View>
 
+          <Pressable onPress={() => focusInput(0)}>
+            <View style={styles.otpContainer}>
+              {Array(OTP_LENGTH).fill(0).map((_, index) => (
+                <TextInput
+                  key={index}
+                  ref={ref => inputRefs.current[index] = ref}
+                  style={[
+                    styles.otpInput,
+                    { 
+                      backgroundColor: darkTheme.card,
+                      borderColor: error ? darkTheme.accent : darkTheme.border,
+                      color: darkTheme.text.primary 
+                    },
+                    otp[index] && styles.otpInputFilled
+                  ]}
+                  value={otp[index]}
+                  onChangeText={(text) => handleInputChange(text.replace(/[^\d]/g, ''), index)}
+                  onKeyPress={(e) => handleKeyPress(e, index)}
+                  keyboardType="number-pad"
+                  maxLength={index === 0 ? OTP_LENGTH : 1}
+                  selectTextOnFocus
+                  selectionColor={darkTheme.primary}
+                />
+              ))}
+            </View>
+          </Pressable>
+
           {error ? (
-            <Text style={[styles.error, { color: darkTheme.accent }]}>{error}</Text>
+            <Text style={[styles.errorText, { color: darkTheme.accent }]}>{error}</Text>
           ) : (
-            <Text style={[styles.hint, { color: darkTheme.text.light }]}>
-              Enter the 6-digit code we sent you
+            <Text style={[styles.helperText, { color: darkTheme.text.light }]}>
+              Enter the 6-digit code
             </Text>
           )}
 
-          <TouchableOpacity
-            style={[
-              styles.resendButton,
-              countdown > 0 && { opacity: 0.5 }
-            ]}
-            onPress={handleResend}
-            disabled={countdown > 0 || isResending}
-          >
-            <Text style={[styles.resendText, { color: darkTheme.primary }]}>
-              {isResending 
-                ? 'Sending...' 
-                : countdown > 0 
-                  ? `Resend code in ${countdown}s`
-                  : 'Resend code'}
-            </Text>
-          </TouchableOpacity>
-        </Pressable>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[
+                styles.verifyButton,
+                { 
+                  backgroundColor: otp.every(digit => digit) ? darkTheme.primary : darkTheme.border,
+                  opacity: otp.every(digit => digit) ? 1 : 0.6
+                }
+              ]}
+              onPress={() => handleVerify()}
+              disabled={!otp.every(digit => digit)}
+            >
+              <Text style={styles.verifyButtonText}>Verify</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.resendButton,
+                { 
+                  borderColor: countdown > 0 ? darkTheme.border : darkTheme.primary,
+                  opacity: countdown > 0 || isResending ? 0.6 : 1
+                }
+              ]}
+              onPress={handleResend}
+              disabled={countdown > 0 || isResending}
+            >
+              <Text 
+                style={[
+                  styles.resendButtonText,
+                  { color: countdown > 0 ? darkTheme.text.light : darkTheme.primary }
+                ]}
+              >
+                {countdown > 0 ? `Resend code (${countdown}s)` : 'Resend code'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -198,54 +236,77 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
+  header: {
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    marginBottom: 48,
   },
   title: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: '700',
-    marginBottom: 8,
-    textAlign: 'center',
+    marginBottom: 12,
+    fontFamily: 'PlusJakartaSans-Bold',
   },
   subtitle: {
     fontSize: 16,
-    marginBottom: 32,
     textAlign: 'center',
+    maxWidth: 280,
   },
   otpContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: CELL_SPACING,
-    marginBottom: 24,
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    gap: 8,
   },
   otpInput: {
-    width: CELL_SIZE,
-    height: CELL_SIZE,
-    borderRadius: CELL_SIZE / 2,
-    borderWidth: 2,
+    flex: 1,
+    height: 56,
+    borderRadius: 12,
+    borderWidth: 1,
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: 'PlusJakartaSans-Medium',
     textAlign: 'center',
   },
   otpInputFilled: {
     borderColor: darkTheme.primary,
   },
-  error: {
+  errorText: {
     fontSize: 14,
-    marginBottom: 24,
     textAlign: 'center',
+    marginBottom: 24,
   },
-  hint: {
+  helperText: {
     fontSize: 14,
-    marginBottom: 24,
     textAlign: 'center',
+    marginBottom: 24,
   },
-  resendButton: {
-    padding: 16,
+  buttonContainer: {
+    gap: 16,
   },
-  resendText: {
+  verifyButton: {
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  verifyButtonText: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#000',
+    fontFamily: 'PlusJakartaSans-SemiBold',
+  },
+  resendButton: {
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  resendButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'PlusJakartaSans-SemiBold',
   },
 });

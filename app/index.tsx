@@ -8,8 +8,7 @@ import {
   Platform,
   ScrollView,
   SafeAreaView,
-  KeyboardAvoidingView,
-  Dimensions
+  KeyboardAvoidingView
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
@@ -17,27 +16,16 @@ import { ChevronDown } from 'lucide-react-native';
 import { validatePhone } from '@/utils/validation';
 import * as Haptics from 'expo-haptics';
 import { darkTheme } from '@/constants/colors';
-import { mockContacts } from '@/mocks/contacts';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-const COUNTRY_CODES = [
-  { code: '+1', country: 'US', flag: '🇺🇸' },
-  { code: '+44', country: 'UK', flag: '🇬🇧' },
-  { code: '+33', country: 'FR', flag: '🇫🇷' },
-  { code: '+49', country: 'DE', flag: '🇩🇪' },
-];
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { addContact } = useAppStore();
-  const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]);
+  const [countryCode, setCountryCode] = useState('+1');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { setUser } = useAppStore();
 
-  const handleContinue = async () => {
-    const fullPhone = selectedCountry.code + phoneNumber;
+  const handlePhoneSubmit = () => {
+    const fullPhone = countryCode + phoneNumber;
     
     if (!validatePhone(fullPhone)) {
       setError('Please enter a valid phone number');
@@ -47,26 +35,29 @@ export default function LoginScreen() {
       return;
     }
 
-    setIsLoading(true);
-    setError('');
-
-    // Add mock contacts when user logs in
-    mockContacts.forEach(contact => {
-      addContact(contact);
-    });
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
-    setIsLoading(false);
     router.push({
       pathname: '/verify',
       params: { phone: fullPhone }
     });
+  };
+
+  const formatPhoneNumber = (text: string) => {
+    const cleaned = text.replace(/[^\d]/g, '');
+    setPhoneNumber(cleaned);
+    setError('');
+  };
+
+  const formatCountryCode = (text: string) => {
+    let cleaned = text.replace(/[^\d+]/g, '');
+    if (!cleaned.startsWith('+')) {
+      cleaned = '+' + cleaned.replace(/\+/g, '');
+    }
+    setCountryCode(cleaned);
+    setError('');
   };
 
   return (
@@ -79,66 +70,85 @@ export default function LoginScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={[styles.container, { width: SCREEN_WIDTH }]}>
+          <View style={styles.container}>
             <View style={styles.header}>
               <Text style={[styles.title, { color: darkTheme.text.primary }]}>
-                Welcome to HitMe
+                Log in / Sign up
               </Text>
               <Text style={[styles.subtitle, { color: darkTheme.text.secondary }]}>
-                Connect with friends when you're both free
+                You'll be able to connect with friends, get notifications when they're available, and do other nice things
               </Text>
             </View>
 
             <View style={styles.form}>
-              <Text style={[styles.label, { color: darkTheme.text.primary }]}>
-                Phone Number
-              </Text>
-              
-              <View style={[styles.phoneContainer, { backgroundColor: darkTheme.card, borderColor: darkTheme.border }]}>
-                <TouchableOpacity style={styles.countrySelector}>
-                  <Text style={[styles.flag, { color: darkTheme.text.primary }]}>
-                    {selectedCountry.flag}
-                  </Text>
-                  <Text style={[styles.countryCode, { color: darkTheme.text.primary }]}>
-                    {selectedCountry.code}
-                  </Text>
+              <View style={styles.inputRow}>
+                <TouchableOpacity 
+                  style={[styles.countrySelect, { backgroundColor: darkTheme.card }]}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.flagEmoji}>🇺🇸</Text>
+                  <TextInput
+                    style={[styles.countryInput, { color: darkTheme.text.primary }]}
+                    value={countryCode}
+                    onChangeText={formatCountryCode}
+                    placeholder="+1"
+                    placeholderTextColor={darkTheme.text.light}
+                    keyboardType="phone-pad"
+                    maxLength={4}
+                  />
                   <ChevronDown size={16} color={darkTheme.text.light} />
                 </TouchableOpacity>
                 
                 <TextInput
-                  style={[styles.phoneInput, { color: darkTheme.text.primary }]}
+                  style={[
+                    styles.phoneInput,
+                    { 
+                      backgroundColor: darkTheme.card,
+                      borderColor: error ? darkTheme.accent : 'transparent',
+                      color: darkTheme.text.primary 
+                    }
+                  ]}
                   value={phoneNumber}
-                  onChangeText={(text) => {
-                    setPhoneNumber(text);
-                    setError('');
-                  }}
-                  placeholder="Enter your phone number"
+                  onChangeText={formatPhoneNumber}
+                  placeholder="Phone number"
                   placeholderTextColor={darkTheme.text.light}
                   keyboardType="phone-pad"
                   autoFocus
                 />
               </View>
-
+              
               {error ? (
-                <Text style={[styles.error, { color: darkTheme.accent }]}>{error}</Text>
+                <Text style={[styles.errorText, { color: darkTheme.accent }]}>
+                  {error}
+                </Text>
               ) : null}
 
               <TouchableOpacity
                 style={[
-                  styles.continueButton,
-                  { backgroundColor: darkTheme.primary },
-                  (!phoneNumber || isLoading) && { opacity: 0.6 }
+                  styles.nextButton,
+                  { 
+                    backgroundColor: phoneNumber.length > 0 ? darkTheme.primary : darkTheme.border,
+                    opacity: phoneNumber.length > 0 ? 1 : 0.6
+                  }
                 ]}
-                onPress={handleContinue}
-                disabled={!phoneNumber || isLoading}
+                onPress={handlePhoneSubmit}
+                disabled={!phoneNumber.length}
               >
-                <Text style={[styles.continueText, { color: "#000" }]}>
-                  {isLoading ? 'Sending...' : 'Continue'}
-                </Text>
+                <Text style={styles.nextButtonText}>Next</Text>
               </TouchableOpacity>
+            </View>
 
-              <Text style={[styles.disclaimer, { color: darkTheme.text.light }]}>
-                By continuing, you agree to our Terms of Service and Privacy Policy
+            <View style={styles.footer}>
+              <Text style={[styles.termsText, { color: darkTheme.text.light }]}>
+                By signing up you accept our{' '}
+                <Text style={[styles.linkText, { color: darkTheme.primary }]}>
+                  terms of use
+                </Text>
+                {' '}and{' '}
+                <Text style={[styles.linkText, { color: darkTheme.primary }]}>
+                  privacy policy
+                </Text>
+                . We'll text you a code to verify your account (usual rates may apply).
               </Text>
             </View>
           </View>
@@ -163,77 +173,87 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: Platform.OS === 'ios' ? 40 : 60,
     paddingBottom: 20,
+    width: '100%',
   },
   header: {
-    alignItems: 'center',
-    marginBottom: 60,
+    marginBottom: 40,
   },
   title: {
     fontSize: 32,
     fontWeight: '700',
     marginBottom: 12,
-    textAlign: 'center',
+    fontFamily: 'PlusJakartaSans-Bold',
   },
   subtitle: {
-    fontSize: 18,
-    textAlign: 'center',
+    fontSize: 16,
     lineHeight: 24,
+    fontFamily: 'PlusJakartaSans-Regular',
   },
   form: {
-    flex: 1,
+    width: '100%',
+    marginBottom: 40,
   },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  phoneContainer: {
+  inputRow: {
     flexDirection: 'row',
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: 'hidden',
+    gap: 12,
+    marginBottom: 12,
+    width: '100%',
   },
-  countrySelector: {
+  countrySelect: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(0, 0, 0, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 52,
+    minWidth: 110,
   },
-  flag: {
+  flagEmoji: {
     fontSize: 20,
     marginRight: 8,
   },
-  countryCode: {
+  countryInput: {
+    flex: 1,
     fontSize: 16,
-    fontWeight: '500',
-    marginRight: 8,
+    fontFamily: 'PlusJakartaSans-Regular',
+    marginRight: 4,
   },
   phoneInput: {
     flex: 1,
+    height: 52,
+    borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 16,
     fontSize: 16,
+    fontFamily: 'PlusJakartaSans-Regular',
   },
-  error: {
+  errorText: {
     fontSize: 14,
+    marginBottom: 12,
+    marginLeft: 4,
+  },
+  nextButton: {
+    height: 52,
+    borderRadius: 26,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginTop: 8,
   },
-  continueButton: {
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  continueText: {
+  nextButtonText: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#000',
+    fontFamily: 'PlusJakartaSans-SemiBold',
   },
-  disclaimer: {
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 24,
-    lineHeight: 16,
+  footer: {
+    marginTop: 'auto',
+    paddingTop: 20,
+  },
+  termsText: {
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: 'left',
+    fontFamily: 'PlusJakartaSans-Regular',
+  },
+  linkText: {
+    textDecorationLine: 'underline',
   },
 });
