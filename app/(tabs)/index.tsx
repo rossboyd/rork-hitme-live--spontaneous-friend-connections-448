@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Text, Animated } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { RequestCard } from '@/components/RequestCard';
@@ -12,27 +12,30 @@ import { EditRequestModal } from '@/components/EditRequestModal';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { useRequestFilters } from '@/hooks/useRequestFilters';
-import { typography } from '@/styles/typography';
 
-// Tab types
 type TabType = 'active' | 'favorites' | 'expired';
 
 export default function HitListScreen() {
   const router = useRouter();
-  const { outboundRequests, contacts, expireRequests, updateRequestStatus, deleteOutboundRequest, updateOutboundRequest, user } = useAppStore();
+  const { 
+    outboundRequests, 
+    contacts, 
+    expireRequests, 
+    updateRequestStatus, 
+    deleteOutboundRequest, 
+    updateOutboundRequest, 
+    user 
+  } = useAppStore();
   const { colors = darkTheme } = useThemeStore();
   const [selectedRequest, setSelectedRequest] = useState<HitRequest | null>(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('active');
 
-  // Use the filter hook to get categorized requests
   const { favoriteRequests, pendingRequests, expiredRequests } = useRequestFilters(outboundRequests);
 
   useEffect(() => {
-    // Check for expired requests on mount and every minute
     expireRequests();
     const interval = setInterval(expireRequests, 60000);
-    
     return () => clearInterval(interval);
   }, [expireRequests]);
 
@@ -41,8 +44,6 @@ export default function HitListScreen() {
   };
 
   const handleExtendRequest = (requestId: string) => {
-    // For now, just change status back to pending
-    // In a real app, you'd update the expiry date too
     updateRequestStatus(requestId, 'pending');
   };
 
@@ -90,33 +91,28 @@ export default function HitListScreen() {
   );
 
   const renderEmptyState = () => {
-    let title = "No requests found";
-    let message = "There are no requests in this category.";
-    let icon = <ListChecks size={48} color={colors.text.light} />;
+    const emptyStates = {
+      active: {
+        title: "No active requests",
+        message: "Add people to your HitList to let them know you want to talk.",
+        icon: <ListChecks size={48} color={colors.text.light} />
+      },
+      favorites: {
+        title: "No favorites yet",
+        message: "Mark requests as favorites to keep them permanently.",
+        icon: <Star size={48} color={colors.text.light} />
+      },
+      expired: {
+        title: "No expired requests",
+        message: "Expired requests will appear here.",
+        icon: <Clock size={48} color={colors.text.light} />
+      }
+    };
 
-    if (activeTab === 'active') {
-      title = "No active requests";
-      message = "Add people to your HitList to let them know you want to talk.";
-    } else if (activeTab === 'favorites') {
-      title = "No favorites yet";
-      message = "Mark requests as favorites to keep them permanently.";
-      icon = <Star size={48} color={colors.text.light} />;
-    } else if (activeTab === 'expired') {
-      title = "No expired requests";
-      message = "Expired requests will appear here.";
-      icon = <Clock size={48} color={colors.text.light} />;
-    }
-
-    return (
-      <EmptyState
-        title={title}
-        message={message}
-        icon={icon}
-      />
-    );
+    const state = emptyStates[activeTab];
+    return <EmptyState title={state.title} message={state.message} icon={state.icon} />;
   };
 
-  // Get the current tab data
   const getCurrentTabData = () => {
     switch (activeTab) {
       case 'favorites':
@@ -131,7 +127,6 @@ export default function HitListScreen() {
   };
 
   const tabData = getCurrentTabData();
-  const hasData = tabData.length > 0;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -142,7 +137,6 @@ export default function HitListScreen() {
         </Text>
       </View>
 
-      {/* Tab Navigation */}
       <View style={styles.tabContainer}>
         <TabButton 
           title="Active" 
@@ -196,7 +190,6 @@ export default function HitListScreen() {
   );
 }
 
-// Tab Button Component
 interface TabButtonProps {
   title: string;
   count: number;

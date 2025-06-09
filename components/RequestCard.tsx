@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Phone, X, Clock, Trash2, Wifi, Star } from 'lucide-react-native';
 import { HitRequest, UrgencyLevel, Contact } from '@/types';
 import { formatDistanceToNow } from '@/utils/dateUtils';
@@ -16,6 +16,7 @@ interface RequestCardProps {
   onDelete?: () => void;
   isInbound?: boolean;
   isFavorite?: boolean;
+  isDraggable?: boolean;
 }
 
 export const RequestCard = ({ 
@@ -26,7 +27,8 @@ export const RequestCard = ({
   onExtend,
   onDelete,
   isInbound = false,
-  isFavorite = false
+  isFavorite = false,
+  isDraggable = false
 }: RequestCardProps) => {
   const { colors = darkTheme } = useThemeStore();
   
@@ -148,7 +150,7 @@ const styles = StyleSheet.create({
   },
   favoriteCard: {
     borderLeftWidth: 3,
-    borderLeftColor: '#FFD700', // Gold color for favorites
+    borderLeftColor: '#FFD700',
   },
   content: {
     flex: 1,

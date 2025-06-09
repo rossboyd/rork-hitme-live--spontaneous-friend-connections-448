@@ -19,21 +19,20 @@ interface CombinedGoLiveModalProps {
   visible: boolean;
   onClose: () => void;
   onGoLive: (minutes: number, modes: Mode[]) => void;
-  initialDuration?: number; // in minutes
+  initialDuration?: number;
 }
 
 export const CombinedGoLiveModal = ({ 
   visible, 
   onClose, 
   onGoLive,
-  initialDuration = 30 // Default to 30 minutes
+  initialDuration = 30
 }: CombinedGoLiveModalProps) => {
   const { colors = darkTheme } = useThemeStore();
   
   const [selectedDuration, setSelectedDuration] = useState(initialDuration);
   const [selectedModes, setSelectedModes] = useState<Mode[]>([]);
   
-  // Reset to initial values when modal opens
   useEffect(() => {
     if (visible) {
       setSelectedDuration(initialDuration);
@@ -42,7 +41,6 @@ export const CombinedGoLiveModal = ({
   }, [visible, initialDuration]);
   
   const handleConfirm = () => {
-    // Ensure at least 1 minute is selected
     if (selectedDuration < 1) {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -54,9 +52,7 @@ export const CombinedGoLiveModal = ({
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     
-    // If no modes selected, use all modes
     const modesToUse = selectedModes.length === 0 ? ['work', 'social', 'family'] : selectedModes;
-    
     onGoLive(selectedDuration, modesToUse);
   };
   
@@ -96,20 +92,17 @@ export const CombinedGoLiveModal = ({
             </TouchableOpacity>
           </View>
           
-          {/* Duration Section */}
           <DurationSelector
             onSelect={setSelectedDuration}
             initialDuration={initialDuration}
           />
           
-          {/* Mode Section */}
           <ModeSelector
             selectedModes={selectedModes}
             onToggleMode={handleToggleMode}
             onSelectAll={handleSelectAll}
           />
           
-          {/* Action Buttons */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={[styles.button, styles.cancelButton, { borderColor: colors.border }]}

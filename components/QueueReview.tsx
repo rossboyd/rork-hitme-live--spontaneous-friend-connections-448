@@ -41,7 +41,6 @@ export const QueueReview = ({
 }: QueueReviewProps) => {
   const { colors = darkTheme } = useThemeStore();
 
-  // Filter requests based on current mode
   const filteredRequests = currentMode 
     ? requests.filter(request => {
         const contact = getContactById(request.senderId);
@@ -84,13 +83,14 @@ export const QueueReview = ({
   };
 
   const renderModeIcon = (mode: Mode) => {
+    const iconProps = { size: 14, color: colors.primary };
     switch (mode) {
       case 'work':
-        return <Briefcase size={14} color={colors.primary} />;
+        return <Briefcase {...iconProps} />;
       case 'family':
-        return <Home size={14} color={colors.primary} />;
+        return <Home {...iconProps} />;
       case 'social':
-        return <Users size={14} color={colors.primary} />;
+        return <Users {...iconProps} />;
       default:
         return null;
     }
@@ -125,7 +125,6 @@ export const QueueReview = ({
             {item.topic}
           </Text>
           
-          {/* Online status / Last seen */}
           <View style={styles.statusContainer}>
             <Clock size={12} color={colors.text.light} />
             <Text style={[styles.lastSeen, { color: colors.text.light }]}>
@@ -135,7 +134,6 @@ export const QueueReview = ({
             </Text>
           </View>
           
-          {/* Contact modes */}
           {contactModes.length > 0 && (
             <View style={styles.modesContainer}>
               {contactModes.map((mode) => (
@@ -202,7 +200,7 @@ export const QueueReview = ({
             <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
               {previewMode
                 ? `${filteredRequests.length} people waiting to talk`
-                : !previewMode && filteredRequests.length > 0 
+                : filteredRequests.length > 0 
                   ? "Select who to notify when you go live."
                   : "Select who to notify when you go live"}
             </Text>
@@ -228,14 +226,20 @@ export const QueueReview = ({
           {!previewMode && onGoLive && filteredRequests.length > 0 && (
             <View style={styles.footer}>
               <TouchableOpacity
-                style={[styles.goLiveButton, { backgroundColor: colors.primary }]}
+                style={[
+                  styles.goLiveButton, 
+                  { 
+                    backgroundColor: colors.primary,
+                    opacity: selectedIds.length > 0 ? 1 : 0.5
+                  }
+                ]}
                 onPress={() => onGoLive(selectedIds)}
                 disabled={selectedIds.length === 0}
-                activeOpacity={selectedIds.length > 0 ? 0.7 : 0.5}
+                activeOpacity={selectedIds.length > 0 ? 0.7 : 1}
               >
                 <Text style={[
                   styles.goLiveText, 
-                  { color: "#000", opacity: selectedIds.length > 0 ? 1 : 0.7 }
+                  { color: "#000" }
                 ]}>
                   Go Live ({selectedIds.length})
                 </Text>
