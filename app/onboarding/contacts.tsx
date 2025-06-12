@@ -10,7 +10,6 @@ import {
   Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAppStore } from '@/store/useAppStore';
 import { Users, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useThemeStore } from '@/store/useThemeStore';

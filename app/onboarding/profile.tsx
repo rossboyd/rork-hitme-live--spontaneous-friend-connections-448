@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
+import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { Avatar } from '@/components/common/Avatar';
 import { Camera, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -30,7 +31,8 @@ const DEFAULT_AVATARS = [
 
 export default function OnboardingProfileScreen() {
   const router = useRouter();
-  const { user, setUser, setHasCompletedOnboarding, loadMockData } = useAppStore();
+  const { user, setUser, loadMockData } = useAppStore();
+  const { setHasCompletedOnboarding } = useOnboardingStore();
   const { colors = darkTheme } = useThemeStore();
   
   const [name, setName] = useState(user?.name || '');

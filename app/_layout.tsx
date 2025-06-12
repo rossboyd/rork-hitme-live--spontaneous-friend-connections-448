@@ -5,7 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
-import { useAppStore } from '@/store/useAppStore';
+import { useOnboardingStore } from '@/store/useOnboardingStore';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -13,7 +13,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   // Always provide default colors to prevent undefined errors
   const { theme, colors = darkTheme } = useThemeStore();
-  const { hasCompletedOnboarding, user } = useAppStore();
+  const { hasCompletedOnboarding } = useOnboardingStore();
   const segments = useSegments();
   const router = useRouter();
   
@@ -36,7 +36,6 @@ export default function RootLayout() {
 
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboardingGroup = segments[0] === 'onboarding';
-    const inTabsGroup = segments[0] === '(tabs)';
     
     // Auth-related routes that should bypass onboarding redirect
     const isAuthRoute = 

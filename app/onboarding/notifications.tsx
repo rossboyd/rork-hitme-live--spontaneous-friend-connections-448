@@ -9,7 +9,7 @@ import {
   Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAppStore } from '@/store/useAppStore';
+import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { Bell, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useThemeStore } from '@/store/useThemeStore';
@@ -17,7 +17,7 @@ import { darkTheme } from '@/constants/colors';
 
 export default function NotificationsPermissionScreen() {
   const router = useRouter();
-  const { setHasCompletedOnboarding } = useAppStore();
+  const { setHasCompletedOnboarding } = useOnboardingStore();
   const { colors = darkTheme } = useThemeStore();
   
   const handleAllowNotifications = () => {
