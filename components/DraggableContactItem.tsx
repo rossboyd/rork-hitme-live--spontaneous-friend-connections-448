@@ -44,7 +44,7 @@ interface DraggableContactItemProps {
   contact: Contact;
   onPress: (contact: Contact) => void;
   showLastOnline?: boolean;
-  isInHitList?: boolean | null;
+  isInHitList?: boolean;
   onToggleHitList?: (contact: Contact) => void;
   showModes?: boolean;
   isDraggable?: boolean;
@@ -109,7 +109,7 @@ export const DraggableContactItem = ({
   const ContactContent = () => (
     <View style={[styles.container, { backgroundColor: colors.card }]}>
       {showGrabHandle && (
-        <View style={styles.dragHandle}>
+        <View style={[styles.dragHandle, { opacity: showGrabHandle ? 1 : 0 }]}>
           <GripVertical size={20} color={colors.text.secondary} />
         </View>
       )}
@@ -169,7 +169,7 @@ export const DraggableContactItem = ({
   );
 
   // Only use gesture handler if all conditions are met and it's available
-  if (isDraggable && isGestureHandlerAvailable && onDragStart && onDragEnd) {
+  if (isDraggable && isGestureHandlerAvailable && onDragStart && onDragEnd && Platform.OS !== 'web') {
     try {
       const translateY = useSharedValue(0);
       const scale = useSharedValue(1);
@@ -181,7 +181,7 @@ export const DraggableContactItem = ({
           'worklet';
           isDragging.value = true;
           runOnJS(onDragStart)();
-          scale.value = withSpring(1.05);
+          scale.value = withSpring(1.02);
           zIndex.value = 1000;
         })
         .onUpdate((event: any) => {

@@ -29,12 +29,6 @@ export const ToggleButton = memo(({
 }: ToggleButtonProps) => {
   const { colors = darkTheme } = useThemeStore();
 
-  const handlePress = () => {
-    if (!disabled) {
-      onToggle(!isRightSelected);
-    }
-  };
-
   return (
     <View
       style={[
@@ -93,6 +87,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 2,
     overflow: 'hidden',
+    minWidth: 120,
   },
   option: {
     flex: 1,

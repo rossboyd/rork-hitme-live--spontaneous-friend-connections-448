@@ -11,7 +11,7 @@ interface ContactItemProps {
   contact: Contact;
   onPress: (contact: Contact) => void;
   showLastOnline?: boolean;
-  isInHitList?: boolean | null;
+  isInHitList?: boolean;
   onToggleHitList?: (contact: Contact) => void;
   showModes?: boolean;
   showGrabHandle?: boolean;
@@ -70,7 +70,7 @@ export const ContactItem = ({
       activeOpacity={0.7}
     >
       {showGrabHandle && (
-        <View style={styles.dragHandle}>
+        <View style={[styles.dragHandle, { opacity: showGrabHandle ? 1 : 0 }]}>
           <GripVertical size={20} color={colors.text.secondary} />
         </View>
       )}

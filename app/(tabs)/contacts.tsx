@@ -62,7 +62,7 @@ export default function ContactsScreen() {
     setShowAddModal(false);
   };
   
-  const isInHitList = (contactId: string) => {
+  const isInHitList = (contactId: string): boolean => {
     return outboundRequests.some(
       req => req.receiverId === contactId && req.status === 'pending'
     );
@@ -135,6 +135,8 @@ export default function ContactsScreen() {
   const showGrabHandle = modeFilter && contactSortOrder === 'ranked';
   
   const renderItem = ({ item, index }: { item: Contact; index: number }) => {
+    const contactIsInHitList = isInHitList(item.id);
+    
     // Use DraggableContactItem only when drag and drop is enabled and available
     if (canDragAndDrop) {
       return (
@@ -142,7 +144,7 @@ export default function ContactsScreen() {
           contact={item}
           onPress={handleContactPress}
           showLastOnline={true}
-          isInHitList={isInHitList(item.id)}
+          isInHitList={contactIsInHitList}
           onToggleHitList={handleToggleHitList}
           showModes={true}
           isDraggable={true}
@@ -161,7 +163,7 @@ export default function ContactsScreen() {
         contact={item}
         onPress={handleContactPress}
         showLastOnline={true}
-        isInHitList={isInHitList(item.id)}
+        isInHitList={contactIsInHitList}
         onToggleHitList={handleToggleHitList}
         showModes={true}
         showGrabHandle={showGrabHandle}

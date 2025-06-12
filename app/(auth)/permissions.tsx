@@ -15,9 +15,19 @@ import { darkTheme } from '@/constants/colors';
 import * as Haptics from 'expo-haptics';
 import { Bell, Users, ChevronLeft } from 'lucide-react-native';
 
-// These native modules are unavailable on web but must be statically imported
-import * as Contacts from 'expo-contacts';
-import * as Notifications from 'expo-notifications';
+// Only import these on native platforms
+let Contacts: any = null;
+let Notifications: any = null;
+
+if (Platform.OS !== 'web') {
+  import('expo-contacts').then(module => {
+    Contacts = module;
+  });
+  
+  import('expo-notifications').then(module => {
+    Notifications = module;
+  });
+}
 
 export default function PermissionsScreen() {
   const router = useRouter();
@@ -38,6 +48,8 @@ export default function PermissionsScreen() {
       setContactsPermission('granted');
       return;
     }
+    
+    if (!Contacts) return;
     
     try {
       const { status } = await Contacts.requestPermissionsAsync();
@@ -60,6 +72,8 @@ export default function PermissionsScreen() {
       setNotificationsPermission('granted');
       return;
     }
+    
+    if (!Notifications) return;
     
     try {
       const { status } = await Notifications.requestPermissionsAsync();
