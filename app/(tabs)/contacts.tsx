@@ -77,6 +77,23 @@ export default function ContactsScreen() {
     router.push(`/contact-detail?id=${contact.id}`);
   };
   
+  const getModeLabel = (mode: Mode) => {
+    switch (mode) {
+      case 'FAM':
+        return 'Family';
+      case 'VIP':
+        return 'VIP';
+      case 'BFF':
+        return 'BFF';
+      case 'WRK':
+        return 'Work';
+      case 'MEH':
+        return 'Meh';
+      default:
+        return mode;
+    }
+  };
+  
   const toggleModeFilter = (mode: Mode) => {
     setModeFilter(currentMode => currentMode === mode ? null : mode);
   };
@@ -123,53 +140,24 @@ export default function ContactsScreen() {
         <View style={styles.filterContainer}>
           <Text style={[styles.filterLabel, { color: colors.text.secondary }]}>Filter by mode:</Text>
           <View style={styles.modeFilters}>
-            <TouchableOpacity 
-              style={[
-                styles.modeFilter, 
-                { backgroundColor: modeFilter === 'work' ? colors.primary : colors.card }
-              ]}
-              onPress={() => toggleModeFilter('work')}
-            >
-              <Filter size={14} color={modeFilter === 'work' ? '#000' : colors.text.primary} />
-              <Text style={[
-                styles.modeFilterText, 
-                { color: modeFilter === 'work' ? '#000' : colors.text.primary }
-              ]}>
-                Work
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[
-                styles.modeFilter, 
-                { backgroundColor: modeFilter === 'social' ? colors.primary : colors.card }
-              ]}
-              onPress={() => toggleModeFilter('social')}
-            >
-              <Filter size={14} color={modeFilter === 'social' ? '#000' : colors.text.primary} />
-              <Text style={[
-                styles.modeFilterText, 
-                { color: modeFilter === 'social' ? '#000' : colors.text.primary }
-              ]}>
-                Social
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[
-                styles.modeFilter, 
-                { backgroundColor: modeFilter === 'family' ? colors.primary : colors.card }
-              ]}
-              onPress={() => toggleModeFilter('family')}
-            >
-              <Filter size={14} color={modeFilter === 'family' ? '#000' : colors.text.primary} />
-              <Text style={[
-                styles.modeFilterText, 
-                { color: modeFilter === 'family' ? '#000' : colors.text.primary }
-              ]}>
-                Family
-              </Text>
-            </TouchableOpacity>
+            {(['FAM', 'VIP', 'BFF', 'WRK', 'MEH'] as Mode[]).map((mode) => (
+              <TouchableOpacity 
+                key={mode}
+                style={[
+                  styles.modeFilter, 
+                  { backgroundColor: modeFilter === mode ? colors.primary : colors.card }
+                ]}
+                onPress={() => toggleModeFilter(mode)}
+              >
+                <Filter size={14} color={modeFilter === mode ? '#000' : colors.text.primary} />
+                <Text style={[
+                  styles.modeFilterText, 
+                  { color: modeFilter === mode ? '#000' : colors.text.primary }
+                ]}>
+                  {getModeLabel(mode)}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
         
@@ -184,7 +172,7 @@ export default function ContactsScreen() {
               message={searchQuery 
                 ? "Try a different search term" 
                 : modeFilter
-                  ? `No contacts in ${modeFilter} mode`
+                  ? `No contacts in ${getModeLabel(modeFilter)} mode`
                   : "Add your first contact to get started"}
               icon={<UserPlus size={48} color={colors.text.light} />}
             />
@@ -231,6 +219,7 @@ const styles = StyleSheet.create({
   },
   modeFilters: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   modeFilter: {

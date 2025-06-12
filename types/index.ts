@@ -1,4 +1,4 @@
-export type Mode = 'work' | 'social' | 'family';
+export type Mode = 'FAM' | 'VIP' | 'BFF' | 'WRK' | 'MEH';
 
 export interface Contact {
   id: string;

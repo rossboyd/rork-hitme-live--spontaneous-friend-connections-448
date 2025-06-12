@@ -5,7 +5,7 @@ import { formatDistanceToNow } from '@/utils/dateUtils';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { Avatar } from '@/components/common/Avatar';
-import { Briefcase, Home, Users } from 'lucide-react-native';
+import { Briefcase, Home, Heart, Crown, Meh } from 'lucide-react-native';
 
 interface ContactItemProps {
   contact: Contact;
@@ -29,14 +29,35 @@ export const ContactItem = ({
 
   const renderModeIcon = (mode: Mode) => {
     switch (mode) {
-      case 'work':
-        return <Briefcase size={14} color={colors.primary} />;
-      case 'family':
+      case 'FAM':
         return <Home size={14} color={colors.primary} />;
-      case 'social':
-        return <Users size={14} color={colors.primary} />;
+      case 'VIP':
+        return <Crown size={14} color={colors.primary} />;
+      case 'BFF':
+        return <Heart size={14} color={colors.primary} />;
+      case 'WRK':
+        return <Briefcase size={14} color={colors.primary} />;
+      case 'MEH':
+        return <Meh size={14} color={colors.primary} />;
       default:
         return null;
+    }
+  };
+
+  const getModeLabel = (mode: Mode) => {
+    switch (mode) {
+      case 'FAM':
+        return 'Family';
+      case 'VIP':
+        return 'VIP';
+      case 'BFF':
+        return 'BFF';
+      case 'WRK':
+        return 'Work';
+      case 'MEH':
+        return 'Meh';
+      default:
+        return mode;
     }
   };
 
@@ -70,7 +91,7 @@ export const ContactItem = ({
               >
                 {renderModeIcon(mode)}
                 <Text style={[styles.modeText, { color: colors.text.secondary }]}>
-                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                  {getModeLabel(mode)}
                 </Text>
               </View>
             ))}

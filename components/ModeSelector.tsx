@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Platform
 } from 'react-native';
-import { Briefcase, Home, Users } from 'lucide-react-native';
+import { Briefcase, Home, Heart, Crown, Meh } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
@@ -40,19 +40,29 @@ export const ModeSelector = ({
   
   const getModeOptions = (colors: any): ModeOption[] => [
     {
-      id: 'work',
+      id: 'FAM',
+      label: 'Family',
+      icon: <Home size={16} color={colors.text.primary} />
+    },
+    {
+      id: 'VIP',
+      label: 'VIP',
+      icon: <Crown size={16} color={colors.text.primary} />
+    },
+    {
+      id: 'BFF',
+      label: 'BFF',
+      icon: <Heart size={16} color={colors.text.primary} />
+    },
+    {
+      id: 'WRK',
       label: 'Work',
       icon: <Briefcase size={16} color={colors.text.primary} />
     },
     {
-      id: 'social',
-      label: 'Social',
-      icon: <Users size={16} color={colors.text.primary} />
-    },
-    {
-      id: 'family',
-      label: 'Family',
-      icon: <Home size={16} color={colors.text.primary} />
+      id: 'MEH',
+      label: 'Meh',
+      icon: <Meh size={16} color={colors.text.primary} />
     }
   ];
   
@@ -133,14 +143,15 @@ const styles = StyleSheet.create({
   },
   pillsContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 10,
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+    gap: 8,
   },
   pill: {
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    flex: 1,
+    minWidth: 80,
   },
   pillContent: {
     flexDirection: 'row',
