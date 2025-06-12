@@ -9,7 +9,7 @@ import {
   Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import * as Haptics from 'expo-haptics';
@@ -31,7 +31,7 @@ if (Platform.OS !== 'web') {
 
 export default function PermissionsScreen() {
   const router = useRouter();
-  const { completeOnboarding } = useAuthStore();
+  const { setHasCompletedOnboarding } = useOnboardingStore();
   const { colors = darkTheme } = useThemeStore();
   
   const [contactsPermission, setContactsPermission] = useState<'granted' | 'denied' | 'pending'>('pending');
@@ -99,7 +99,7 @@ export default function PermissionsScreen() {
       }
       
       // Complete onboarding
-      completeOnboarding();
+      setHasCompletedOnboarding(true);
       
       // Navigate to main app
       router.replace('/(onboarding)');
@@ -116,7 +116,7 @@ export default function PermissionsScreen() {
     }
     
     // Complete onboarding without permissions
-    completeOnboarding();
+    setHasCompletedOnboarding(true);
     
     // Navigate to main app
     router.replace('/(onboarding)');

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans';
@@ -62,16 +63,17 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: colors.background,
-        },
-        headerShadowVisible: false,
-        headerTintColor: colors.text.primary,
-        headerBackTitle: 'Back',
-      }}
-    >
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Stack
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: colors.background,
+          },
+          headerShadowVisible: false,
+          headerTintColor: colors.text.primary,
+          headerBackTitle: 'Back',
+        }}
+      >
       <Stack.Screen
         name="index"
         options={{
@@ -91,6 +93,7 @@ export default function RootLayout() {
           headerShown: false,
         }}
       />
-    </Stack>
+      </Stack>
+    </GestureHandlerRootView>
   );
 }

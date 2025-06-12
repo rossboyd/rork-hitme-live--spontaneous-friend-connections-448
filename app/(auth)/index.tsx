@@ -10,6 +10,7 @@ import {
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import * as Haptics from 'expo-haptics';
@@ -19,17 +20,18 @@ const { width, height } = Dimensions.get('window');
 
 export default function AuthScreen() {
   const router = useRouter();
-  const { isAuthenticated, isOnboarded } = useAuthStore();
+  const { isLoggedIn } = useAuthStore();
+  const { hasCompletedOnboarding } = useOnboardingStore();
   const { colors = darkTheme } = useThemeStore();
   
   // Check if user is already authenticated and onboarded
   useEffect(() => {
-    if (isAuthenticated && isOnboarded) {
+    if (isLoggedIn && hasCompletedOnboarding) {
       router.replace('/(tabs)');
-    } else if (isAuthenticated && !isOnboarded) {
-      router.replace('/(onboarding)');
+    } else if (isLoggedIn && !hasCompletedOnboarding) {
+      router.replace('/onboarding/welcome');
     }
-  }, [isAuthenticated, isOnboarded]);
+  }, [isLoggedIn, hasCompletedOnboarding]);
   
   const handleSignUp = () => {
     if (Platform.OS !== 'web') {
