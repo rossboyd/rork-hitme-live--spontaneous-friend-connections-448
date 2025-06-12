@@ -131,6 +131,7 @@ export default function ContactsScreen() {
   };
   
   const canDragAndDrop = modeFilter && contactSortOrder === 'ranked' && Platform.OS !== 'web';
+  const showGrabHandle = modeFilter && contactSortOrder === 'ranked';
   
   const renderItem = ({ item, index }: { item: Contact; index: number }) => {
     if (canDragAndDrop) {
@@ -147,6 +148,7 @@ export default function ContactsScreen() {
           onDragEnd={handleDragEnd}
           dragIndex={index}
           itemHeight={96}
+          showGrabHandle={showGrabHandle}
         />
       );
     }
@@ -159,6 +161,7 @@ export default function ContactsScreen() {
         isInHitList={isInHitList(item.id)}
         onToggleHitList={handleToggleHitList}
         showModes={true}
+        showGrabHandle={showGrabHandle}
       />
     );
   };
@@ -224,9 +227,12 @@ export default function ContactsScreen() {
             ))}
           </View>
           
-          {modeFilter && contactSortOrder === 'ranked' && Platform.OS !== 'web' && (
+          {showGrabHandle && (
             <Text style={[styles.dragHint, { color: colors.text.light }]}>
-              Drag contacts to reorder your {getModeLabel(modeFilter)} list
+              {Platform.OS === 'web' 
+                ? `Viewing ${getModeLabel(modeFilter!)} in ranked order`
+                : `Drag contacts to reorder your ${getModeLabel(modeFilter!)} list`
+              }
             </Text>
           )}
         </View>

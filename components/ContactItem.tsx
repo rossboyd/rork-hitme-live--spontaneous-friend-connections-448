@@ -5,7 +5,7 @@ import { formatDistanceToNow } from '@/utils/dateUtils';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { Avatar } from '@/components/common/Avatar';
-import { Briefcase, Home, Heart, Crown, Meh } from 'lucide-react-native';
+import { Briefcase, Home, Heart, Crown, Meh, GripVertical } from 'lucide-react-native';
 
 interface ContactItemProps {
   contact: Contact;
@@ -14,6 +14,7 @@ interface ContactItemProps {
   isInHitList?: boolean;
   onToggleHitList?: (contact: Contact) => void;
   showModes?: boolean;
+  showGrabHandle?: boolean;
 }
 
 export const ContactItem = ({
@@ -22,7 +23,8 @@ export const ContactItem = ({
   showLastOnline = false,
   isInHitList = false,
   onToggleHitList,
-  showModes = false
+  showModes = false,
+  showGrabHandle = false
 }: ContactItemProps) => {
   const { colors = darkTheme } = useThemeStore();
   const contactModes = contact.modes || [];
@@ -66,6 +68,12 @@ export const ContactItem = ({
       style={[styles.container, { backgroundColor: colors.card }]}
       onPress={() => onPress(contact)}
     >
+      {showGrabHandle && (
+        <View style={styles.dragHandle}>
+          <GripVertical size={20} color={colors.text.light} />
+        </View>
+      )}
+      
       <Avatar
         name={contact.name}
         avatar={contact.avatar}
@@ -134,6 +142,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
+  },
+  dragHandle: {
+    marginRight: 12,
+    paddingVertical: 8,
   },
   content: {
     flex: 1,

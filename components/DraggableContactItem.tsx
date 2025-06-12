@@ -45,6 +45,7 @@ interface DraggableContactItemProps {
   onDragEnd?: (contactId: string, newIndex: number) => void;
   dragIndex?: number;
   itemHeight?: number;
+  showGrabHandle?: boolean;
 }
 
 export const DraggableContactItem = ({
@@ -58,7 +59,8 @@ export const DraggableContactItem = ({
   onDragStart,
   onDragEnd,
   dragIndex = 0,
-  itemHeight = 96
+  itemHeight = 96,
+  showGrabHandle = false
 }: DraggableContactItemProps) => {
   const { colors = darkTheme } = useThemeStore();
   const contactModes = contact.modes || [];
@@ -99,7 +101,7 @@ export const DraggableContactItem = ({
 
   const ContactContent = () => (
     <View style={[styles.container, { backgroundColor: colors.card }]}>
-      {isDraggable && Platform.OS !== 'web' && (
+      {showGrabHandle && (
         <View style={styles.dragHandle}>
           <GripVertical size={20} color={colors.text.light} />
         </View>
