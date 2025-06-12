@@ -15,7 +15,7 @@ interface ModeAssociationsProps {
   onToggleMode: (mode: Mode) => void;
 }
 
-interface ModeOption {
+interface TraitOption {
   id: Mode;
   label: string;
   icon: React.ReactNode;
@@ -26,36 +26,36 @@ export const ModeAssociations = ({ contact, onToggleMode }: ModeAssociationsProp
   const { colors = darkTheme } = useThemeStore();
   const contactModes = contact.modes || [];
   
-  const modeOptions: ModeOption[] = [
+  const traitOptions: TraitOption[] = [
     {
       id: 'FAM',
       label: 'Family',
       icon: <Home size={24} color={colors.primary} />,
-      description: (name) => `Show ${name} when you're in Family mode`
+      description: (name) => `Show ${name} when you are in Family mode`
     },
     {
       id: 'VIP',
       label: 'VIP',
       icon: <Crown size={24} color={colors.primary} />,
-      description: (name) => `Show ${name} when you're in VIP mode`
+      description: (name) => `Show ${name} when you are in VIP mode`
     },
     {
       id: 'BFF',
       label: 'BFF',
       icon: <Heart size={24} color={colors.primary} />,
-      description: (name) => `Show ${name} when you're in BFF mode`
+      description: (name) => `Show ${name} when you are in BFF mode`
     },
     {
       id: 'WRK',
       label: 'Work',
       icon: <Briefcase size={24} color={colors.primary} />,
-      description: (name) => `Show ${name} when you're in Work mode`
+      description: (name) => `Show ${name} when you are in Work mode`
     },
     {
       id: 'MEH',
       label: 'Meh',
       icon: <Meh size={24} color={colors.primary} />,
-      description: (name) => `Show ${name} when you're in Meh mode`
+      description: (name) => `Show ${name} when you are in Meh mode`
     }
   ];
   
@@ -68,43 +68,48 @@ export const ModeAssociations = ({ contact, onToggleMode }: ModeAssociationsProp
       
       <Text style={[styles.description, { color: colors.text.secondary }]}>
         Choose which traits to associate with {contact.name}.
-        They will only appear in your feed when you're in these modes.
+        They will only appear in your feed when you are in these modes.
       </Text>
       
-      <View style={styles.modesList}>
-        {modeOptions.map((mode) => {
-          const isSelected = contactModes.includes(mode.id);
+      <View style={styles.traitsList}>
+        {traitOptions.map((trait) => {
+          const isSelected = contactModes.includes(trait.id);
           
           return (
-            <View key={mode.id} style={[
-              styles.modeItem,
-              { backgroundColor: colors.background }
-            ]}>
-              <View style={styles.modeHeader}>
-                <View style={[styles.modeIconContainer, { backgroundColor: colors.card }]}>
-                  {mode.icon}
+            <TouchableOpacity 
+              key={trait.id} 
+              style={[
+                styles.traitItem,
+                { backgroundColor: colors.background },
+                isSelected && { borderColor: colors.primary, borderWidth: 2 }
+              ]}
+              onPress={() => onToggleMode(trait.id)}
+            >
+              <View style={styles.traitContent}>
+                <View style={styles.traitHeader}>
+                  <View style={[styles.traitIconContainer, { backgroundColor: colors.card }]}>
+                    {trait.icon}
+                  </View>
+                  <View style={styles.traitInfo}>
+                    <Text style={[styles.traitLabel, { color: colors.text.primary }]}>{trait.label}</Text>
+                    <Text style={[styles.traitDescription, { color: colors.text.secondary }]}>
+                      {trait.description(contact.name)}
+                    </Text>
+                  </View>
                 </View>
-                <Text style={[styles.modeLabel, { color: colors.text.primary }]}>{mode.label}</Text>
-              </View>
-              
-              <Text style={[styles.modeDescription, { color: colors.text.secondary }]}>
-                {mode.description(contact.name)}
-              </Text>
-              
-              <TouchableOpacity 
-                style={[
+                
+                <View style={[
                   styles.toggleButton,
                   { backgroundColor: isSelected ? colors.primary : colors.border }
-                ]}
-                onPress={() => onToggleMode(mode.id)}
-              >
-                {isSelected ? (
-                  <Check size={24} color="#000" />
-                ) : (
-                  <X size={24} color={colors.text.light} />
-                )}
-              </TouchableOpacity>
-            </View>
+                ]}>
+                  {isSelected ? (
+                    <Check size={20} color="#000" />
+                  ) : (
+                    <X size={20} color={colors.text.light} />
+                  )}
+                </View>
+              </View>
+            </TouchableOpacity>
           );
         })}
       </View>
@@ -133,44 +138,51 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 20,
   },
-  modesList: {
-    gap: 16,
+  traitsList: {
+    gap: 12,
   },
-  modeItem: {
+  traitItem: {
     borderRadius: 12,
     padding: 16,
-    position: 'relative',
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
-  modeHeader: {
+  traitContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    justifyContent: 'space-between',
   },
-  modeIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
+  traitHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 12,
+    flex: 1,
   },
-  modeLabel: {
-    fontSize: 18,
-    fontWeight: '500',
-  },
-  modeDescription: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  toggleButton: {
-    position: 'absolute',
-    right: 16,
-    top: '50%',
-    marginTop: -24,
+  traitIconContainer: {
     width: 48,
     height: 48,
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 16,
+  },
+  traitInfo: {
+    flex: 1,
+  },
+  traitLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  traitDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  toggleButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
   },
 });

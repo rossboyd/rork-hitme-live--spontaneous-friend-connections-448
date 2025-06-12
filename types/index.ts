@@ -7,6 +7,7 @@ export interface Contact {
   phone: string;
   email?: string;
   lastOnline?: number;
+  lastSeen?: number; // Add this property to fix the TypeScript error
   modes?: Mode[];
   isFavorite?: boolean;
 }
@@ -30,7 +31,7 @@ export interface HitRequest {
   status: RequestStatus;
   urgency: RequestUrgency;
   createdAt: number;
-  expiresAt: number;
+  expiresAt: number | null;
 }
 
 export interface AppState {
