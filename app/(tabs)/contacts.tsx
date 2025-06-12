@@ -13,7 +13,8 @@ import { useAppStore } from '@/store/useAppStore';
 import { ContactItem } from '@/components/ContactItem';
 import { DraggableContactItem } from '@/components/DraggableContactItem';
 import { EmptyState } from '@/components/EmptyState';
-import { Search, UserPlus, Filter, List, BarChart3 } from 'lucide-react-native';
+import { ToggleButton } from '@/components/common/ToggleButton';
+import { Search, UserPlus, Filter } from 'lucide-react-native';
 import { Contact, Mode, SortOrder } from '@/types';
 import { AddContactModal } from '@/components/AddContactModal';
 import { useThemeStore } from '@/store/useThemeStore';
@@ -92,8 +93,8 @@ export default function ContactsScreen() {
     setModeFilter(currentMode => currentMode === mode ? null : mode);
   };
 
-  const toggleSortOrder = () => {
-    const newOrder: SortOrder = contactSortOrder === 'alphabetical' ? 'ranked' : 'alphabetical';
+  const handleSortToggle = (isRanked: boolean) => {
+    const newOrder: SortOrder = isRanked ? 'ranked' : 'alphabetical';
     setContactSortOrder(newOrder);
   };
 
@@ -193,19 +194,13 @@ export default function ContactsScreen() {
         <View style={styles.filterContainer}>
           <View style={styles.filterRow}>
             <Text style={[styles.filterLabel, { color: colors.text.secondary }]}>Filter by trait:</Text>
-            <TouchableOpacity 
-              style={[styles.sortToggle, { backgroundColor: colors.card }]}
-              onPress={toggleSortOrder}
-            >
-              {contactSortOrder === 'alphabetical' ? (
-                <List size={16} color={colors.text.primary} />
-              ) : (
-                <BarChart3 size={16} color={colors.text.primary} />
-              )}
-              <Text style={[styles.sortToggleText, { color: colors.text.primary }]}>
-                {contactSortOrder === 'alphabetical' ? 'A-Z' : 'Ranked'}
-              </Text>
-            </TouchableOpacity>
+            <ToggleButton
+              leftLabel="A-Z"
+              rightLabel="Ranked"
+              isRightSelected={contactSortOrder === 'ranked'}
+              onToggle={handleSortToggle}
+              style={styles.sortToggle}
+            />
           </View>
           
           <View style={styles.modeFilters}>
@@ -300,16 +295,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   sortToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-  },
-  sortToggleText: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginLeft: 6,
+    // ToggleButton will handle its own styling
   },
   modeFilters: {
     flexDirection: 'row',
