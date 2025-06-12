@@ -257,10 +257,13 @@ export const useAppStore = create<AppState>()(
           newRankings[mode] = {};
         }
         
-        // Assign new rankings based on the order
+        // Assign new rankings based on the order (0-indexed)
         contactIds.forEach((contactId, index) => {
           newRankings[mode][contactId] = index;
         });
+        
+        console.log(`Reordered ${mode} contacts:`, contactIds);
+        console.log(`New rankings for ${mode}:`, newRankings[mode]);
         
         return {
           modeRankings: newRankings
@@ -269,21 +272,29 @@ export const useAppStore = create<AppState>()(
       setContactSortOrder: (order) => set({ contactSortOrder: order }),
       initializeModeRankings: () => set((state) => {
         const newRankings = { ...state.modeRankings };
+        let hasChanges = false;
         
         state.contacts.forEach(contact => {
           contact.modes?.forEach(mode => {
             if (!newRankings[mode]) {
               newRankings[mode] = {};
+              hasChanges = true;
             }
             if (newRankings[mode][contact.id] === undefined) {
               const existingRanks = Object.values(newRankings[mode]);
               const maxRank = existingRanks.length > 0 ? Math.max(...existingRanks) : -1;
               newRankings[mode][contact.id] = maxRank + 1;
+              hasChanges = true;
             }
           });
         });
         
-        return { modeRankings: newRankings };
+        if (hasChanges) {
+          console.log('Initialized mode rankings:', newRankings);
+          return { modeRankings: newRankings };
+        }
+        
+        return state;
       }),
 
       // Requests slice

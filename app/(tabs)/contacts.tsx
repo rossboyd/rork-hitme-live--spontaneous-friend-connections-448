@@ -13,7 +13,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { ContactItem } from '@/components/ContactItem';
 import { DraggableContactItem } from '@/components/DraggableContactItem';
 import { EmptyState } from '@/components/EmptyState';
-import { Search, UserPlus, Filter, ArrowUpDown, List, BarChart3 } from 'lucide-react-native';
+import { Search, UserPlus, Filter, List, BarChart3 } from 'lucide-react-native';
 import { Contact, Mode, SortOrder } from '@/types';
 import { AddContactModal } from '@/components/AddContactModal';
 import { useThemeStore } from '@/store/useThemeStore';
@@ -34,7 +34,7 @@ export default function ContactsScreen() {
   const { colors = darkTheme } = useThemeStore();
   
   const [searchQuery, setSearchQuery] = useState('');
-  const [showAddModal, setShowAddModal] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
   const [modeFilter, setModeFilter] = useState<Mode | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   
@@ -105,21 +105,23 @@ export default function ContactsScreen() {
     setIsDragging(false);
     
     if (modeFilter && contactSortOrder === 'ranked') {
-      // Get current order of contact IDs
+      // Get current filtered contacts in their current order
       const currentContactIds = filteredContacts.map(c => c.id);
       
-      // Remove the dragged contact from its current position
-      const draggedContactIndex = currentContactIds.indexOf(contactId);
-      if (draggedContactIndex !== -1) {
-        currentContactIds.splice(draggedContactIndex, 1);
-        
-        // Insert at new position
-        const clampedIndex = Math.max(0, Math.min(newIndex, currentContactIds.length));
-        currentContactIds.splice(clampedIndex, 0, contactId);
-        
-        // Update rankings
-        reorderContactsInMode(modeFilter, currentContactIds);
-      }
+      // Find the current index of the dragged contact
+      const currentIndex = currentContactIds.indexOf(contactId);
+      if (currentIndex === -1) return;
+      
+      // Remove the contact from its current position
+      const reorderedIds = [...currentContactIds];
+      reorderedIds.splice(currentIndex, 1);
+      
+      // Insert at new position (clamp to valid range)
+      const clampedIndex = Math.max(0, Math.min(newIndex, reorderedIds.length));
+      reorderedIds.splice(clampedIndex, 0, contactId);
+      
+      // Update rankings in the store
+      reorderContactsInMode(modeFilter, reorderedIds);
     }
   };
   
@@ -186,7 +188,7 @@ export default function ContactsScreen() {
         
         <View style={styles.filterContainer}>
           <View style={styles.filterRow}>
-            <Text style={[styles.filterLabel, { color: colors.text.secondary }]}>Filter by mode:</Text>
+            <Text style={[styles.filterLabel, { color: colors.text.secondary }]}>Filter by trait:</Text>
             <TouchableOpacity 
               style={[styles.sortToggle, { backgroundColor: colors.card }]}
               onPress={toggleSortOrder}
@@ -236,13 +238,14 @@ export default function ContactsScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           scrollEnabled={!isDragging}
+          showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <EmptyState
               title="No contacts found"
               message={searchQuery 
                 ? "Try a different search term" 
                 : modeFilter
-                  ? `No contacts in ${getModeLabel(modeFilter)} mode`
+                  ? `No contacts in ${getModeLabel(modeFilter)} trait`
                   : "Add your first contact to get started"}
               icon={<UserPlus size={48} color={colors.text.light} />}
             />

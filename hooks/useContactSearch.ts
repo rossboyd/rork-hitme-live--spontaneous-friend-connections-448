@@ -35,10 +35,26 @@ export const useContactSearch = (
     } else if (sortOrder === 'ranked' && modeFilter) {
       // Sort by custom ranking for the selected mode
       const modeRanking = modeRankings[modeFilter] || {};
+      
       result.sort((a, b) => {
-        const rankA = modeRanking[a.id] ?? 999999;
-        const rankB = modeRanking[b.id] ?? 999999;
-        return rankA - rankB;
+        const rankA = modeRanking[a.id];
+        const rankB = modeRanking[b.id];
+        
+        // If both have rankings, sort by rank
+        if (rankA !== undefined && rankB !== undefined) {
+          return rankA - rankB;
+        }
+        
+        // If only one has a ranking, prioritize the ranked one
+        if (rankA !== undefined && rankB === undefined) {
+          return -1;
+        }
+        if (rankA === undefined && rankB !== undefined) {
+          return 1;
+        }
+        
+        // If neither has a ranking, sort alphabetically
+        return a.name.localeCompare(b.name);
       });
     } else {
       // Default to alphabetical if ranked is selected but no mode filter

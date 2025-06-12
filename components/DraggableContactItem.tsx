@@ -9,11 +9,10 @@ import { Briefcase, Home, Heart, Crown, Meh, GripVertical } from 'lucide-react-n
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  useAnimatedGestureHandler,
   runOnJS,
   withSpring,
 } from 'react-native-reanimated';
-import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 interface DraggableContactItemProps {
   contact: Contact;
@@ -40,7 +39,7 @@ export const DraggableContactItem = ({
   onDragStart,
   onDragEnd,
   dragIndex = 0,
-  itemHeight = 80
+  itemHeight = 96
 }: DraggableContactItemProps) => {
   const { colors = darkTheme } = useThemeStore();
   const contactModes = contact.modes || [];
@@ -48,6 +47,7 @@ export const DraggableContactItem = ({
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
   const zIndex = useSharedValue(0);
+  const isDragging = useSharedValue(false);
 
   const renderModeIcon = (mode: Mode) => {
     switch (mode) {
@@ -83,28 +83,31 @@ export const DraggableContactItem = ({
     }
   };
 
-  const gestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
-    onStart: () => {
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      isDragging.value = true;
       if (onDragStart) {
         runOnJS(onDragStart)();
       }
       scale.value = withSpring(1.05);
       zIndex.value = 1000;
-    },
-    onActive: (event) => {
+    })
+    .onUpdate((event) => {
       translateY.value = event.translationY;
-    },
-    onEnd: (event) => {
+    })
+    .onEnd((event) => {
       const newIndex = Math.round(dragIndex + event.translationY / itemHeight);
+      const clampedIndex = Math.max(0, newIndex);
+      
       if (onDragEnd) {
-        runOnJS(onDragEnd)(contact.id, Math.max(0, newIndex));
+        runOnJS(onDragEnd)(contact.id, clampedIndex);
       }
       
       translateY.value = withSpring(0);
       scale.value = withSpring(1);
       zIndex.value = 0;
-    },
-  });
+      isDragging.value = false;
+    });
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
@@ -113,6 +116,7 @@ export const DraggableContactItem = ({
     ],
     zIndex: zIndex.value,
     elevation: zIndex.value > 0 ? 5 : 0,
+    opacity: isDragging.value ? 0.9 : 1,
   }));
 
   const ContactContent = () => (
@@ -179,13 +183,13 @@ export const DraggableContactItem = ({
 
   if (isDraggable && Platform.OS !== 'web') {
     return (
-      <PanGestureHandler onGestureEvent={gestureHandler}>
+      <GestureDetector gesture={panGesture}>
         <Animated.View style={animatedStyle}>
           <TouchableOpacity onPress={() => onPress(contact)} activeOpacity={0.7}>
             <ContactContent />
           </TouchableOpacity>
         </Animated.View>
-      </PanGestureHandler>
+      </GestureDetector>
     );
   }
 
