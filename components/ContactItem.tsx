@@ -67,10 +67,11 @@ export const ContactItem = ({
     <TouchableOpacity 
       style={[styles.container, { backgroundColor: colors.card }]}
       onPress={() => onPress(contact)}
+      activeOpacity={0.7}
     >
       {showGrabHandle && (
         <View style={styles.dragHandle}>
-          <GripVertical size={20} color={colors.text.light} />
+          <GripVertical size={20} color={colors.text.secondary} />
         </View>
       )}
       
@@ -146,6 +147,7 @@ const styles = StyleSheet.create({
   dragHandle: {
     marginRight: 12,
     paddingVertical: 8,
+    paddingHorizontal: 4,
   },
   content: {
     flex: 1,

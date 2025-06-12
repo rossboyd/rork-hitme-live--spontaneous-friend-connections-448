@@ -130,10 +130,12 @@ export default function ContactsScreen() {
     }
   };
   
+  // Only enable drag and drop on native platforms when in ranked mode with a mode filter
   const canDragAndDrop = modeFilter && contactSortOrder === 'ranked' && Platform.OS !== 'web';
   const showGrabHandle = modeFilter && contactSortOrder === 'ranked';
   
   const renderItem = ({ item, index }: { item: Contact; index: number }) => {
+    // Use DraggableContactItem only when drag and drop is enabled and available
     if (canDragAndDrop) {
       return (
         <DraggableContactItem
@@ -153,6 +155,7 @@ export default function ContactsScreen() {
       );
     }
     
+    // Use regular ContactItem for all other cases
     return (
       <ContactItem
         contact={item}
@@ -196,7 +199,7 @@ export default function ContactsScreen() {
         
         <View style={styles.filterContainer}>
           <View style={styles.filterRow}>
-            <Text style={[styles.filterLabel, { color: colors.text.secondary }]}>Filter by trait:</Text>
+            <Text style={[styles.filterLabel, { color: colors.text.secondary }]}>Sort:</Text>
             <ToggleButton
               leftLabel="A-Z"
               rightLabel="Ranked"
@@ -212,7 +215,10 @@ export default function ContactsScreen() {
                 key={mode}
                 style={[
                   styles.modeFilter, 
-                  { backgroundColor: modeFilter === mode ? colors.primary : colors.card }
+                  { 
+                    backgroundColor: modeFilter === mode ? colors.primary : colors.card,
+                    borderColor: modeFilter === mode ? colors.primary : colors.border
+                  }
                 ]}
                 onPress={() => toggleModeFilter(mode)}
               >
@@ -295,10 +301,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   filterLabel: {
     fontSize: 14,
+    fontWeight: '500',
   },
   sortToggle: {
     // ToggleButton will handle its own styling
@@ -312,9 +319,10 @@ const styles = StyleSheet.create({
   modeFilter: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
+    paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 16,
+    borderWidth: 1,
   },
   modeFilterText: {
     fontSize: 14,
@@ -325,6 +333,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontStyle: 'italic',
     textAlign: 'center',
+    marginTop: 4,
   },
   listContent: {
     paddingVertical: 8,

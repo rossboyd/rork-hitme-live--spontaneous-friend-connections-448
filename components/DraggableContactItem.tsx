@@ -7,7 +7,7 @@ import { darkTheme } from '@/constants/colors';
 import { Avatar } from '@/components/common/Avatar';
 import { Briefcase, Home, Heart, Crown, Meh, GripVertical } from 'lucide-react-native';
 
-// Only import gesture handler on native platforms
+// Only import gesture handler on native platforms with proper error handling
 let Animated: any = null;
 let GestureDetector: any = null;
 let Gesture: any = null;
@@ -15,6 +15,7 @@ let useSharedValue: any = null;
 let useAnimatedStyle: any = null;
 let runOnJS: any = null;
 let withSpring: any = null;
+let isGestureHandlerAvailable = false;
 
 if (Platform.OS !== 'web') {
   try {
@@ -28,8 +29,14 @@ if (Platform.OS !== 'web') {
     withSpring = reanimated.withSpring;
     GestureDetector = gestureHandler.GestureDetector;
     Gesture = gestureHandler.Gesture;
+    
+    // Verify all required functions are available
+    if (Animated && GestureDetector && Gesture && useSharedValue && useAnimatedStyle && runOnJS && withSpring) {
+      isGestureHandlerAvailable = true;
+    }
   } catch (error) {
     console.warn('Gesture handler or reanimated not available:', error);
+    isGestureHandlerAvailable = false;
   }
 }
 
@@ -103,7 +110,7 @@ export const DraggableContactItem = ({
     <View style={[styles.container, { backgroundColor: colors.card }]}>
       {showGrabHandle && (
         <View style={styles.dragHandle}>
-          <GripVertical size={20} color={colors.text.light} />
+          <GripVertical size={20} color={colors.text.secondary} />
         </View>
       )}
       
@@ -161,8 +168,8 @@ export const DraggableContactItem = ({
     </View>
   );
 
-  // Only use gesture handler on native platforms and when all dependencies are available
-  if (isDraggable && Platform.OS !== 'web' && Gesture && GestureDetector && useSharedValue) {
+  // Only use gesture handler if all conditions are met and it's available
+  if (isDraggable && isGestureHandlerAvailable && onDragStart && onDragEnd) {
     try {
       const translateY = useSharedValue(0);
       const scale = useSharedValue(1);
@@ -171,23 +178,22 @@ export const DraggableContactItem = ({
 
       const panGesture = Gesture.Pan()
         .onStart(() => {
+          'worklet';
           isDragging.value = true;
-          if (onDragStart) {
-            runOnJS(onDragStart)();
-          }
+          runOnJS(onDragStart)();
           scale.value = withSpring(1.05);
           zIndex.value = 1000;
         })
         .onUpdate((event: any) => {
+          'worklet';
           translateY.value = event.translationY;
         })
         .onEnd((event: any) => {
+          'worklet';
           const newIndex = Math.round(dragIndex + event.translationY / itemHeight);
           const clampedIndex = Math.max(0, newIndex);
           
-          if (onDragEnd) {
-            runOnJS(onDragEnd)(contact.id, clampedIndex);
-          }
+          runOnJS(onDragEnd)(contact.id, clampedIndex);
           
           translateY.value = withSpring(0);
           scale.value = withSpring(1);
@@ -195,15 +201,18 @@ export const DraggableContactItem = ({
           isDragging.value = false;
         });
 
-      const animatedStyle = useAnimatedStyle(() => ({
-        transform: [
-          { translateY: translateY.value },
-          { scale: scale.value }
-        ],
-        zIndex: zIndex.value,
-        elevation: zIndex.value > 0 ? 5 : 0,
-        opacity: isDragging.value ? 0.9 : 1,
-      }));
+      const animatedStyle = useAnimatedStyle(() => {
+        'worklet';
+        return {
+          transform: [
+            { translateY: translateY.value },
+            { scale: scale.value }
+          ],
+          zIndex: zIndex.value,
+          elevation: zIndex.value > 0 ? 5 : 0,
+          opacity: isDragging.value ? 0.9 : 1,
+        };
+      });
 
       return (
         <GestureDetector gesture={panGesture}>
@@ -220,6 +229,7 @@ export const DraggableContactItem = ({
     }
   }
 
+  // Fallback to regular TouchableOpacity if gesture handler is not available or not needed
   return (
     <TouchableOpacity onPress={() => onPress(contact)} activeOpacity={0.7}>
       <ContactContent />
@@ -244,6 +254,7 @@ const styles = StyleSheet.create({
   dragHandle: {
     marginRight: 12,
     paddingVertical: 8,
+    paddingHorizontal: 4,
   },
   content: {
     flex: 1,
