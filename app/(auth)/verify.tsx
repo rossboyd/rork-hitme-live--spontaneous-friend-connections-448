@@ -69,7 +69,7 @@ export default function VerifyScreen() {
     if (otpString.length === OTP_LENGTH) {
       // For demo, any 4-digit code works
       login(phone);
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/home');
     }
   };
 

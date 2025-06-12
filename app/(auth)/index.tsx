@@ -27,7 +27,7 @@ export default function AuthScreen() {
   // Check if user is already authenticated and onboarded
   useEffect(() => {
     if (isLoggedIn && hasCompletedOnboarding) {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/home');
     } else if (isLoggedIn && !hasCompletedOnboarding) {
       router.replace('/onboarding/welcome');
     }
