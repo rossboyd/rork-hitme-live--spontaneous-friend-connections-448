@@ -5,7 +5,7 @@ import {
   StyleSheet, 
   TouchableOpacity 
 } from 'react-native';
-import { Filter, Briefcase, Home, Users, Check, X } from 'lucide-react-native';
+import { Filter, Briefcase, Home, Heart, Crown, Meh, Check, X } from 'lucide-react-native';
 import { Contact, Mode } from '@/types';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
@@ -28,22 +28,34 @@ export const ModeAssociations = ({ contact, onToggleMode }: ModeAssociationsProp
   
   const modeOptions: ModeOption[] = [
     {
-      id: 'work',
+      id: 'FAM',
+      label: 'Family',
+      icon: <Home size={24} color={colors.primary} />,
+      description: (name) => `Show ${name} when you're in Family mode`
+    },
+    {
+      id: 'VIP',
+      label: 'VIP',
+      icon: <Crown size={24} color={colors.primary} />,
+      description: (name) => `Show ${name} when you're in VIP mode`
+    },
+    {
+      id: 'BFF',
+      label: 'BFF',
+      icon: <Heart size={24} color={colors.primary} />,
+      description: (name) => `Show ${name} when you're in BFF mode`
+    },
+    {
+      id: 'WRK',
       label: 'Work',
       icon: <Briefcase size={24} color={colors.primary} />,
       description: (name) => `Show ${name} when you're in Work mode`
     },
     {
-      id: 'social',
-      label: 'Social',
-      icon: <Users size={24} color={colors.primary} />,
-      description: (name) => `Show ${name} when you're in Social mode`
-    },
-    {
-      id: 'family',
-      label: 'Family',
-      icon: <Home size={24} color={colors.primary} />,
-      description: (name) => `Show ${name} when you're in Family mode`
+      id: 'MEH',
+      label: 'Meh',
+      icon: <Meh size={24} color={colors.primary} />,
+      description: (name) => `Show ${name} when you're in Meh mode`
     }
   ];
   
@@ -51,11 +63,11 @@ export const ModeAssociations = ({ contact, onToggleMode }: ModeAssociationsProp
     <View style={[styles.container, { backgroundColor: colors.card }]}>
       <View style={styles.header}>
         <Filter size={24} color={colors.text.primary} />
-        <Text style={[styles.title, { color: colors.text.primary }]}>Mode Associations</Text>
+        <Text style={[styles.title, { color: colors.text.primary }]}>Contact Traits</Text>
       </View>
       
       <Text style={[styles.description, { color: colors.text.secondary }]}>
-        Choose which modes you want to associate with {contact.name}.
+        Choose which traits to associate with {contact.name}.
         They will only appear in your feed when you're in these modes.
       </Text>
       

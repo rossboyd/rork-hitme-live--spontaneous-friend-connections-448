@@ -112,8 +112,7 @@ export const SlideToLiveToggle = ({
     <View style={styles.container}>
       <View style={styles.infoContainer}>
         <Text style={[styles.title, { color: colors.text.primary }]}>
-          Hey {userName},
-          {"\n"}You're Offline
+          Hey {userName},{"\n"}You're Offline
         </Text>
         <TouchableOpacity 
           onPress={handlePreviewQueue}
@@ -147,7 +146,7 @@ export const SlideToLiveToggle = ({
                 { scale: thumbScale }
               ],
               borderColor: isThresholdReached ? colors.primary : 'transparent',
-              backgroundColor: '#F3F4F6' // Light grey color for thumb
+              backgroundColor: '#F3F4F6'
             }
           ]}
           {...panResponder.panHandlers}

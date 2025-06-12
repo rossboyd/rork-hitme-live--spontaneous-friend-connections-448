@@ -13,20 +13,19 @@ import { darkTheme } from '@/constants/colors';
 
 interface DurationSelectorProps {
   onSelect: (minutes: number) => void;
-  initialDuration?: number; // in minutes
+  initialDuration?: number;
 }
 
 const MAX_HOURS = 12;
-const ITEM_HEIGHT = 40; // Reduced height
-const VISIBLE_ITEMS = 3; // Reduced visible items
+const ITEM_HEIGHT = 32;
+const VISIBLE_ITEMS = 3;
 
 export const DurationSelector = ({ 
   onSelect,
-  initialDuration = 30 // Default to 30 minutes
+  initialDuration = 30
 }: DurationSelectorProps) => {
   const { colors = darkTheme } = useThemeStore();
   
-  // Calculate initial hours and minutes
   const initialHours = Math.floor(initialDuration / 60);
   const initialMinutes = initialDuration % 60;
   
@@ -36,18 +35,15 @@ export const DurationSelector = ({
   const hoursScrollRef = useRef<ScrollView>(null);
   const minutesScrollRef = useRef<ScrollView>(null);
   
-  // Update the total duration when hours or minutes change
   useEffect(() => {
     const totalMinutes = (selectedHours * 60) + selectedMinutes;
     onSelect(totalMinutes);
   }, [selectedHours, selectedMinutes, onSelect]);
   
-  // Reset to initial values when initialDuration changes
   useEffect(() => {
     setSelectedHours(initialHours);
     setSelectedMinutes(initialMinutes);
     
-    // Scroll to initial positions with a slight delay to ensure refs are ready
     setTimeout(() => {
       hoursScrollRef.current?.scrollTo({ 
         y: initialHours * ITEM_HEIGHT, 
@@ -104,25 +100,29 @@ export const DurationSelector = ({
     });
   };
   
-  // Generate arrays for hours and minutes
   const hours = Array.from({ length: MAX_HOURS + 1 }, (_, i) => i);
   const minutes = Array.from({ length: 60 }, (_, i) => i);
   
-  // Calculate padding to center the selected item
   const paddingVertical = (VISIBLE_ITEMS - 1) / 2 * ITEM_HEIGHT;
   
-  // Render a picker item with fade effect based on distance from center
-  const renderPickerItem = (value: number, isSelected: boolean, type: 'hour' | 'minute') => {
+  const renderPickerItem = (value: number, isSelected: boolean, type: 'hour' | 'minute', index: number, selectedIndex: number) => {
     const formattedValue = type === 'minute' && value < 10 ? `0${value}` : value.toString();
+    const distance = Math.abs(index - selectedIndex);
+    const opacity = distance === 0 ? 1 : distance === 1 ? 0.4 : 0.15;
+    const fontSize = distance === 0 ? 20 : 16;
     
     return (
       <View key={`${type}-${value}`} style={styles.pickerItem}>
         <Text 
           style={[
             styles.pickerText,
-            { color: colors.text.primary },
-            isSelected && { color: colors.primary, fontWeight: '600', fontSize: 24 },
-            !isSelected && { opacity: 0.5 }
+            { 
+              color: colors.text.primary,
+              opacity,
+              fontSize,
+              fontWeight: distance === 0 ? '600' : '400'
+            },
+            isSelected && { color: colors.primary }
           ]}
         >
           {formattedValue}
@@ -138,10 +138,8 @@ export const DurationSelector = ({
       </Text>
       
       <View style={styles.pickerContainer}>
-        {/* Selection indicator overlay */}
         <View style={[styles.selectionIndicator, { borderColor: colors.primary }]} />
         
-        {/* Hours picker */}
         <View style={styles.pickerColumn}>
           <ScrollView
             ref={hoursScrollRef}
@@ -153,14 +151,13 @@ export const DurationSelector = ({
             onMomentumScrollEnd={handleHoursScrollEnd}
             scrollEventThrottle={16}
           >
-            {hours.map((hour) => renderPickerItem(hour, selectedHours === hour, 'hour'))}
+            {hours.map((hour, index) => renderPickerItem(hour, selectedHours === hour, 'hour', index, selectedHours))}
           </ScrollView>
           <Text style={[styles.pickerLabel, { color: colors.text.secondary }]}>
             hours
           </Text>
         </View>
         
-        {/* Minutes picker */}
         <View style={styles.pickerColumn}>
           <ScrollView
             ref={minutesScrollRef}
@@ -172,7 +169,7 @@ export const DurationSelector = ({
             onMomentumScrollEnd={handleMinutesScrollEnd}
             scrollEventThrottle={16}
           >
-            {minutes.map((minute) => renderPickerItem(minute, selectedMinutes === minute, 'minute'))}
+            {minutes.map((minute, index) => renderPickerItem(minute, selectedMinutes === minute, 'minute', index, selectedMinutes))}
           </ScrollView>
           <Text style={[styles.pickerLabel, { color: colors.text.secondary }]}>
             minutes
@@ -216,7 +213,6 @@ const styles = StyleSheet.create({
     marginTop: -ITEM_HEIGHT / 2,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#3B82F6',
     backgroundColor: 'rgba(59, 130, 246, 0.05)',
     zIndex: 1,
   },
@@ -231,7 +227,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pickerText: {
-    fontSize: 20,
     fontWeight: '400',
   },
   pickerLabel: {

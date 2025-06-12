@@ -9,7 +9,7 @@ import {
   Dimensions
 } from 'react-native';
 import { HitRequest, Contact, Mode } from '@/types';
-import { X, Check, Filter, Briefcase, Home, Users, Clock } from 'lucide-react-native';
+import { X, Check, Filter, Briefcase, Home, Heart, Crown, Meh, Clock } from 'lucide-react-native';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { Avatar } from '@/components/common/Avatar';
@@ -28,7 +28,7 @@ interface QueueReviewProps {
 }
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const MODAL_HEIGHT = SCREEN_HEIGHT * 0.6; // 60% of screen height
+const MODAL_HEIGHT = SCREEN_HEIGHT * 0.6;
 
 export const QueueReview = ({
   visible,
@@ -60,7 +60,6 @@ export const QueueReview = ({
     }
   };
 
-  // Filter requests based on current mode if one is selected
   const filteredRequests = currentMode 
     ? requests.filter(request => {
         const contact = getContactById(request.senderId);
@@ -70,12 +69,16 @@ export const QueueReview = ({
 
   const getModeLabel = () => {
     switch (currentMode) {
-      case 'work':
+      case 'WRK':
         return 'Work Mode';
-      case 'family':
+      case 'FAM':
         return 'Family Mode';
-      case 'social':
-        return 'Social Mode';
+      case 'BFF':
+        return 'BFF Mode';
+      case 'VIP':
+        return 'VIP Mode';
+      case 'MEH':
+        return 'Meh Mode';
       default:
         return 'All Contacts';
     }
@@ -83,14 +86,35 @@ export const QueueReview = ({
 
   const renderModeIcon = (mode: Mode) => {
     switch (mode) {
-      case 'work':
+      case 'WRK':
         return <Briefcase size={14} color={colors.primary} />;
-      case 'family':
+      case 'FAM':
         return <Home size={14} color={colors.primary} />;
-      case 'social':
-        return <Users size={14} color={colors.primary} />;
+      case 'BFF':
+        return <Heart size={14} color={colors.primary} />;
+      case 'VIP':
+        return <Crown size={14} color={colors.primary} />;
+      case 'MEH':
+        return <Meh size={14} color={colors.primary} />;
       default:
         return null;
+    }
+  };
+
+  const getModeDisplayName = (mode: Mode) => {
+    switch (mode) {
+      case 'FAM':
+        return 'Family';
+      case 'VIP':
+        return 'VIP';
+      case 'BFF':
+        return 'BFF';
+      case 'WRK':
+        return 'Work';
+      case 'MEH':
+        return 'Meh';
+      default:
+        return mode;
     }
   };
 
@@ -171,10 +195,9 @@ export const QueueReview = ({
                         {contact.name}
                       </Text>
                       <Text style={[styles.topic, { color: colors.text.secondary }]}>
-                        {request.topic}
+                        {request.message}
                       </Text>
                       
-                      {/* Online status / Last seen */}
                       <View style={styles.statusContainer}>
                         <Clock size={12} color={colors.text.light} />
                         <Text style={[styles.lastSeen, { color: colors.text.light }]}>
@@ -184,7 +207,6 @@ export const QueueReview = ({
                         </Text>
                       </View>
                       
-                      {/* Contact modes */}
                       {contactModes.length > 0 && (
                         <View style={styles.modesContainer}>
                           {contactModes.map((mode) => (
@@ -194,7 +216,7 @@ export const QueueReview = ({
                             >
                               {renderModeIcon(mode)}
                               <Text style={[styles.modeTagText, { color: colors.text.secondary }]}>
-                                {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                                {getModeDisplayName(mode)}
                               </Text>
                             </View>
                           ))}
