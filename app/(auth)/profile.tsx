@@ -21,7 +21,7 @@ import { ChevronLeft, Camera, User } from 'lucide-react-native';
 
 export default function ProfileSetupScreen() {
   const router = useRouter();
-  const { user, updateUser, completeOnboarding } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const { colors = darkTheme } = useThemeStore();
   
   const [name, setName] = useState('');

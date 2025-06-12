@@ -71,7 +71,7 @@ export default function OnboardingScreen() {
       }
       
       // Navigate to main app
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/home');
     } catch (err) {
       console.error('Error completing onboarding:', err);
     } finally {

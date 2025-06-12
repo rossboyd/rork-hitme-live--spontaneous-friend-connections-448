@@ -6,6 +6,7 @@ interface AuthState {
   isLoggedIn: boolean;
   phoneNumber: string | null;
   login: (phone: string) => void;
+  setPhoneNumber: (phone: string | null) => void;
   logout: () => void;
 }
 
@@ -15,6 +16,7 @@ export const useAuthStore = create<AuthState>()(
       isLoggedIn: false,
       phoneNumber: null,
       login: (phone) => set({ isLoggedIn: true, phoneNumber: phone }),
+      setPhoneNumber: (phone) => set({ phoneNumber: phone }),
       logout: () => set({ isLoggedIn: false, phoneNumber: null }),
     }),
     {
