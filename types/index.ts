@@ -3,7 +3,7 @@ export type Mode = 'FAM' | 'VIP' | 'BFF' | 'WRK' | 'MEH';
 export interface Contact {
   id: string;
   name: string;
-  avatar: string;
+  avatar?: string;
   phone: string;
   email?: string;
   lastOnline?: number;
