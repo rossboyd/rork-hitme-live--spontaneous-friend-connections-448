@@ -5,56 +5,50 @@ import {
   FlatList, 
   TextInput, 
   TouchableOpacity,
-  Text
+  Text,
+  Platform
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { ContactItem } from '@/components/ContactItem';
+import { DraggableContactItem } from '@/components/DraggableContactItem';
 import { EmptyState } from '@/components/EmptyState';
-import { Search, UserPlus, Filter } from 'lucide-react-native';
-import { Contact, Mode } from '@/types';
+import { Search, UserPlus, Filter, ArrowUpDown, List, BarChart3 } from 'lucide-react-native';
+import { Contact, Mode, SortOrder } from '@/types';
 import { AddContactModal } from '@/components/AddContactModal';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
+import { useContactSearch } from '@/hooks/useContactSearch';
 
 export default function ContactsScreen() {
   const router = useRouter();
-  const { contacts, addContact, outboundRequests } = useAppStore();
+  const { 
+    contacts, 
+    addContact, 
+    outboundRequests, 
+    contactSortOrder, 
+    setContactSortOrder,
+    reorderContactsInMode,
+    initializeModeRankings
+  } = useAppStore();
   const { colors = darkTheme } = useThemeStore();
   
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState('');
   const [modeFilter, setModeFilter] = useState<Mode | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  
+  const filteredContacts = useContactSearch(contacts, searchQuery, modeFilter, contactSortOrder);
   
   useEffect(() => {
-    let result = [...contacts];
-    
-    // Apply search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        contact => 
-          contact.name.toLowerCase().includes(query) || 
-          contact.phone.includes(query)
-      );
-    }
-    
-    // Apply mode filter
-    if (modeFilter) {
-      result = result.filter(
-        contact => contact.modes?.includes(modeFilter)
-      );
-    }
-    
-    // Sort alphabetically
-    result.sort((a, b) => a.name.localeCompare(b.name));
-    
-    setFilteredContacts(result);
-  }, [contacts, searchQuery, modeFilter]);
+    // Initialize rankings when component mounts
+    initializeModeRankings();
+  }, []);
   
   const handleContactPress = (contact: Contact) => {
-    router.push(`/contact-detail?id=${contact.id}`);
+    if (!isDragging) {
+      router.push(`/contact-detail?id=${contact.id}`);
+    }
   };
   
   const handleAddContact = (data: { name: string; phone: string; avatar: string }) => {
@@ -97,17 +91,70 @@ export default function ContactsScreen() {
   const toggleModeFilter = (mode: Mode) => {
     setModeFilter(currentMode => currentMode === mode ? null : mode);
   };
+
+  const toggleSortOrder = () => {
+    const newOrder: SortOrder = contactSortOrder === 'alphabetical' ? 'ranked' : 'alphabetical';
+    setContactSortOrder(newOrder);
+  };
+
+  const handleDragStart = () => {
+    setIsDragging(true);
+  };
+
+  const handleDragEnd = (contactId: string, newIndex: number) => {
+    setIsDragging(false);
+    
+    if (modeFilter && contactSortOrder === 'ranked') {
+      // Get current order of contact IDs
+      const currentContactIds = filteredContacts.map(c => c.id);
+      
+      // Remove the dragged contact from its current position
+      const draggedContactIndex = currentContactIds.indexOf(contactId);
+      if (draggedContactIndex !== -1) {
+        currentContactIds.splice(draggedContactIndex, 1);
+        
+        // Insert at new position
+        const clampedIndex = Math.max(0, Math.min(newIndex, currentContactIds.length));
+        currentContactIds.splice(clampedIndex, 0, contactId);
+        
+        // Update rankings
+        reorderContactsInMode(modeFilter, currentContactIds);
+      }
+    }
+  };
   
-  const renderItem = ({ item }: { item: Contact }) => (
-    <ContactItem
-      contact={item}
-      onPress={handleContactPress}
-      showLastOnline={true}
-      isInHitList={isInHitList(item.id)}
-      onToggleHitList={handleToggleHitList}
-      showModes={true}
-    />
-  );
+  const canDragAndDrop = modeFilter && contactSortOrder === 'ranked' && Platform.OS !== 'web';
+  
+  const renderItem = ({ item, index }: { item: Contact; index: number }) => {
+    if (canDragAndDrop) {
+      return (
+        <DraggableContactItem
+          contact={item}
+          onPress={handleContactPress}
+          showLastOnline={true}
+          isInHitList={isInHitList(item.id)}
+          onToggleHitList={handleToggleHitList}
+          showModes={true}
+          isDraggable={true}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          dragIndex={index}
+          itemHeight={96}
+        />
+      );
+    }
+    
+    return (
+      <ContactItem
+        contact={item}
+        onPress={handleContactPress}
+        showLastOnline={true}
+        isInHitList={isInHitList(item.id)}
+        onToggleHitList={handleToggleHitList}
+        showModes={true}
+      />
+    );
+  };
   
   return (
     <>
@@ -138,7 +185,23 @@ export default function ContactsScreen() {
         </View>
         
         <View style={styles.filterContainer}>
-          <Text style={[styles.filterLabel, { color: colors.text.secondary }]}>Filter by mode:</Text>
+          <View style={styles.filterRow}>
+            <Text style={[styles.filterLabel, { color: colors.text.secondary }]}>Filter by mode:</Text>
+            <TouchableOpacity 
+              style={[styles.sortToggle, { backgroundColor: colors.card }]}
+              onPress={toggleSortOrder}
+            >
+              {contactSortOrder === 'alphabetical' ? (
+                <List size={16} color={colors.text.primary} />
+              ) : (
+                <BarChart3 size={16} color={colors.text.primary} />
+              )}
+              <Text style={[styles.sortToggleText, { color: colors.text.primary }]}>
+                {contactSortOrder === 'alphabetical' ? 'A-Z' : 'Ranked'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          
           <View style={styles.modeFilters}>
             {(['FAM', 'VIP', 'BFF', 'WRK', 'MEH'] as Mode[]).map((mode) => (
               <TouchableOpacity 
@@ -159,6 +222,12 @@ export default function ContactsScreen() {
               </TouchableOpacity>
             ))}
           </View>
+          
+          {modeFilter && contactSortOrder === 'ranked' && Platform.OS !== 'web' && (
+            <Text style={[styles.dragHint, { color: colors.text.light }]}>
+              Drag contacts to reorder your {getModeLabel(modeFilter)} list
+            </Text>
+          )}
         </View>
         
         <FlatList
@@ -166,6 +235,7 @@ export default function ContactsScreen() {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
+          scrollEnabled={!isDragging}
           ListEmptyComponent={
             <EmptyState
               title="No contacts found"
@@ -213,14 +283,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 8,
   },
+  filterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   filterLabel: {
     fontSize: 14,
-    marginBottom: 8,
+  },
+  sortToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+  },
+  sortToggleText: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 6,
   },
   modeFilters: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+    marginBottom: 8,
   },
   modeFilter: {
     flexDirection: 'row',
@@ -233,6 +321,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     marginLeft: 4,
+  },
+  dragHint: {
+    fontSize: 12,
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
   listContent: {
     paddingVertical: 8,

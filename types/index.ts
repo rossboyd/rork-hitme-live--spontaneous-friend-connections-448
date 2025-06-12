@@ -7,7 +7,7 @@ export interface Contact {
   phone: string;
   email?: string;
   lastOnline?: number;
-  lastSeen?: number; // Add this property to fix the TypeScript error
+  lastSeen?: number;
   modes?: Mode[];
   isFavorite?: boolean;
 }
@@ -34,6 +34,14 @@ export interface HitRequest {
   expiresAt: number | null;
 }
 
+export type SortOrder = 'alphabetical' | 'ranked';
+
+export interface ModeRankings {
+  [mode: string]: {
+    [contactId: string]: number;
+  };
+}
+
 export interface AppState {
   user: User | null;
   contacts: Contact[];
@@ -45,6 +53,8 @@ export interface AppState {
   pendingNotifications: string[];
   dismissedRequests: string[];
   currentMode: Mode | null;
+  modeRankings: ModeRankings;
+  contactSortOrder: SortOrder;
   
   // Actions
   setUser: (user: User) => void;
@@ -64,4 +74,7 @@ export interface AppState {
   updateContactLastOnline: (contactId: string) => void;
   setCurrentMode: (mode: Mode | null) => void;
   toggleContactFavorite: (contactId: string) => void;
+  updateModeRanking: (mode: Mode, contactId: string, rank: number) => void;
+  reorderContactsInMode: (mode: Mode, contactIds: string[]) => void;
+  setContactSortOrder: (order: SortOrder) => void;
 }

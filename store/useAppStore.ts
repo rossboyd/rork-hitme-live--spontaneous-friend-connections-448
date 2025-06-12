@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { HitRequest, Contact, User, Mode } from '@/types';
+import { HitRequest, Contact, User, Mode, ModeRankings, SortOrder } from '@/types';
 import { mockContacts } from '@/mocks/contacts';
 import { mockRequests } from '@/mocks/requests';
 
@@ -14,12 +14,18 @@ interface UserSlice {
 
 interface ContactsSlice {
   contacts: Contact[];
+  modeRankings: ModeRankings;
+  contactSortOrder: SortOrder;
   addContact: (contact: Contact) => void;
   updateContact: (contactId: string, updates: Partial<Contact>) => void;
   deleteContact: (contactId: string) => void;
   updateContactLastOnline: (contactId: string) => void;
   updateContactModes: (contactId: string, modes: Mode[]) => void;
   toggleContactMode: (contactId: string, mode: Mode) => void;
+  updateModeRanking: (mode: Mode, contactId: string, rank: number) => void;
+  reorderContactsInMode: (mode: Mode, contactIds: string[]) => void;
+  setContactSortOrder: (order: SortOrder) => void;
+  initializeModeRankings: () => void;
 }
 
 interface RequestsSlice {
@@ -78,23 +84,87 @@ export const useAppStore = create<AppState>()(
 
       // Contacts slice
       contacts: [],
-      addContact: (contact) => set((state) => ({
-        contacts: [...state.contacts, contact]
-      })),
-      updateContact: (contactId, updates) => set((state) => ({
-        contacts: state.contacts.map(contact => 
-          contact.id === contactId ? { ...contact, ...updates } : contact
-        )
-      })),
-      deleteContact: (contactId) => set((state) => ({
-        contacts: state.contacts.filter(contact => contact.id !== contactId),
-        outboundRequests: state.outboundRequests.filter(
-          req => req.receiverId !== contactId
-        ),
-        inboundRequests: state.inboundRequests.filter(
-          req => req.senderId !== contactId
-        )
-      })),
+      modeRankings: {},
+      contactSortOrder: 'alphabetical',
+      addContact: (contact) => set((state) => {
+        const newContacts = [...state.contacts, contact];
+        // Initialize rankings for this contact in all their modes
+        const newRankings = { ...state.modeRankings };
+        contact.modes?.forEach(mode => {
+          if (!newRankings[mode]) {
+            newRankings[mode] = {};
+          }
+          // Add to end of the list
+          const existingRanks = Object.values(newRankings[mode]);
+          const maxRank = existingRanks.length > 0 ? Math.max(...existingRanks) : -1;
+          newRankings[mode][contact.id] = maxRank + 1;
+        });
+        
+        return {
+          contacts: newContacts,
+          modeRankings: newRankings
+        };
+      }),
+      updateContact: (contactId, updates) => set((state) => {
+        const contact = state.contacts.find(c => c.id === contactId);
+        if (!contact) return state;
+        
+        const updatedContact = { ...contact, ...updates };
+        const newContacts = state.contacts.map(c => 
+          c.id === contactId ? updatedContact : c
+        );
+        
+        // Update rankings if modes changed
+        let newRankings = { ...state.modeRankings };
+        if (updates.modes) {
+          const oldModes = contact.modes || [];
+          const newModes = updates.modes;
+          
+          // Remove from old modes that are no longer present
+          oldModes.forEach(mode => {
+            if (!newModes.includes(mode) && newRankings[mode]) {
+              delete newRankings[mode][contactId];
+            }
+          });
+          
+          // Add to new modes
+          newModes.forEach(mode => {
+            if (!oldModes.includes(mode)) {
+              if (!newRankings[mode]) {
+                newRankings[mode] = {};
+              }
+              const existingRanks = Object.values(newRankings[mode]);
+              const maxRank = existingRanks.length > 0 ? Math.max(...existingRanks) : -1;
+              newRankings[mode][contactId] = maxRank + 1;
+            }
+          });
+        }
+        
+        return {
+          contacts: newContacts,
+          modeRankings: newRankings
+        };
+      }),
+      deleteContact: (contactId) => set((state) => {
+        // Remove from rankings
+        const newRankings = { ...state.modeRankings };
+        Object.keys(newRankings).forEach(mode => {
+          if (newRankings[mode][contactId] !== undefined) {
+            delete newRankings[mode][contactId];
+          }
+        });
+        
+        return {
+          contacts: state.contacts.filter(contact => contact.id !== contactId),
+          outboundRequests: state.outboundRequests.filter(
+            req => req.receiverId !== contactId
+          ),
+          inboundRequests: state.inboundRequests.filter(
+            req => req.senderId !== contactId
+          ),
+          modeRankings: newRankings
+        };
+      }),
       updateContactLastOnline: (contactId) => set((state) => ({
         contacts: state.contacts.map(contact => 
           contact.id === contactId 
@@ -102,13 +172,41 @@ export const useAppStore = create<AppState>()(
             : contact
         )
       })),
-      updateContactModes: (contactId, modes) => set((state) => ({
-        contacts: state.contacts.map(contact => 
-          contact.id === contactId 
-            ? { ...contact, modes } 
-            : contact
-        )
-      })),
+      updateContactModes: (contactId, modes) => set((state) => {
+        const contact = state.contacts.find(c => c.id === contactId);
+        if (!contact) return state;
+        
+        const oldModes = contact.modes || [];
+        let newRankings = { ...state.modeRankings };
+        
+        // Remove from old modes that are no longer present
+        oldModes.forEach(mode => {
+          if (!modes.includes(mode) && newRankings[mode]) {
+            delete newRankings[mode][contactId];
+          }
+        });
+        
+        // Add to new modes
+        modes.forEach(mode => {
+          if (!oldModes.includes(mode)) {
+            if (!newRankings[mode]) {
+              newRankings[mode] = {};
+            }
+            const existingRanks = Object.values(newRankings[mode]);
+            const maxRank = existingRanks.length > 0 ? Math.max(...existingRanks) : -1;
+            newRankings[mode][contactId] = maxRank + 1;
+          }
+        });
+        
+        return {
+          contacts: state.contacts.map(contact => 
+            contact.id === contactId 
+              ? { ...contact, modes } 
+              : contact
+          ),
+          modeRankings: newRankings
+        };
+      }),
       toggleContactMode: (contactId, mode) => set((state) => {
         const contact = state.contacts.find(c => c.id === contactId);
         if (!contact) return state;
@@ -118,13 +216,74 @@ export const useAppStore = create<AppState>()(
           ? currentModes.filter(m => m !== mode)
           : [...currentModes, mode];
         
+        let newRankings = { ...state.modeRankings };
+        
+        if (currentModes.includes(mode)) {
+          // Removing from mode
+          if (newRankings[mode]) {
+            delete newRankings[mode][contactId];
+          }
+        } else {
+          // Adding to mode
+          if (!newRankings[mode]) {
+            newRankings[mode] = {};
+          }
+          const existingRanks = Object.values(newRankings[mode]);
+          const maxRank = existingRanks.length > 0 ? Math.max(...existingRanks) : -1;
+          newRankings[mode][contactId] = maxRank + 1;
+        }
+        
         return {
           contacts: state.contacts.map(c => 
             c.id === contactId 
               ? { ...c, modes: updatedModes } 
               : c
-          )
+          ),
+          modeRankings: newRankings
         };
+      }),
+      updateModeRanking: (mode, contactId, rank) => set((state) => ({
+        modeRankings: {
+          ...state.modeRankings,
+          [mode]: {
+            ...state.modeRankings[mode],
+            [contactId]: rank
+          }
+        }
+      })),
+      reorderContactsInMode: (mode, contactIds) => set((state) => {
+        const newRankings = { ...state.modeRankings };
+        if (!newRankings[mode]) {
+          newRankings[mode] = {};
+        }
+        
+        // Assign new rankings based on the order
+        contactIds.forEach((contactId, index) => {
+          newRankings[mode][contactId] = index;
+        });
+        
+        return {
+          modeRankings: newRankings
+        };
+      }),
+      setContactSortOrder: (order) => set({ contactSortOrder: order }),
+      initializeModeRankings: () => set((state) => {
+        const newRankings = { ...state.modeRankings };
+        
+        state.contacts.forEach(contact => {
+          contact.modes?.forEach(mode => {
+            if (!newRankings[mode]) {
+              newRankings[mode] = {};
+            }
+            if (newRankings[mode][contact.id] === undefined) {
+              const existingRanks = Object.values(newRankings[mode]);
+              const maxRank = existingRanks.length > 0 ? Math.max(...existingRanks) : -1;
+              newRankings[mode][contact.id] = maxRank + 1;
+            }
+          });
+        });
+        
+        return { modeRankings: newRankings };
       }),
 
       // Requests slice
@@ -225,6 +384,8 @@ export const useAppStore = create<AppState>()(
         dismissedRequests: [],
         hasCompletedOnboarding: false,
         currentMode: null,
+        modeRankings: {},
+        contactSortOrder: 'alphabetical',
         user: {
           id: 'user-1',
           name: 'You',
@@ -248,6 +409,8 @@ export const useAppStore = create<AppState>()(
         hitMeDuration: state.hitMeDuration,
         hasCompletedOnboarding: state.hasCompletedOnboarding,
         currentMode: state.currentMode,
+        modeRankings: state.modeRankings,
+        contactSortOrder: state.contactSortOrder,
       }),
     }
   )
