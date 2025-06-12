@@ -105,23 +105,27 @@ export default function ContactsScreen() {
     setIsDragging(false);
     
     if (modeFilter && contactSortOrder === 'ranked') {
-      // Get current filtered contacts in their current order
-      const currentContactIds = filteredContacts.map(c => c.id);
-      
-      // Find the current index of the dragged contact
-      const currentIndex = currentContactIds.indexOf(contactId);
-      if (currentIndex === -1) return;
-      
-      // Remove the contact from its current position
-      const reorderedIds = [...currentContactIds];
-      reorderedIds.splice(currentIndex, 1);
-      
-      // Insert at new position (clamp to valid range)
-      const clampedIndex = Math.max(0, Math.min(newIndex, reorderedIds.length));
-      reorderedIds.splice(clampedIndex, 0, contactId);
-      
-      // Update rankings in the store
-      reorderContactsInMode(modeFilter, reorderedIds);
+      try {
+        // Get current filtered contacts in their current order
+        const currentContactIds = filteredContacts.map(c => c.id);
+        
+        // Find the current index of the dragged contact
+        const currentIndex = currentContactIds.indexOf(contactId);
+        if (currentIndex === -1) return;
+        
+        // Remove the contact from its current position
+        const reorderedIds = [...currentContactIds];
+        reorderedIds.splice(currentIndex, 1);
+        
+        // Insert at new position (clamp to valid range)
+        const clampedIndex = Math.max(0, Math.min(newIndex, reorderedIds.length));
+        reorderedIds.splice(clampedIndex, 0, contactId);
+        
+        // Update rankings in the store
+        reorderContactsInMode(modeFilter, reorderedIds);
+      } catch (error) {
+        console.warn('Error reordering contacts:', error);
+      }
     }
   };
   

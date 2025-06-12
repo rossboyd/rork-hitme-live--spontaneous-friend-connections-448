@@ -6,13 +6,32 @@ import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { Avatar } from '@/components/common/Avatar';
 import { Briefcase, Home, Heart, Crown, Meh, GripVertical } from 'lucide-react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  runOnJS,
-  withSpring,
-} from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+
+// Only import gesture handler on native platforms
+let Animated: any = null;
+let GestureDetector: any = null;
+let Gesture: any = null;
+let useSharedValue: any = null;
+let useAnimatedStyle: any = null;
+let runOnJS: any = null;
+let withSpring: any = null;
+
+if (Platform.OS !== 'web') {
+  try {
+    const reanimated = require('react-native-reanimated');
+    const gestureHandler = require('react-native-gesture-handler');
+    
+    Animated = reanimated.default;
+    useSharedValue = reanimated.useSharedValue;
+    useAnimatedStyle = reanimated.useAnimatedStyle;
+    runOnJS = reanimated.runOnJS;
+    withSpring = reanimated.withSpring;
+    GestureDetector = gestureHandler.GestureDetector;
+    Gesture = gestureHandler.Gesture;
+  } catch (error) {
+    console.warn('Gesture handler or reanimated not available:', error);
+  }
+}
 
 interface DraggableContactItemProps {
   contact: Contact;
@@ -43,11 +62,6 @@ export const DraggableContactItem = ({
 }: DraggableContactItemProps) => {
   const { colors = darkTheme } = useThemeStore();
   const contactModes = contact.modes || [];
-
-  const translateY = useSharedValue(0);
-  const scale = useSharedValue(1);
-  const zIndex = useSharedValue(0);
-  const isDragging = useSharedValue(false);
 
   const renderModeIcon = (mode: Mode) => {
     switch (mode) {
@@ -82,42 +96,6 @@ export const DraggableContactItem = ({
         return mode;
     }
   };
-
-  const panGesture = Gesture.Pan()
-    .onStart(() => {
-      isDragging.value = true;
-      if (onDragStart) {
-        runOnJS(onDragStart)();
-      }
-      scale.value = withSpring(1.05);
-      zIndex.value = 1000;
-    })
-    .onUpdate((event) => {
-      translateY.value = event.translationY;
-    })
-    .onEnd((event) => {
-      const newIndex = Math.round(dragIndex + event.translationY / itemHeight);
-      const clampedIndex = Math.max(0, newIndex);
-      
-      if (onDragEnd) {
-        runOnJS(onDragEnd)(contact.id, clampedIndex);
-      }
-      
-      translateY.value = withSpring(0);
-      scale.value = withSpring(1);
-      zIndex.value = 0;
-      isDragging.value = false;
-    });
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: translateY.value },
-      { scale: scale.value }
-    ],
-    zIndex: zIndex.value,
-    elevation: zIndex.value > 0 ? 5 : 0,
-    opacity: isDragging.value ? 0.9 : 1,
-  }));
 
   const ContactContent = () => (
     <View style={[styles.container, { backgroundColor: colors.card }]}>
@@ -181,16 +159,63 @@ export const DraggableContactItem = ({
     </View>
   );
 
-  if (isDraggable && Platform.OS !== 'web') {
-    return (
-      <GestureDetector gesture={panGesture}>
-        <Animated.View style={animatedStyle}>
-          <TouchableOpacity onPress={() => onPress(contact)} activeOpacity={0.7}>
-            <ContactContent />
-          </TouchableOpacity>
-        </Animated.View>
-      </GestureDetector>
-    );
+  // Only use gesture handler on native platforms and when all dependencies are available
+  if (isDraggable && Platform.OS !== 'web' && Gesture && GestureDetector && useSharedValue) {
+    try {
+      const translateY = useSharedValue(0);
+      const scale = useSharedValue(1);
+      const zIndex = useSharedValue(0);
+      const isDragging = useSharedValue(false);
+
+      const panGesture = Gesture.Pan()
+        .onStart(() => {
+          isDragging.value = true;
+          if (onDragStart) {
+            runOnJS(onDragStart)();
+          }
+          scale.value = withSpring(1.05);
+          zIndex.value = 1000;
+        })
+        .onUpdate((event: any) => {
+          translateY.value = event.translationY;
+        })
+        .onEnd((event: any) => {
+          const newIndex = Math.round(dragIndex + event.translationY / itemHeight);
+          const clampedIndex = Math.max(0, newIndex);
+          
+          if (onDragEnd) {
+            runOnJS(onDragEnd)(contact.id, clampedIndex);
+          }
+          
+          translateY.value = withSpring(0);
+          scale.value = withSpring(1);
+          zIndex.value = 0;
+          isDragging.value = false;
+        });
+
+      const animatedStyle = useAnimatedStyle(() => ({
+        transform: [
+          { translateY: translateY.value },
+          { scale: scale.value }
+        ],
+        zIndex: zIndex.value,
+        elevation: zIndex.value > 0 ? 5 : 0,
+        opacity: isDragging.value ? 0.9 : 1,
+      }));
+
+      return (
+        <GestureDetector gesture={panGesture}>
+          <Animated.View style={animatedStyle}>
+            <TouchableOpacity onPress={() => onPress(contact)} activeOpacity={0.7}>
+              <ContactContent />
+            </TouchableOpacity>
+          </Animated.View>
+        </GestureDetector>
+      );
+    } catch (error) {
+      console.warn('Error creating draggable contact item:', error);
+      // Fallback to regular contact item
+    }
   }
 
   return (
