@@ -44,7 +44,7 @@ interface DraggableContactItemProps {
   contact: Contact;
   onPress: (contact: Contact) => void;
   showLastOnline?: boolean;
-  isInHitList?: boolean;
+  isInHitList?: boolean | null;
   onToggleHitList?: (contact: Contact) => void;
   showModes?: boolean;
   isDraggable?: boolean;
