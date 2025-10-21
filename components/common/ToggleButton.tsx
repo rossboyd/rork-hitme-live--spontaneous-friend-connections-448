@@ -4,6 +4,7 @@ import {
   Text, 
   StyleSheet, 
   View,
+  Animated,
   StyleProp,
   ViewStyle
 } from 'react-native';
@@ -29,52 +30,57 @@ export const ToggleButton = memo(({
 }: ToggleButtonProps) => {
   const { colors = darkTheme } = useThemeStore();
 
+  const handlePress = () => {
+    if (!disabled) {
+      onToggle(!isRightSelected);
+    }
+  };
+
   return (
-    <View
+    <TouchableOpacity
       style={[
         styles.container,
         { backgroundColor: colors.card, borderColor: colors.border },
         style
       ]}
+      onPress={handlePress}
+      disabled={disabled}
+      activeOpacity={0.8}
     >
-      <TouchableOpacity
-        style={[
-          styles.option,
-          !isRightSelected && [styles.selectedOption, { backgroundColor: colors.primary }]
-        ]}
-        onPress={() => !disabled && onToggle(false)}
-        disabled={disabled}
-        activeOpacity={0.8}
-      >
-        <Text
+      <View style={styles.toggleContainer}>
+        <View
           style={[
-            styles.optionText,
-            { color: !isRightSelected ? '#000' : colors.text.secondary }
+            styles.option,
+            !isRightSelected && [styles.selectedOption, { backgroundColor: colors.primary }]
           ]}
         >
-          {leftLabel}
-        </Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity
-        style={[
-          styles.option,
-          isRightSelected && [styles.selectedOption, { backgroundColor: colors.primary }]
-        ]}
-        onPress={() => !disabled && onToggle(true)}
-        disabled={disabled}
-        activeOpacity={0.8}
-      >
-        <Text
+          <Text
+            style={[
+              styles.optionText,
+              { color: !isRightSelected ? '#000' : colors.text.secondary }
+            ]}
+          >
+            {leftLabel}
+          </Text>
+        </View>
+        
+        <View
           style={[
-            styles.optionText,
-            { color: isRightSelected ? '#000' : colors.text.secondary }
+            styles.option,
+            isRightSelected && [styles.selectedOption, { backgroundColor: colors.primary }]
           ]}
         >
-          {rightLabel}
-        </Text>
-      </TouchableOpacity>
-    </View>
+          <Text
+            style={[
+              styles.optionText,
+              { color: isRightSelected ? '#000' : colors.text.secondary }
+            ]}
+          >
+            {rightLabel}
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 });
 
@@ -82,21 +88,20 @@ ToggleButton.displayName = 'ToggleButton';
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
     borderRadius: 8,
     borderWidth: 1,
     padding: 2,
-    overflow: 'hidden',
-    minWidth: 120,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
   },
   option: {
     flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 50,
   },
   selectedOption: {
     // backgroundColor will be set dynamically

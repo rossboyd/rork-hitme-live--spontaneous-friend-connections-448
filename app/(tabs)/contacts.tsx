@@ -62,7 +62,7 @@ export default function ContactsScreen() {
     setShowAddModal(false);
   };
   
-  const isInHitList = (contactId: string): boolean => {
+  const isInHitList = (contactId: string) => {
     return outboundRequests.some(
       req => req.receiverId === contactId && req.status === 'pending'
     );
@@ -130,21 +130,16 @@ export default function ContactsScreen() {
     }
   };
   
-  // Only enable drag and drop on native platforms when in ranked mode with a mode filter
   const canDragAndDrop = modeFilter && contactSortOrder === 'ranked' && Platform.OS !== 'web';
-  const showGrabHandle = modeFilter && contactSortOrder === 'ranked';
   
   const renderItem = ({ item, index }: { item: Contact; index: number }) => {
-    const contactIsInHitList = isInHitList(item.id);
-    
-    // Use DraggableContactItem only when drag and drop is enabled and available
     if (canDragAndDrop) {
       return (
         <DraggableContactItem
           contact={item}
           onPress={handleContactPress}
           showLastOnline={true}
-          isInHitList={contactIsInHitList}
+          isInHitList={isInHitList(item.id)}
           onToggleHitList={handleToggleHitList}
           showModes={true}
           isDraggable={true}
@@ -152,21 +147,18 @@ export default function ContactsScreen() {
           onDragEnd={handleDragEnd}
           dragIndex={index}
           itemHeight={96}
-          showGrabHandle={showGrabHandle}
         />
       );
     }
     
-    // Use regular ContactItem for all other cases
     return (
       <ContactItem
         contact={item}
         onPress={handleContactPress}
         showLastOnline={true}
-        isInHitList={contactIsInHitList}
+        isInHitList={isInHitList(item.id)}
         onToggleHitList={handleToggleHitList}
         showModes={true}
-        showGrabHandle={showGrabHandle}
       />
     );
   };
@@ -201,7 +193,7 @@ export default function ContactsScreen() {
         
         <View style={styles.filterContainer}>
           <View style={styles.filterRow}>
-            <Text style={[styles.filterLabel, { color: colors.text.secondary }]}>Sort:</Text>
+            <Text style={[styles.filterLabel, { color: colors.text.secondary }]}>Filter by trait:</Text>
             <ToggleButton
               leftLabel="A-Z"
               rightLabel="Ranked"
@@ -217,10 +209,7 @@ export default function ContactsScreen() {
                 key={mode}
                 style={[
                   styles.modeFilter, 
-                  { 
-                    backgroundColor: modeFilter === mode ? colors.primary : colors.card,
-                    borderColor: modeFilter === mode ? colors.primary : colors.border
-                  }
+                  { backgroundColor: modeFilter === mode ? colors.primary : colors.card }
                 ]}
                 onPress={() => toggleModeFilter(mode)}
               >
@@ -235,12 +224,9 @@ export default function ContactsScreen() {
             ))}
           </View>
           
-          {showGrabHandle && (
+          {modeFilter && contactSortOrder === 'ranked' && Platform.OS !== 'web' && (
             <Text style={[styles.dragHint, { color: colors.text.light }]}>
-              {Platform.OS === 'web' 
-                ? `Viewing ${getModeLabel(modeFilter!)} in ranked order`
-                : `Drag contacts to reorder your ${getModeLabel(modeFilter!)} list`
-              }
+              Drag contacts to reorder your {getModeLabel(modeFilter)} list
             </Text>
           )}
         </View>
@@ -303,11 +289,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   filterLabel: {
     fontSize: 14,
-    fontWeight: '500',
   },
   sortToggle: {
     // ToggleButton will handle its own styling
@@ -321,10 +306,9 @@ const styles = StyleSheet.create({
   modeFilter: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 16,
-    borderWidth: 1,
   },
   modeFilterText: {
     fontSize: 14,
@@ -335,7 +319,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontStyle: 'italic',
     textAlign: 'center',
-    marginTop: 4,
   },
   listContent: {
     paddingVertical: 8,

@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
-import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { useThemeStore } from '@/store/useThemeStore';
 import { 
   Bell, 
@@ -42,8 +41,8 @@ export default function ProfileScreen() {
     contacts, 
     updateRequestStatus,
     resetToMockData,
+    resetOnboarding
   } = useAppStore();
-  const { resetOnboarding } = useOnboardingStore();
   const { colors = darkTheme } = useThemeStore();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [editProfileVisible, setEditProfileVisible] = useState(false);

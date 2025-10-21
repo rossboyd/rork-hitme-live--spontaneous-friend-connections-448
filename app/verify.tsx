@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
-import { useOnboardingStore } from '@/store/useOnboardingStore';
 import * as Haptics from 'expo-haptics';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
@@ -19,7 +18,6 @@ import { darkTheme } from '@/constants/colors';
 export default function VerifyScreen() {
   const router = useRouter();
   const { setUser } = useAppStore();
-  const { setIsFirstLaunch } = useOnboardingStore();
   const { colors = darkTheme } = useThemeStore();
   
   const [otp, setOtp] = useState('');
@@ -56,9 +54,6 @@ export default function VerifyScreen() {
       avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80',
       phone: phoneNumber,
     });
-
-    // Mark that the app has been launched once
-    setIsFirstLaunch(false);
     
     // Navigate to onboarding instead of home
     router.replace('/onboarding/welcome');

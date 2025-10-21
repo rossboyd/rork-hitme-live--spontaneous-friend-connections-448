@@ -55,6 +55,11 @@ interface HitMeModeSlice {
   setCurrentMode: (mode: Mode | null) => void;
 }
 
+interface OnboardingSlice {
+  hasCompletedOnboarding: boolean;
+  setHasCompletedOnboarding: (value: boolean) => void;
+  resetOnboarding: () => void;
+}
 
 interface DebugSlice {
   resetToMockData: () => void;
@@ -62,7 +67,7 @@ interface DebugSlice {
 }
 
 // Combine all slices into one interface
-type AppState = UserSlice & ContactsSlice & RequestsSlice & HitMeModeSlice & DebugSlice;
+type AppState = UserSlice & ContactsSlice & RequestsSlice & HitMeModeSlice & OnboardingSlice & DebugSlice;
 
 // Create the store with proper typing
 export const useAppStore = create<AppState>()(
@@ -369,6 +374,15 @@ export const useAppStore = create<AppState>()(
         currentMode: mode
       }),
 
+      // Onboarding slice
+      hasCompletedOnboarding: false,
+      setHasCompletedOnboarding: (value) => set({
+        hasCompletedOnboarding: value
+      }),
+      resetOnboarding: () => set({
+        hasCompletedOnboarding: false
+      }),
+
       // Debug slice
       resetToMockData: () => set({
         contacts: [...mockContacts],
@@ -379,6 +393,7 @@ export const useAppStore = create<AppState>()(
         hitMeEndTime: null,
         pendingNotifications: [],
         dismissedRequests: [],
+        hasCompletedOnboarding: false,
         currentMode: null,
         modeRankings: {},
         contactSortOrder: 'alphabetical',
@@ -403,6 +418,7 @@ export const useAppStore = create<AppState>()(
         outboundRequests: state.outboundRequests,
         inboundRequests: state.inboundRequests,
         hitMeDuration: state.hitMeDuration,
+        hasCompletedOnboarding: state.hasCompletedOnboarding,
         currentMode: state.currentMode,
         modeRankings: state.modeRankings,
         contactSortOrder: state.contactSortOrder,
