@@ -1,30 +1,25 @@
-// Shared animation configurations
 import { Platform } from 'react-native';
-import { 
-  WithSpringConfig, 
-  WithTimingConfig 
-} from 'react-native-reanimated';
 
-export const SPRING_CONFIG: WithSpringConfig = {
+export const SPRING_CONFIG = {
   damping: 20,
   mass: 1,
   stiffness: 200,
   overshootClamping: false,
+  useNativeDriver: true,
 };
 
-export const TIMING_CONFIG: WithTimingConfig = {
+export const TIMING_CONFIG = {
   duration: 250,
+  useNativeDriver: true,
 };
 
-// Config used for page transition animations
-export const PAGE_TRANSITION_CONFIG: WithTimingConfig = {
+export const PAGE_TRANSITION_CONFIG = {
   duration: 400,
+  useNativeDriver: true,
 };
 
-// Delay between staggered item animations
 export const STAGGER_DELAY = 50;
 
-// Safe animation config for web
 export const getAnimationConfig = (isSpring = true) => {
   if (Platform.OS === 'web') {
     return TIMING_CONFIG;

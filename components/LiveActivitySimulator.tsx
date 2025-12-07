@@ -1,13 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Animated } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter, Href } from 'expo-router';
-import Animated, { 
-  useAnimatedStyle,
-  withRepeat,
-  withSequence,
-  withTiming
-} from 'react-native-reanimated';
 
 interface LiveActivitySimulatorProps {
   timeRemaining: number;
@@ -21,34 +15,32 @@ export const LiveActivitySimulator = ({
   userAvatar
 }: LiveActivitySimulatorProps) => {
   const router = useRouter();
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
-  // Format time remaining as MM:SS
   const minutes = Math.floor(timeRemaining / 1000 / 60);
   const seconds = Math.floor((timeRemaining / 1000) % 60);
   const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 
-  // Calculate progress percentage
-  const progress = timeRemaining / (30 * 60 * 1000); // Assuming 30 min total
+  const progress = timeRemaining / (30 * 60 * 1000);
 
-  // Animated styles
-  const pulseStyle = useAnimatedStyle(() => {
-    if (Platform.OS === 'web') return {};
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
     
-    return {
-      transform: [
-        {
-          scale: withRepeat(
-            withSequence(
-              withTiming(1.1, { duration: 1000 }),
-              withTiming(1, { duration: 1000 })
-            ),
-            -1,
-            true
-          ),
-        },
-      ],
-    };
-  });
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [pulseAnim]);
 
   return (
     <TouchableOpacity 
@@ -81,7 +73,7 @@ export const LiveActivitySimulator = ({
                 style={[
                   styles.progressFill,
                   { width: `${progress * 100}%` },
-                  Platform.OS !== 'web' && pulseStyle
+                  Platform.OS !== 'web' && { transform: [{ scaleY: pulseAnim }] }
                 ]} 
               />
               <View style={[styles.progressDot, { left: `${progress * 100}%` }]} />
