@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
-import { X, User, Briefcase, Home, Users } from 'lucide-react-native';
+import { X, User, Briefcase, Home, Users, Heart, Meh } from 'lucide-react-native';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { Avatar } from '@/components/common/Avatar';
@@ -157,9 +157,45 @@ export const AddContactModal = ({
                   style={[
                     styles.modeButton,
                     { backgroundColor: colors.card },
-                    selectedModes.includes('work') && { borderColor: colors.primary, borderWidth: 2 }
+                    selectedModes.includes('FAM') && { borderColor: colors.primary, borderWidth: 2 }
                   ]}
-                  onPress={() => toggleMode('work')}
+                  onPress={() => toggleMode('FAM')}
+                >
+                  <Home size={24} color={colors.primary} />
+                  <Text style={[styles.modeButtonText, { color: colors.text.primary }]}>Family</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[
+                    styles.modeButton,
+                    { backgroundColor: colors.card },
+                    selectedModes.includes('VIP') && { borderColor: colors.primary, borderWidth: 2 }
+                  ]}
+                  onPress={() => toggleMode('VIP')}
+                >
+                  <Users size={24} color={colors.primary} />
+                  <Text style={[styles.modeButtonText, { color: colors.text.primary }]}>VIP</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[
+                    styles.modeButton,
+                    { backgroundColor: colors.card },
+                    selectedModes.includes('BFF') && { borderColor: colors.primary, borderWidth: 2 }
+                  ]}
+                  onPress={() => toggleMode('BFF')}
+                >
+                  <Heart size={24} color={colors.primary} />
+                  <Text style={[styles.modeButtonText, { color: colors.text.primary }]}>BFF</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[
+                    styles.modeButton,
+                    { backgroundColor: colors.card },
+                    selectedModes.includes('WRK') && { borderColor: colors.primary, borderWidth: 2 }
+                  ]}
+                  onPress={() => toggleMode('WRK')}
                 >
                   <Briefcase size={24} color={colors.primary} />
                   <Text style={[styles.modeButtonText, { color: colors.text.primary }]}>Work</Text>
@@ -169,24 +205,12 @@ export const AddContactModal = ({
                   style={[
                     styles.modeButton,
                     { backgroundColor: colors.card },
-                    selectedModes.includes('social') && { borderColor: colors.primary, borderWidth: 2 }
+                    selectedModes.includes('MEH') && { borderColor: colors.primary, borderWidth: 2 }
                   ]}
-                  onPress={() => toggleMode('social')}
+                  onPress={() => toggleMode('MEH')}
                 >
-                  <Users size={24} color={colors.primary} />
-                  <Text style={[styles.modeButtonText, { color: colors.text.primary }]}>Social</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={[
-                    styles.modeButton,
-                    { backgroundColor: colors.card },
-                    selectedModes.includes('family') && { borderColor: colors.primary, borderWidth: 2 }
-                  ]}
-                  onPress={() => toggleMode('family')}
-                >
-                  <Home size={24} color={colors.primary} />
-                  <Text style={[styles.modeButtonText, { color: colors.text.primary }]}>Family</Text>
+                  <Meh size={24} color={colors.primary} />
+                  <Text style={[styles.modeButtonText, { color: colors.text.primary }]}>Meh</Text>
                 </TouchableOpacity>
               </View>
             </View>

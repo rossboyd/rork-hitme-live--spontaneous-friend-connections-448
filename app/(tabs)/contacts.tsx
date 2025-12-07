@@ -42,9 +42,8 @@ export default function ContactsScreen() {
   const filteredContacts = useContactSearch(contacts, searchQuery, modeFilter, contactSortOrder);
   
   useEffect(() => {
-    // Initialize rankings when component mounts
     initializeModeRankings();
-  }, []);
+  }, [initializeModeRankings]);
   
   const handleContactPress = (contact: Contact) => {
     if (!isDragging) {

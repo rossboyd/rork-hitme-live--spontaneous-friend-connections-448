@@ -56,8 +56,9 @@ export default function ContactsScreen() {
     if (!selectedContact) return;
     
     addOutboundRequest({
-      senderId: 'user-1', // Current user ID
+      senderId: 'user-1',
       receiverId: selectedContact.id,
+      message: data.topic,
       topic: data.topic,
       urgency: data.urgency,
       expiresAt: data.expiresIn ? Date.now() + data.expiresIn : null,

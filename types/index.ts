@@ -7,6 +7,7 @@ export interface Contact {
   phone: string;
   email?: string;
   lastOnline?: number;
+  lastSeen?: number;
   modes?: Mode[];
   isFavorite?: boolean;
 }
@@ -21,12 +22,14 @@ export interface User {
 
 export type RequestStatus = 'pending' | 'completed' | 'expired' | 'rejected' | 'dismissed';
 export type RequestUrgency = 'low' | 'medium' | 'high';
+export type UrgencyLevel = RequestUrgency;
 
 export interface HitRequest {
   id: string;
   senderId: string;
   receiverId: string;
   message: string;
+  topic?: string;
   status: RequestStatus;
   urgency: RequestUrgency;
   createdAt: number;
