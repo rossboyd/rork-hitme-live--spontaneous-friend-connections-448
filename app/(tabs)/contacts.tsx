@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Text
 } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
+import { useRouter, Stack, Href } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { ContactItem } from '@/components/ContactItem';
 import { EmptyState } from '@/components/EmptyState';
@@ -42,7 +42,7 @@ export default function ContactsScreen() {
   }, [initializeModeRankings]);
   
   const handleContactPress = (contact: Contact) => {
-    router.push(`/contact-detail?id=${contact.id}`);
+    router.push(`/contact-detail?id=${contact.id}` as Href);
   };
   
   const handleAddContact = (data: { name: string; phone: string; avatar: string }) => {
@@ -62,7 +62,7 @@ export default function ContactsScreen() {
   };
   
   const handleToggleHitList = (contact: Contact) => {
-    router.push(`/contact-detail?id=${contact.id}`);
+    router.push(`/contact-detail?id=${contact.id}` as Href);
   };
   
   const getModeLabel = (mode: Mode) => {

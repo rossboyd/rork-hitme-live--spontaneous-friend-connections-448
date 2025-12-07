@@ -10,7 +10,7 @@ import {
   Platform,
   Alert
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Href } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { Avatar } from '@/components/common/Avatar';
 import { Camera, ChevronRight } from 'lucide-react-native';
@@ -62,7 +62,7 @@ export default function OnboardingProfileScreen() {
     setHasCompletedOnboarding(true);
     
     // Navigate to the main app
-    router.replace('/(tabs)/home');
+    router.replace('/(tabs)/home' as Href);
   };
   
   return (
@@ -79,7 +79,7 @@ export default function OnboardingProfileScreen() {
             Set up your profile
           </Text>
           <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
-            Choose how you'll appear to others
+            Choose how you&apos;ll appear to others
           </Text>
         </View>
         

@@ -10,8 +10,6 @@ export const SPRING_CONFIG: WithSpringConfig = {
   mass: 1,
   stiffness: 200,
   overshootClamping: false,
-  restDisplacementThreshold: 0.01,
-  restSpeedThreshold: 2,
 };
 
 export const TIMING_CONFIG: WithTimingConfig = {

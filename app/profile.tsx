@@ -10,7 +10,7 @@ import {
   ScrollView
 } from 'react-native';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { useRouter, Href } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { useThemeStore } from '@/store/useThemeStore';
 import { 
@@ -156,7 +156,7 @@ export default function ProfileScreen() {
         {renderSettingItem(
           <Smartphone size={24} color={colors.text.primary} />,
           "Live Activity Preview",
-          () => router.push('/live-activity-preview')
+          () => router.push('/live-activity-preview' as Href)
         )}
       </View>
       

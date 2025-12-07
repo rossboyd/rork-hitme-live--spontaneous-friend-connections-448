@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { useRouter, Href } from 'expo-router';
 import Animated, { 
   useAnimatedStyle,
   withRepeat,
@@ -53,7 +53,7 @@ export const LiveActivitySimulator = ({
   return (
     <TouchableOpacity 
       style={styles.container}
-      onPress={() => router.push('/(tabs)/home')}
+      onPress={() => router.push('/(tabs)/home' as Href)}
       activeOpacity={0.9}
     >
       <View style={styles.widget}>

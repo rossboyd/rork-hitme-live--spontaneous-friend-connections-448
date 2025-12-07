@@ -34,21 +34,22 @@ export default function RootLayout() {
   useEffect(() => {
     if (!fontsLoaded) return;
 
-    const inOnboardingGroup = segments[0] === 'onboarding';
+    const currentSegment = segments[0] as string | undefined;
+    const inOnboardingGroup = currentSegment === 'onboarding';
     
     // Auth-related routes that should bypass onboarding redirect
     const isAuthRoute = 
-      segments[0] === 'verify' || 
-      segments[0] === undefined; // root/index (login)
+      currentSegment === 'verify' || 
+      currentSegment === undefined; // root/index (login)
 
     // If user hasn't completed onboarding and isn't in the onboarding flow or auth flow
     if (!hasCompletedOnboarding && !inOnboardingGroup && !isAuthRoute) {
-      router.replace('/onboarding/welcome');
+      router.replace('/onboarding/welcome' as any);
     }
     
     // If user has completed onboarding but is still in the onboarding flow
-    if (hasCompletedOnboarding && (inOnboardingGroup || segments[0] === 'verify')) {
-      router.replace('/(tabs)/home');
+    if (hasCompletedOnboarding && (inOnboardingGroup || currentSegment === 'verify')) {
+      router.replace('/(tabs)/home' as any);
     }
   }, [fontsLoaded, hasCompletedOnboarding, segments, router]);
 
