@@ -7,6 +7,9 @@ import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { useAppStore } from '@/store/useAppStore';
 
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { StyleSheet } from 'react-native';
+
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
@@ -58,8 +61,9 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack
-      screenOptions={{
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Stack
+        screenOptions={{
         headerStyle: {
           backgroundColor: colors.background,
         },
@@ -88,5 +92,6 @@ export default function RootLayout() {
         }}
       />
     </Stack>
+    </GestureHandlerRootView>
   );
 }

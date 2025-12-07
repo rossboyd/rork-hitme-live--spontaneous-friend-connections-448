@@ -19,6 +19,8 @@ interface DraggableContactItemProps {
   onDragEnd?: (contactId: string, newIndex: number) => void;
   dragIndex?: number;
   itemHeight?: number;
+  drag?: () => void;
+  isActive?: boolean;
 }
 
 export const DraggableContactItem = ({
@@ -32,7 +34,9 @@ export const DraggableContactItem = ({
   onDragStart,
   onDragEnd,
   dragIndex = 0,
-  itemHeight = 96
+  itemHeight = 96,
+  drag,
+  isActive = false
 }: DraggableContactItemProps) => {
   const { colors = darkTheme } = useThemeStore();
   const contactModes = contact.modes || [];
@@ -74,8 +78,20 @@ export const DraggableContactItem = ({
 
 
   return (
-    <TouchableOpacity onPress={() => onPress(contact)} activeOpacity={0.7}>
-      <View style={[styles.container, { backgroundColor: colors.card }]}>
+    <TouchableOpacity 
+      onPress={() => onPress(contact)} 
+      onLongPress={isDraggable ? drag : undefined}
+      delayLongPress={200}
+      activeOpacity={0.7}
+      disabled={isActive}
+    >
+      <View style={[
+        styles.container, 
+        { 
+          backgroundColor: isActive ? colors.card + 'CC' : colors.card,
+          transform: isActive ? [{ scale: 1.05 }] : []
+        }
+      ]}>
         <Avatar
           name={contact.name}
           avatar={contact.avatar}

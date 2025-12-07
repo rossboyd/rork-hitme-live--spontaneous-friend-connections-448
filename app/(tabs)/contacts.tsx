@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
   StyleSheet, 
@@ -7,9 +7,10 @@ import {
   TouchableOpacity,
   Text
 } from 'react-native';
+import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
 import { useRouter, Stack, Href } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
-import { ContactItem } from '@/components/ContactItem';
+import { DraggableContactItem } from '@/components/DraggableContactItem';
 import { EmptyState } from '@/components/EmptyState';
 import { ToggleButton } from '@/components/common/ToggleButton';
 import { Search, UserPlus, Filter } from 'lucide-react-native';
@@ -27,7 +28,8 @@ export default function ContactsScreen() {
     outboundRequests, 
     contactSortOrder, 
     setContactSortOrder,
-    initializeModeRankings
+    initializeModeRankings,
+    reorderContactsInMode
   } = useAppStore();
   const { colors = darkTheme } = useThemeStore();
   
@@ -91,9 +93,34 @@ export default function ContactsScreen() {
     setContactSortOrder(newOrder);
   };
   
+  const handleDragEnd = ({ data }: { data: Contact[] }) => {
+    if (modeFilter && contactSortOrder === 'ranked') {
+      const contactIds = data.map(c => c.id);
+      reorderContactsInMode(modeFilter, contactIds);
+    }
+  };
+
+  const renderDraggableItem = useCallback(({ item, drag, isActive }: RenderItemParams<Contact>) => {
+    return (
+      <ScaleDecorator>
+        <DraggableContactItem
+          contact={item}
+          onPress={handleContactPress}
+          showLastOnline={true}
+          isInHitList={isInHitList(item.id)}
+          onToggleHitList={handleToggleHitList}
+          showModes={true}
+          isDraggable={contactSortOrder === 'ranked' && !!modeFilter}
+          drag={drag}
+          isActive={isActive}
+        />
+      </ScaleDecorator>
+    );
+  }, [contactSortOrder, modeFilter, isInHitList, handleContactPress, handleToggleHitList]);
+
   const renderItem = ({ item }: { item: Contact }) => {
     return (
-      <ContactItem
+      <DraggableContactItem
         contact={item}
         onPress={handleContactPress}
         showLastOnline={true}
@@ -168,24 +195,42 @@ export default function ContactsScreen() {
 
         </View>
         
-        <FlatList
-          data={filteredContacts}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <EmptyState
-              title="No contacts found"
-              message={searchQuery 
-                ? "Try a different search term" 
-                : modeFilter
-                  ? `No contacts in ${getModeLabel(modeFilter)} trait`
-                  : "Add your first contact to get started"}
-              icon={<UserPlus size={48} color={colors.text.light} />}
-            />
-          }
-        />
+        {contactSortOrder === 'ranked' && modeFilter ? (
+          <DraggableFlatList
+            data={filteredContacts}
+            onDragEnd={handleDragEnd}
+            keyExtractor={(item) => item.id}
+            renderItem={renderDraggableItem}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <EmptyState
+                title="No contacts found"
+                message={`No contacts in ${getModeLabel(modeFilter)} trait`}
+                icon={<UserPlus size={48} color={colors.text.light} />}
+              />
+            }
+          />
+        ) : (
+          <FlatList
+            data={filteredContacts}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <EmptyState
+                title="No contacts found"
+                message={searchQuery 
+                  ? "Try a different search term" 
+                  : modeFilter
+                    ? `No contacts in ${getModeLabel(modeFilter)} trait`
+                    : "Add your first contact to get started"}
+                icon={<UserPlus size={48} color={colors.text.light} />}
+              />
+            }
+          />
+        )}
       </View>
       
       <AddContactModal
