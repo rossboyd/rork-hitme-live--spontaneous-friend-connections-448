@@ -45,15 +45,44 @@ export const NotificationSimulator = ({
   onSimulateConnection 
 }: NotificationSimulatorProps) => {
   const { colors = darkTheme } = useThemeStore();
-  const notificationListener = useRef<any>();
-  const responseListener = useRef<any>();
+  const notificationListener = useRef<any>(null);
+  const responseListener = useRef<any>(null);
   const lastNotificationRequest = useRef<HitRequest | null>(null);
 
   // Set up notification listeners
+  const handleConnectFromNotification = React.useCallback(async (request: HitRequest) => {
+    const contactForRequest = contacts.find(c => c.id === request.receiverId);
+    if (!contactForRequest) return;
+    
+    const formattedPhone = contactForRequest.phone.startsWith('+') 
+      ? contactForRequest.phone.substring(1).replace(/\D/g, '')
+      : contactForRequest.phone.replace(/\D/g, '');
+    
+    try {
+      const whatsappUrl = `whatsapp://send?phone=${formattedPhone}`;
+      const canOpen = await Linking.canOpenURL(whatsappUrl);
+      
+      if (canOpen) {
+        await Linking.openURL(whatsappUrl);
+      } else {
+        const webWhatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}`;
+        await Linking.openURL(webWhatsappUrl);
+      }
+      
+      onSimulateConnection(request.id);
+    } catch (error) {
+      console.error("Error opening WhatsApp:", error);
+      Alert.alert(
+        "Connection Error",
+        "There was an error connecting to WhatsApp."
+      );
+      
+      onSimulateConnection(request.id);
+    }
+  }, [contacts, onSimulateConnection]);
+
   useEffect(() => {
-    // Only set up notification listeners on native platforms
     if (Platform.OS !== 'web' && Notifications) {
-      // Request permissions
       const requestPermissions = async () => {
         const { status } = await Notifications.requestPermissionsAsync();
         if (status !== 'granted') {
@@ -92,7 +121,7 @@ export const NotificationSimulator = ({
         }
       };
     }
-  }, []);
+  }, [handleConnectFromNotification]);
 
   // Filter for active outbound requests
   const activeRequests = outboundRequests.filter(req => req.status === 'pending');
@@ -130,10 +159,7 @@ export const NotificationSimulator = ({
                 phone: contact.phone 
               },
             },
-            trigger: { 
-              type: 'seconds',
-              seconds: 1,
-            },
+            trigger: { seconds: 1 } as any,
           });
           
           // Show confirmation
@@ -166,44 +192,7 @@ export const NotificationSimulator = ({
     }
   };
 
-  const handleConnectFromNotification = async (request: HitRequest) => {
-    const contactForRequest = contacts.find(c => c.id === request.receiverId);
-    if (!contactForRequest) return;
-    
-    // Format phone number for WhatsApp - remove all non-numeric characters
-    // Keep the plus sign for international format
-    const formattedPhone = contactForRequest.phone.startsWith('+') 
-      ? contactForRequest.phone.substring(1).replace(/\D/g, '')
-      : contactForRequest.phone.replace(/\D/g, '');
-    
-    // Try to open WhatsApp with the contact's phone number
-    try {
-      // WhatsApp deep link format: whatsapp://send?phone=XXXXXXXXXXX
-      // Note: WhatsApp requires the phone number without the + sign but with country code
-      const whatsappUrl = `whatsapp://send?phone=${formattedPhone}`;
-      const canOpen = await Linking.canOpenURL(whatsappUrl);
-      
-      if (canOpen) {
-        await Linking.openURL(whatsappUrl);
-      } else {
-        // Fallback to web WhatsApp if app isn't installed
-        const webWhatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}`;
-        await Linking.openURL(webWhatsappUrl);
-      }
-      
-      // Mark the request as completed
-      onSimulateConnection(request.id);
-    } catch (error) {
-      console.error("Error opening WhatsApp:", error);
-      Alert.alert(
-        "Connection Error",
-        "There was an error connecting to WhatsApp."
-      );
-      
-      // Still mark as completed even if there was an error
-      onSimulateConnection(request.id);
-    }
-  };
+
 
   return (
     <TouchableOpacity 

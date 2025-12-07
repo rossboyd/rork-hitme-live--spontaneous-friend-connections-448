@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import { colors } from '@/constants/colors';
+import { useThemeStore } from '@/store/useThemeStore';
+import { darkTheme } from '@/constants/colors';
 
 interface HitMeModeToggleProps {
   isActive: boolean;
@@ -8,6 +9,7 @@ interface HitMeModeToggleProps {
 }
 
 export const HitMeModeToggle = ({ isActive, onToggle }: HitMeModeToggleProps) => {
+  const { colors = darkTheme } = useThemeStore();
   const animation = React.useRef(new Animated.Value(isActive ? 1 : 0)).current;
   
   React.useEffect(() => {
@@ -30,12 +32,13 @@ export const HitMeModeToggle = ({ isActive, onToggle }: HitMeModeToggleProps) =>
   
   return (
     <TouchableOpacity 
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.card }]}
       onPress={onToggle}
       activeOpacity={0.8}
     >
       <View style={styles.content}>
-        <Text style={[styles.text, isActive && styles.activeText]}>
+        <Text style={[styles.text, { color: colors.text.primary }, isActive && [styles.activeText, { color: colors.primary }]]}>
+        
           {isActive ? 'HitMeMode Active' : 'Activate HitMeMode'}
         </Text>
         
@@ -54,7 +57,6 @@ export const HitMeModeToggle = ({ isActive, onToggle }: HitMeModeToggleProps) =>
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
     marginHorizontal: 16,
@@ -73,10 +75,8 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.text.primary,
   },
   activeText: {
-    color: colors.primary,
     fontWeight: '600',
   },
   toggle: {

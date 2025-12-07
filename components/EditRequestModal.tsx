@@ -48,7 +48,7 @@ export const EditRequestModal = ({
   
   useEffect(() => {
     if (request) {
-      setTopic(request.topic);
+      setTopic(request.topic || '');
       setUrgency(request.urgency);
       setIsFavorite(request.expiresAt === null);
       

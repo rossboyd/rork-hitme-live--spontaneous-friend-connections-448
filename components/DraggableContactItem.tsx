@@ -1,11 +1,11 @@
-import React, { useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, PanResponder, Animated } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Contact, Mode } from '@/types';
 import { formatDistanceToNow } from '@/utils/dateUtils';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { Avatar } from '@/components/common/Avatar';
-import { Briefcase, Home, Heart, Crown, Meh, GripVertical } from 'lucide-react-native';
+import { Briefcase, Home, Heart, Crown, Meh } from 'lucide-react-native';
 
 interface DraggableContactItemProps {
   contact: Contact;
@@ -71,125 +71,64 @@ export const DraggableContactItem = ({
     }
   };
 
-  const pan = useRef(new Animated.ValueXY()).current;
-  const scale = useRef(new Animated.Value(1)).current;
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => isDraggable && Platform.OS !== 'web',
-      onMoveShouldSetPanResponder: () => isDraggable && Platform.OS !== 'web',
-      onPanResponderGrant: () => {
-        if (onDragStart) {
-          onDragStart();
-        }
-        Animated.spring(scale, {
-          toValue: 1.05,
-          useNativeDriver: true,
-        }).start();
-      },
-      onPanResponderMove: Animated.event(
-        [null, { dy: pan.y }],
-        { useNativeDriver: false }
-      ),
-      onPanResponderRelease: (_, gestureState) => {
-        const newIndex = Math.round(dragIndex + gestureState.dy / itemHeight);
-        const clampedIndex = Math.max(0, newIndex);
-        
-        if (onDragEnd) {
-          onDragEnd(contact.id, clampedIndex);
-        }
-        
-        Animated.parallel([
-          Animated.spring(pan, {
-            toValue: { x: 0, y: 0 },
-            useNativeDriver: true,
-          }),
-          Animated.spring(scale, {
-            toValue: 1,
-            useNativeDriver: true,
-          }),
-        ]).start();
-      },
-    })
-  ).current;
-
-  const animatedStyle = {
-    transform: [
-      { translateY: pan.y },
-      { scale: scale },
-    ],
-  };
 
   return (
-    <Animated.View
-      style={[
-        isDraggable && Platform.OS !== 'web' ? animatedStyle : {},
-        isDraggable && Platform.OS !== 'web' ? { zIndex: 1000 } : {}
-      ]}
-      {...(isDraggable && Platform.OS !== 'web' ? panResponder.panHandlers : {})}
-    >
-      <TouchableOpacity onPress={() => onPress(contact)} activeOpacity={0.7}>
-        <View style={[styles.container, { backgroundColor: colors.card }]}>
-          {isDraggable && Platform.OS !== 'web' && (
-            <View style={styles.dragHandle}>
-              <GripVertical size={20} color={colors.text.light} />
+    <TouchableOpacity onPress={() => onPress(contact)} activeOpacity={0.7}>
+      <View style={[styles.container, { backgroundColor: colors.card }]}>
+        <Avatar
+          name={contact.name}
+          avatar={contact.avatar}
+          size={56}
+        />
+        
+        <View style={styles.content}>
+          <Text style={[styles.name, { color: colors.text.primary }]}>{contact.name}</Text>
+          <Text style={[styles.phone, { color: colors.text.secondary }]}>{contact.phone}</Text>
+          
+          {showLastOnline && contact.lastOnline && (
+            <Text style={[styles.lastOnline, { color: colors.text.light }]}>
+              Last online {formatDistanceToNow(contact.lastOnline)}
+            </Text>
+          )}
+          
+          {showModes && contactModes.length > 0 && (
+            <View style={styles.modesContainer}>
+              {contactModes.map((mode) => (
+                <View 
+                  key={mode} 
+                  style={[styles.modeTag, { backgroundColor: colors.background }]}
+                >
+                  {renderModeIcon(mode)}
+                  <Text style={[styles.modeText, { color: colors.text.secondary }]}>
+                    {getModeLabel(mode)}
+                  </Text>
+                </View>
+              ))}
             </View>
           )}
-          
-          <Avatar
-            name={contact.name}
-            avatar={contact.avatar}
-            size={56}
-          />
-          
-          <View style={styles.content}>
-            <Text style={[styles.name, { color: colors.text.primary }]}>{contact.name}</Text>
-            <Text style={[styles.phone, { color: colors.text.secondary }]}>{contact.phone}</Text>
-            
-            {showLastOnline && contact.lastOnline && (
-              <Text style={[styles.lastOnline, { color: colors.text.light }]}>
-                Last online {formatDistanceToNow(contact.lastOnline)}
-              </Text>
-            )}
-            
-            {showModes && contactModes.length > 0 && (
-              <View style={styles.modesContainer}>
-                {contactModes.map((mode) => (
-                  <View 
-                    key={mode} 
-                    style={[styles.modeTag, { backgroundColor: colors.background }]}
-                  >
-                    {renderModeIcon(mode)}
-                    <Text style={[styles.modeText, { color: colors.text.secondary }]}>
-                      {getModeLabel(mode)}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
-          
-          {onToggleHitList && (
-            <TouchableOpacity
-              style={[
-                styles.hitListButton,
-                isInHitList ? 
-                  { backgroundColor: colors.primary, borderColor: colors.primary } : 
-                  { borderColor: colors.primary }
-              ]}
-              onPress={() => onToggleHitList(contact)}
-            >
-              <Text style={[
-                styles.hitListButtonText,
-                { color: isInHitList ? '#000' : colors.primary }
-              ]}>
-                {isInHitList ? 'In HitList' : 'Add'}
-              </Text>
-            </TouchableOpacity>
-          )}
         </View>
-      </TouchableOpacity>
-    </Animated.View>
+        
+        {onToggleHitList && (
+          <TouchableOpacity
+            style={[
+              styles.hitListButton,
+              isInHitList ? 
+                { backgroundColor: colors.primary, borderColor: colors.primary } : 
+                { borderColor: colors.primary }
+            ]}
+            onPress={() => onToggleHitList(contact)}
+          >
+            <Text style={[
+              styles.hitListButtonText,
+              { color: isInHitList ? '#000' : colors.primary }
+            ]}>
+              {isInHitList ? 'In HitList' : 'Add'}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </TouchableOpacity>
   );
 };
 
@@ -206,10 +145,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
-  },
-  dragHandle: {
-    marginRight: 12,
-    paddingVertical: 8,
   },
   content: {
     flex: 1,

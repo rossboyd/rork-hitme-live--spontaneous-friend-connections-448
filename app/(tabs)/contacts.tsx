@@ -5,13 +5,11 @@ import {
   FlatList, 
   TextInput, 
   TouchableOpacity,
-  Text,
-  Platform
+  Text
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { ContactItem } from '@/components/ContactItem';
-import { DraggableContactItem } from '@/components/DraggableContactItem';
 import { EmptyState } from '@/components/EmptyState';
 import { ToggleButton } from '@/components/common/ToggleButton';
 import { Search, UserPlus, Filter } from 'lucide-react-native';
@@ -29,7 +27,6 @@ export default function ContactsScreen() {
     outboundRequests, 
     contactSortOrder, 
     setContactSortOrder,
-    reorderContactsInMode,
     initializeModeRankings
   } = useAppStore();
   const { colors = darkTheme } = useThemeStore();
@@ -37,7 +34,6 @@ export default function ContactsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [modeFilter, setModeFilter] = useState<Mode | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
   
   const filteredContacts = useContactSearch(contacts, searchQuery, modeFilter, contactSortOrder);
   
@@ -46,9 +42,7 @@ export default function ContactsScreen() {
   }, [initializeModeRankings]);
   
   const handleContactPress = (contact: Contact) => {
-    if (!isDragging) {
-      router.push(`/contact-detail?id=${contact.id}`);
-    }
+    router.push(`/contact-detail?id=${contact.id}`);
   };
   
   const handleAddContact = (data: { name: string; phone: string; avatar: string }) => {
@@ -96,60 +90,8 @@ export default function ContactsScreen() {
     const newOrder: SortOrder = isRanked ? 'ranked' : 'alphabetical';
     setContactSortOrder(newOrder);
   };
-
-  const handleDragStart = () => {
-    setIsDragging(true);
-  };
-
-  const handleDragEnd = (contactId: string, newIndex: number) => {
-    setIsDragging(false);
-    
-    if (modeFilter && contactSortOrder === 'ranked') {
-      try {
-        // Get current filtered contacts in their current order
-        const currentContactIds = filteredContacts.map(c => c.id);
-        
-        // Find the current index of the dragged contact
-        const currentIndex = currentContactIds.indexOf(contactId);
-        if (currentIndex === -1) return;
-        
-        // Remove the contact from its current position
-        const reorderedIds = [...currentContactIds];
-        reorderedIds.splice(currentIndex, 1);
-        
-        // Insert at new position (clamp to valid range)
-        const clampedIndex = Math.max(0, Math.min(newIndex, reorderedIds.length));
-        reorderedIds.splice(clampedIndex, 0, contactId);
-        
-        // Update rankings in the store
-        reorderContactsInMode(modeFilter, reorderedIds);
-      } catch (error) {
-        console.warn('Error reordering contacts:', error);
-      }
-    }
-  };
   
-  const canDragAndDrop = modeFilter && contactSortOrder === 'ranked' && Platform.OS !== 'web';
-  
-  const renderItem = ({ item, index }: { item: Contact; index: number }) => {
-    if (canDragAndDrop) {
-      return (
-        <DraggableContactItem
-          contact={item}
-          onPress={handleContactPress}
-          showLastOnline={true}
-          isInHitList={isInHitList(item.id)}
-          onToggleHitList={handleToggleHitList}
-          showModes={true}
-          isDraggable={true}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          dragIndex={index}
-          itemHeight={96}
-        />
-      );
-    }
-    
+  const renderItem = ({ item }: { item: Contact }) => {
     return (
       <ContactItem
         contact={item}
@@ -223,11 +165,7 @@ export default function ContactsScreen() {
             ))}
           </View>
           
-          {modeFilter && contactSortOrder === 'ranked' && Platform.OS !== 'web' && (
-            <Text style={[styles.dragHint, { color: colors.text.light }]}>
-              Drag contacts to reorder your {getModeLabel(modeFilter)} list
-            </Text>
-          )}
+
         </View>
         
         <FlatList
@@ -235,7 +173,6 @@ export default function ContactsScreen() {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
-          scrollEnabled={!isDragging}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <EmptyState
@@ -313,11 +250,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     marginLeft: 4,
-  },
-  dragHint: {
-    fontSize: 12,
-    fontStyle: 'italic',
-    textAlign: 'center',
   },
   listContent: {
     paddingVertical: 8,

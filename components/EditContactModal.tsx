@@ -46,9 +46,9 @@ export const EditContactModal = ({
   
   useEffect(() => {
     if (contact) {
-      setName(contact.name);
-      setPhone(contact.phone);
-      setSelectedAvatar(contact.avatar);
+      setName(contact.name || '');
+      setPhone(contact.phone || '');
+      setSelectedAvatar(contact.avatar || '');
     }
   }, [contact]);
   
