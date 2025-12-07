@@ -61,7 +61,10 @@ interface DebugSlice {
 }
 
 // Combine all slices into one interface
-type AppState = UserSlice & ContactsSlice & RequestsSlice & HitMeModeSlice & OnboardingSlice & DebugSlice;
+type AppState = UserSlice & ContactsSlice & RequestsSlice & HitMeModeSlice & OnboardingSlice & DebugSlice & {
+  _hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
+};
 
 // Create the store with proper typing
 export const useAppStore = create<AppState>()(
@@ -236,10 +239,19 @@ export const useAppStore = create<AppState>()(
         contacts: [...mockContacts],
         inboundRequests: [...mockRequests],
       })),
+
+      // Hydration tracking
+      _hasHydrated: false,
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
     }),
     {
       name: 'hit-me-app-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.setHasHydrated(true);
+        }
+      },
       partialize: (state) => ({
         user: state.user,
         contacts: state.contacts,

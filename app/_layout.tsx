@@ -11,9 +11,8 @@ import { useAppStore } from '@/store/useAppStore';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  // Always provide default colors to prevent undefined errors
-  const { theme, colors = darkTheme } = useThemeStore();
-  const { hasCompletedOnboarding, user } = useAppStore();
+  const { colors = darkTheme } = useThemeStore();
+  const isHydrated = useAppStore((state) => state._hasHydrated);
   const segments = useSegments();
   const router = useRouter();
   
@@ -25,18 +24,19 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded) {
+    if (fontsLoaded && isHydrated) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, isHydrated]);
 
   // Handle authentication and onboarding routing
   useEffect(() => {
-    if (!fontsLoaded) return;
+    if (!fontsLoaded || !isHydrated) return;
+
+    const hasCompletedOnboarding = useAppStore.getState().hasCompletedOnboarding;
 
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboardingGroup = segments[0] === 'onboarding';
-    const inTabsGroup = segments[0] === '(tabs)';
     
     // Auth-related routes that should bypass onboarding redirect
     const isAuthRoute = 
@@ -56,9 +56,9 @@ export default function RootLayout() {
     if (hasCompletedOnboarding && (inOnboardingGroup || segments[0] === 'verify')) {
       router.replace('/(tabs)/home');
     }
-  }, [fontsLoaded, hasCompletedOnboarding, segments, router]);
+  }, [fontsLoaded, isHydrated, segments, router]);
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || !isHydrated) {
     return null;
   }
 
