@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   StyleSheet, 
@@ -101,7 +101,7 @@ export default function ContactsScreen() {
     }
   };
 
-  const renderDraggableItem = useCallback(({ item, drag, isActive }: RenderItemParams<Contact>) => {
+  const renderDraggableItem = ({ item, drag, isActive }: RenderItemParams<Contact>) => {
     return (
       <ScaleDecorator>
         <DraggableContactItem
@@ -117,7 +117,7 @@ export default function ContactsScreen() {
         />
       </ScaleDecorator>
     );
-  }, [contactSortOrder, modeFilter]);
+  };
 
   const renderItem = ({ item }: { item: Contact }) => {
     return (
