@@ -5,7 +5,8 @@ import {
   FlatList, 
   TextInput, 
   TouchableOpacity,
-  Text
+  Text,
+  Platform
 } from 'react-native';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
 import { useRouter, Stack, Href } from 'expo-router';
@@ -116,7 +117,7 @@ export default function ContactsScreen() {
         />
       </ScaleDecorator>
     );
-  }, [contactSortOrder, modeFilter, isInHitList, handleContactPress, handleToggleHitList]);
+  }, [contactSortOrder, modeFilter]);
 
   const renderItem = ({ item }: { item: Contact }) => {
     return (
@@ -195,7 +196,7 @@ export default function ContactsScreen() {
 
         </View>
         
-        {contactSortOrder === 'ranked' && modeFilter ? (
+        {(contactSortOrder === 'ranked' && modeFilter && Platform.OS !== 'web') ? (
           <DraggableFlatList
             data={filteredContacts}
             onDragEnd={handleDragEnd}
