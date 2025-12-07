@@ -5,47 +5,56 @@ import {
   FlatList, 
   TextInput, 
   TouchableOpacity,
-  Text,
-  Platform
+  Text
 } from 'react-native';
-import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
-import { useRouter, Stack, Href } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
-import { DraggableContactItem } from '@/components/DraggableContactItem';
+import { ContactItem } from '@/components/ContactItem';
 import { EmptyState } from '@/components/EmptyState';
-import { ToggleButton } from '@/components/common/ToggleButton';
 import { Search, UserPlus, Filter } from 'lucide-react-native';
-import { Contact, Mode, SortOrder } from '@/types';
+import { Contact, Mode } from '@/types';
 import { AddContactModal } from '@/components/AddContactModal';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
-import { useContactSearch } from '@/hooks/useContactSearch';
 
 export default function ContactsScreen() {
   const router = useRouter();
-  const { 
-    contacts, 
-    addContact, 
-    outboundRequests, 
-    contactSortOrder, 
-    setContactSortOrder,
-    initializeModeRankings,
-    reorderContactsInMode
-  } = useAppStore();
+  const { contacts, addContact, outboundRequests } = useAppStore();
   const { colors = darkTheme } = useThemeStore();
   
   const [searchQuery, setSearchQuery] = useState('');
+  const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [modeFilter, setModeFilter] = useState<Mode | null>(null);
   
-  const filteredContacts = useContactSearch(contacts, searchQuery, modeFilter, contactSortOrder);
-  
   useEffect(() => {
-    initializeModeRankings();
-  }, [initializeModeRankings]);
+    let result = [...contacts];
+    
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        contact => 
+          contact.name.toLowerCase().includes(query) || 
+          contact.phone.includes(query)
+      );
+    }
+    
+    // Apply mode filter
+    if (modeFilter) {
+      result = result.filter(
+        contact => contact.modes?.includes(modeFilter)
+      );
+    }
+    
+    // Sort alphabetically
+    result.sort((a, b) => a.name.localeCompare(b.name));
+    
+    setFilteredContacts(result);
+  }, [contacts, searchQuery, modeFilter]);
   
   const handleContactPress = (contact: Contact) => {
-    router.push(`/contact-detail?id=${contact.id}` as Href);
+    router.push(`/contact-detail?id=${contact.id}`);
   };
   
   const handleAddContact = (data: { name: string; phone: string; avatar: string }) => {
@@ -65,7 +74,7 @@ export default function ContactsScreen() {
   };
   
   const handleToggleHitList = (contact: Contact) => {
-    router.push(`/contact-detail?id=${contact.id}` as Href);
+    router.push(`/contact-detail?id=${contact.id}`);
   };
   
   const getModeLabel = (mode: Mode) => {
@@ -88,49 +97,17 @@ export default function ContactsScreen() {
   const toggleModeFilter = (mode: Mode) => {
     setModeFilter(currentMode => currentMode === mode ? null : mode);
   };
-
-  const handleSortToggle = (isRanked: boolean) => {
-    const newOrder: SortOrder = isRanked ? 'ranked' : 'alphabetical';
-    setContactSortOrder(newOrder);
-  };
   
-  const handleDragEnd = ({ data }: { data: Contact[] }) => {
-    if (modeFilter && contactSortOrder === 'ranked') {
-      const contactIds = data.map(c => c.id);
-      reorderContactsInMode(modeFilter, contactIds);
-    }
-  };
-
-  const renderDraggableItem = ({ item, drag, isActive }: RenderItemParams<Contact>) => {
-    return (
-      <ScaleDecorator>
-        <DraggableContactItem
-          contact={item}
-          onPress={handleContactPress}
-          showLastOnline={true}
-          isInHitList={isInHitList(item.id)}
-          onToggleHitList={handleToggleHitList}
-          showModes={true}
-          isDraggable={contactSortOrder === 'ranked' && !!modeFilter}
-          drag={drag}
-          isActive={isActive}
-        />
-      </ScaleDecorator>
-    );
-  };
-
-  const renderItem = ({ item }: { item: Contact }) => {
-    return (
-      <DraggableContactItem
-        contact={item}
-        onPress={handleContactPress}
-        showLastOnline={true}
-        isInHitList={isInHitList(item.id)}
-        onToggleHitList={handleToggleHitList}
-        showModes={true}
-      />
-    );
-  };
+  const renderItem = ({ item }: { item: Contact }) => (
+    <ContactItem
+      contact={item}
+      onPress={handleContactPress}
+      showLastOnline={true}
+      isInHitList={isInHitList(item.id)}
+      onToggleHitList={handleToggleHitList}
+      showModes={true}
+    />
+  );
   
   return (
     <>
@@ -161,17 +138,7 @@ export default function ContactsScreen() {
         </View>
         
         <View style={styles.filterContainer}>
-          <View style={styles.filterRow}>
-            <Text style={[styles.filterLabel, { color: colors.text.secondary }]}>Filter by trait:</Text>
-            <ToggleButton
-              leftLabel="A-Z"
-              rightLabel="Ranked"
-              isRightSelected={contactSortOrder === 'ranked'}
-              onToggle={handleSortToggle}
-              style={styles.sortToggle}
-            />
-          </View>
-          
+          <Text style={[styles.filterLabel, { color: colors.text.secondary }]}>Filter by mode:</Text>
           <View style={styles.modeFilters}>
             {(['FAM', 'VIP', 'BFF', 'WRK', 'MEH'] as Mode[]).map((mode) => (
               <TouchableOpacity 
@@ -192,46 +159,25 @@ export default function ContactsScreen() {
               </TouchableOpacity>
             ))}
           </View>
-          
-
         </View>
         
-        {(contactSortOrder === 'ranked' && modeFilter && Platform.OS !== 'web') ? (
-          <DraggableFlatList
-            data={filteredContacts}
-            onDragEnd={handleDragEnd}
-            keyExtractor={(item) => item.id}
-            renderItem={renderDraggableItem}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            ListEmptyComponent={
-              <EmptyState
-                title="No contacts found"
-                message={`No contacts in ${getModeLabel(modeFilter)} trait`}
-                icon={<UserPlus size={48} color={colors.text.light} />}
-              />
-            }
-          />
-        ) : (
-          <FlatList
-            data={filteredContacts}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            ListEmptyComponent={
-              <EmptyState
-                title="No contacts found"
-                message={searchQuery 
-                  ? "Try a different search term" 
-                  : modeFilter
-                    ? `No contacts in ${getModeLabel(modeFilter)} trait`
-                    : "Add your first contact to get started"}
-                icon={<UserPlus size={48} color={colors.text.light} />}
-              />
-            }
-          />
-        )}
+        <FlatList
+          data={filteredContacts}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <EmptyState
+              title="No contacts found"
+              message={searchQuery 
+                ? "Try a different search term" 
+                : modeFilter
+                  ? `No contacts in ${getModeLabel(modeFilter)} mode`
+                  : "Add your first contact to get started"}
+              icon={<UserPlus size={48} color={colors.text.light} />}
+            />
+          }
+        />
       </View>
       
       <AddContactModal
@@ -267,23 +213,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 8,
   },
-  filterRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
   filterLabel: {
     fontSize: 14,
-  },
-  sortToggle: {
-    // ToggleButton will handle its own styling
+    marginBottom: 8,
   },
   modeFilters: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 8,
   },
   modeFilter: {
     flexDirection: 'row',

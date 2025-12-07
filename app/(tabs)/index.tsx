@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Text, Platform } from 'react-native';
-import { useRouter, Href } from 'expo-router';
+import { View, StyleSheet, FlatList, TouchableOpacity, Text, Animated } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { RequestCard } from '@/components/RequestCard';
 import { EmptyState } from '@/components/EmptyState';
 import { Plus, ListChecks, Star, Clock } from 'lucide-react-native';
 import { HitRequest } from '@/types';
 import * as Haptics from 'expo-haptics';
+import { Platform } from 'react-native';
 import { EditRequestModal } from '@/components/EditRequestModal';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { useRequestFilters } from '@/hooks/useRequestFilters';
+import { typography } from '@/styles/typography';
 
 // Tab types
 type TabType = 'active' | 'favorites' | 'expired';
@@ -35,7 +37,7 @@ export default function HitListScreen() {
   }, [expireRequests]);
 
   const handleAddRequest = () => {
-    router.push('/contacts' as Href);
+    router.push('/contacts');
   };
 
   const handleExtendRequest = (requestId: string) => {
@@ -129,6 +131,7 @@ export default function HitListScreen() {
   };
 
   const tabData = getCurrentTabData();
+  const hasData = tabData.length > 0;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

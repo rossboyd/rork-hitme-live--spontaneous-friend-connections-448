@@ -7,16 +7,13 @@ import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
 import { useAppStore } from '@/store/useAppStore';
 
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { StyleSheet } from 'react-native';
-
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   // Always provide default colors to prevent undefined errors
-  const { colors = darkTheme } = useThemeStore();
-  const { hasCompletedOnboarding } = useAppStore();
+  const { theme, colors = darkTheme } = useThemeStore();
+  const { hasCompletedOnboarding, user } = useAppStore();
   const segments = useSegments();
   const router = useRouter();
   
@@ -37,22 +34,27 @@ export default function RootLayout() {
   useEffect(() => {
     if (!fontsLoaded) return;
 
-    const currentSegment = segments[0] as string | undefined;
-    const inOnboardingGroup = currentSegment === 'onboarding';
+    const inAuthGroup = segments[0] === '(auth)';
+    const inOnboardingGroup = segments[0] === 'onboarding';
+    const inTabsGroup = segments[0] === '(tabs)';
     
     // Auth-related routes that should bypass onboarding redirect
     const isAuthRoute = 
-      currentSegment === 'verify' || 
-      currentSegment === undefined; // root/index (login)
+      inAuthGroup || 
+      segments[0] === 'verify' || 
+      segments[0] === '' || // root/index (likely login)
+      segments[0] === 'phone' || 
+      segments[0] === 'login' || 
+      segments[0] === 'permissions';
 
     // If user hasn't completed onboarding and isn't in the onboarding flow or auth flow
     if (!hasCompletedOnboarding && !inOnboardingGroup && !isAuthRoute) {
-      router.replace('/onboarding/welcome' as any);
+      router.replace('/onboarding/welcome');
     }
     
     // If user has completed onboarding but is still in the onboarding flow
-    if (hasCompletedOnboarding && (inOnboardingGroup || currentSegment === 'verify')) {
-      router.replace('/(tabs)/home' as any);
+    if (hasCompletedOnboarding && (inOnboardingGroup || segments[0] === 'verify')) {
+      router.replace('/(tabs)/home');
     }
   }, [fontsLoaded, hasCompletedOnboarding, segments, router]);
 
@@ -61,9 +63,8 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <Stack
-        screenOptions={{
+    <Stack
+      screenOptions={{
         headerStyle: {
           backgroundColor: colors.background,
         },
@@ -92,6 +93,5 @@ export default function RootLayout() {
         }}
       />
     </Stack>
-    </GestureHandlerRootView>
   );
 }

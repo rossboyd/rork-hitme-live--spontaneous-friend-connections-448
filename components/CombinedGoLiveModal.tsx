@@ -55,7 +55,7 @@ export const CombinedGoLiveModal = ({
     }
     
     // If no modes selected, use all modes
-    const modesToUse = selectedModes.length === 0 ? (['FAM', 'VIP', 'BFF', 'WRK', 'MEH'] as Mode[]) : selectedModes;
+    const modesToUse = selectedModes.length === 0 ? ['work', 'social', 'family'] : selectedModes;
     
     onGoLive(selectedDuration, modesToUse);
   };
@@ -71,7 +71,7 @@ export const CombinedGoLiveModal = ({
   };
   
   const handleSelectAll = () => {
-    setSelectedModes(['FAM', 'VIP', 'BFF', 'WRK', 'MEH']);
+    setSelectedModes(['work', 'social', 'family']);
   };
   
   return (

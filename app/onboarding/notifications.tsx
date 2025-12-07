@@ -8,7 +8,7 @@ import {
   ScrollView,
   Platform
 } from 'react-native';
-import { useRouter, Href } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { Bell, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -30,7 +30,7 @@ export default function NotificationsPermissionScreen() {
     setHasCompletedOnboarding(true);
     
     // Navigate to the main app
-    router.replace('/(tabs)/home' as Href);
+    router.replace('/(tabs)/home');
   };
   
   const handleSkip = () => {
@@ -38,7 +38,7 @@ export default function NotificationsPermissionScreen() {
     setHasCompletedOnboarding(true);
     
     // Navigate to the main app
-    router.replace('/(tabs)/home' as Href);
+    router.replace('/(tabs)/home');
   };
   
   return (

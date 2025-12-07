@@ -28,16 +28,12 @@ export const LiveModeStatus = ({
 
   const getModeLabel = () => {
     switch (currentMode) {
-      case 'FAM':
-        return 'Family Mode';
-      case 'VIP':
-        return 'VIP Mode';
-      case 'BFF':
-        return 'BFF Mode';
-      case 'WRK':
+      case 'work':
         return 'Work Mode';
-      case 'MEH':
-        return 'Meh Mode';
+      case 'family':
+        return 'Family Mode';
+      case 'social':
+        return 'Social Mode';
       default:
         return null;
     }

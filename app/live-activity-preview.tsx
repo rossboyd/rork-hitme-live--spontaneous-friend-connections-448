@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, StatusBar } from 'react-native';
-import { useRouter, Href } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { LiveActivitySimulator } from '@/components/LiveActivitySimulator';
 import { useAppStore } from '@/store/useAppStore';
+import { Image } from 'expo-image';
 
 export default function LiveActivityPreviewScreen() {
   const router = useRouter();
@@ -59,7 +60,7 @@ export default function LiveActivityPreviewScreen() {
       <TouchableOpacity 
         style={styles.tapOverlay}
         activeOpacity={1}
-        onPress={() => router.push('/(tabs)/home' as Href)}
+        onPress={() => router.push('/(tabs)/home')}
       >
         <Text style={styles.tapText}>Tap anywhere to return to app</Text>
       </TouchableOpacity>

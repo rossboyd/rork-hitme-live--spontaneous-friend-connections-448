@@ -9,7 +9,7 @@ import {
   Platform,
   ScrollView
 } from 'react-native';
-import { useRouter, Href } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { useThemeStore } from '@/store/useThemeStore';
 import { 
@@ -22,6 +22,7 @@ import {
   Camera,
   Edit,
   Smartphone,
+  ExternalLink,
   RotateCcw
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -219,7 +220,7 @@ export default function ProfileScreen() {
         {renderSettingItem(
           <Smartphone size={24} color={colors.text.primary} />,
           "Live Activity Preview",
-          () => router.push('/live-activity-preview' as Href)
+          () => router.push('/live-activity-preview')
         )}
         
         {renderSettingItem(

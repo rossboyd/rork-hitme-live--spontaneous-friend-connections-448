@@ -10,7 +10,8 @@ import {
   SafeAreaView,
   KeyboardAvoidingView
 } from 'react-native';
-import { useRouter, Href } from 'expo-router';
+import { useRouter } from 'expo-router';
+import { useAppStore } from '@/store/useAppStore';
 import { ChevronDown } from 'lucide-react-native';
 import { validatePhone } from '@/utils/validation';
 import * as Haptics from 'expo-haptics';
@@ -21,6 +22,7 @@ export default function LoginScreen() {
   const [countryCode, setCountryCode] = useState('+44');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState('');
+  const { setUser } = useAppStore();
 
   const handlePhoneSubmit = () => {
     const fullPhone = countryCode + phoneNumber;
@@ -38,9 +40,9 @@ export default function LoginScreen() {
     }
 
     router.push({
-      pathname: '/verify' as Href,
+      pathname: '/verify',
       params: { phone: fullPhone }
-    } as any);
+    });
   };
 
   const formatPhoneNumber = (text: string) => {
@@ -74,7 +76,7 @@ export default function LoginScreen() {
                 Log in / Sign up
               </Text>
               <Text style={[styles.subtitle, { color: darkTheme.text.secondary }]}>
-                You&apos;ll be able to connect with friends, get notifications when they&apos;re available, and do other nice things
+                You'll be able to connect with friends, get notifications when they're available, and do other nice things
               </Text>
             </View>
 
@@ -146,7 +148,7 @@ export default function LoginScreen() {
                 <Text style={[styles.linkText, { color: darkTheme.primary }]}>
                   privacy policy
                 </Text>
-                . We&apos;ll text you a code to verify your account (usual rates may apply).
+                . We'll text you a code to verify your account (usual rates may apply).
               </Text>
             </View>
           </View>

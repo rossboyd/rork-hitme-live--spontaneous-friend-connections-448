@@ -5,7 +5,7 @@ import {
   StyleSheet, 
   TouchableOpacity 
 } from 'react-native';
-import { Filter, Briefcase, Home, Heart, Crown, Meh, Check, X } from 'lucide-react-native';
+import { Filter, Briefcase, Home, Users, Check, X } from 'lucide-react-native';
 import { Contact, Mode } from '@/types';
 import { useThemeStore } from '@/store/useThemeStore';
 import { darkTheme } from '@/constants/colors';
@@ -15,7 +15,7 @@ interface ModeAssociationsProps {
   onToggleMode: (mode: Mode) => void;
 }
 
-interface TraitOption {
+interface ModeOption {
   id: Mode;
   label: string;
   icon: React.ReactNode;
@@ -26,36 +26,24 @@ export const ModeAssociations = ({ contact, onToggleMode }: ModeAssociationsProp
   const { colors = darkTheme } = useThemeStore();
   const contactModes = contact.modes || [];
   
-  const traitOptions: TraitOption[] = [
+  const modeOptions: ModeOption[] = [
     {
-      id: 'FAM',
-      label: 'Family',
-      icon: <Home size={24} color={colors.primary} />,
-      description: (name) => `Show ${name} when you are in Family mode`
-    },
-    {
-      id: 'VIP',
-      label: 'VIP',
-      icon: <Crown size={24} color={colors.primary} />,
-      description: (name) => `Show ${name} when you are in VIP mode`
-    },
-    {
-      id: 'BFF',
-      label: 'BFF',
-      icon: <Heart size={24} color={colors.primary} />,
-      description: (name) => `Show ${name} when you are in BFF mode`
-    },
-    {
-      id: 'WRK',
+      id: 'work',
       label: 'Work',
       icon: <Briefcase size={24} color={colors.primary} />,
-      description: (name) => `Show ${name} when you are in Work mode`
+      description: (name) => `Show ${name} when you're in Work mode`
     },
     {
-      id: 'MEH',
-      label: 'Meh',
-      icon: <Meh size={24} color={colors.primary} />,
-      description: (name) => `Show ${name} when you are in Meh mode`
+      id: 'social',
+      label: 'Social',
+      icon: <Users size={24} color={colors.primary} />,
+      description: (name) => `Show ${name} when you're in Social mode`
+    },
+    {
+      id: 'family',
+      label: 'Family',
+      icon: <Home size={24} color={colors.primary} />,
+      description: (name) => `Show ${name} when you're in Family mode`
     }
   ];
   
@@ -63,53 +51,48 @@ export const ModeAssociations = ({ contact, onToggleMode }: ModeAssociationsProp
     <View style={[styles.container, { backgroundColor: colors.card }]}>
       <View style={styles.header}>
         <Filter size={24} color={colors.text.primary} />
-        <Text style={[styles.title, { color: colors.text.primary }]}>Contact Traits</Text>
+        <Text style={[styles.title, { color: colors.text.primary }]}>Mode Associations</Text>
       </View>
       
       <Text style={[styles.description, { color: colors.text.secondary }]}>
-        Choose which traits to associate with {contact.name}.
-        They will only appear in your feed when you are in these modes.
+        Choose which modes you want to associate with {contact.name}.
+        They will only appear in your feed when you're in these modes.
       </Text>
       
-      <View style={styles.traitsList}>
-        {traitOptions.map((trait) => {
-          const isSelected = contactModes.includes(trait.id);
+      <View style={styles.modesList}>
+        {modeOptions.map((mode) => {
+          const isSelected = contactModes.includes(mode.id);
           
           return (
-            <TouchableOpacity 
-              key={trait.id} 
-              style={[
-                styles.traitItem,
-                { backgroundColor: colors.background },
-                isSelected && { borderColor: colors.primary, borderWidth: 2 }
-              ]}
-              onPress={() => onToggleMode(trait.id)}
-            >
-              <View style={styles.traitContent}>
-                <View style={styles.traitHeader}>
-                  <View style={[styles.traitIconContainer, { backgroundColor: colors.card }]}>
-                    {trait.icon}
-                  </View>
-                  <View style={styles.traitInfo}>
-                    <Text style={[styles.traitLabel, { color: colors.text.primary }]}>{trait.label}</Text>
-                    <Text style={[styles.traitDescription, { color: colors.text.secondary }]}>
-                      {trait.description(contact.name)}
-                    </Text>
-                  </View>
+            <View key={mode.id} style={[
+              styles.modeItem,
+              { backgroundColor: colors.background }
+            ]}>
+              <View style={styles.modeHeader}>
+                <View style={[styles.modeIconContainer, { backgroundColor: colors.card }]}>
+                  {mode.icon}
                 </View>
-                
-                <View style={[
+                <Text style={[styles.modeLabel, { color: colors.text.primary }]}>{mode.label}</Text>
+              </View>
+              
+              <Text style={[styles.modeDescription, { color: colors.text.secondary }]}>
+                {mode.description(contact.name)}
+              </Text>
+              
+              <TouchableOpacity 
+                style={[
                   styles.toggleButton,
                   { backgroundColor: isSelected ? colors.primary : colors.border }
-                ]}>
-                  {isSelected ? (
-                    <Check size={20} color="#000" />
-                  ) : (
-                    <X size={20} color={colors.text.light} />
-                  )}
-                </View>
-              </View>
-            </TouchableOpacity>
+                ]}
+                onPress={() => onToggleMode(mode.id)}
+              >
+                {isSelected ? (
+                  <Check size={24} color="#000" />
+                ) : (
+                  <X size={24} color={colors.text.light} />
+                )}
+              </TouchableOpacity>
+            </View>
           );
         })}
       </View>
@@ -138,51 +121,44 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 20,
   },
-  traitsList: {
-    gap: 12,
+  modesList: {
+    gap: 16,
   },
-  traitItem: {
+  modeItem: {
     borderRadius: 12,
     padding: 16,
-    borderWidth: 1,
-    borderColor: 'transparent',
+    position: 'relative',
   },
-  traitContent: {
+  modeHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    marginBottom: 8,
   },
-  traitHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  traitIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  traitInfo: {
-    flex: 1,
-  },
-  traitLabel: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  traitDescription: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  toggleButton: {
+  modeIconContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 12,
+    marginRight: 12,
+  },
+  modeLabel: {
+    fontSize: 18,
+    fontWeight: '500',
+  },
+  modeDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  toggleButton: {
+    position: 'absolute',
+    right: 16,
+    top: '50%',
+    marginTop: -24,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

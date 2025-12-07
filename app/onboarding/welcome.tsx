@@ -8,7 +8,7 @@ import {
   ScrollView,
   Platform
 } from 'react-native';
-import { useRouter, Href } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useThemeStore } from '@/store/useThemeStore';
@@ -23,7 +23,7 @@ export default function WelcomeScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     
-    router.push('/onboarding/profile' as Href);
+    router.push('/onboarding/profile');
   };
   
   return (
@@ -47,7 +47,7 @@ export default function WelcomeScreen() {
           Connect when it matters
         </Text>
         <Text style={[styles.description, { color: colors.text.secondary }]}>
-          Let your friends know when you&apos;re available to chat, and get notified when they are too.
+          Let your friends know when you're available to chat, and get notified when they are too.
         </Text>
       </View>
       

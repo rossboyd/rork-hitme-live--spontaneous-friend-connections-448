@@ -9,7 +9,7 @@ import {
   Platform,
   KeyboardAvoidingView
 } from 'react-native';
-import { useRouter, Href } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import * as Haptics from 'expo-haptics';
 import { useThemeStore } from '@/store/useThemeStore';
@@ -56,7 +56,7 @@ export default function VerifyScreen() {
     });
     
     // Navigate to onboarding instead of home
-    router.replace('/onboarding/welcome' as Href);
+    router.replace('/onboarding/welcome');
   };
   
   const handleResendCode = () => {

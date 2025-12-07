@@ -3,11 +3,10 @@ export type Mode = 'FAM' | 'VIP' | 'BFF' | 'WRK' | 'MEH';
 export interface Contact {
   id: string;
   name: string;
-  avatar?: string;
+  avatar: string;
   phone: string;
   email?: string;
   lastOnline?: number;
-  lastSeen?: number;
   modes?: Mode[];
   isFavorite?: boolean;
 }
@@ -20,28 +19,18 @@ export interface User {
   email?: string;
 }
 
-export type RequestStatus = 'pending' | 'completed' | 'expired' | 'rejected' | 'dismissed';
+export type RequestStatus = 'pending' | 'completed' | 'expired' | 'rejected';
 export type RequestUrgency = 'low' | 'medium' | 'high';
-export type UrgencyLevel = RequestUrgency;
 
 export interface HitRequest {
   id: string;
   senderId: string;
   receiverId: string;
   message: string;
-  topic?: string;
   status: RequestStatus;
   urgency: RequestUrgency;
   createdAt: number;
-  expiresAt: number | null;
-}
-
-export type SortOrder = 'alphabetical' | 'ranked';
-
-export interface ModeRankings {
-  [mode: string]: {
-    [contactId: string]: number;
-  };
+  expiresAt: number;
 }
 
 export interface AppState {
@@ -55,8 +44,6 @@ export interface AppState {
   pendingNotifications: string[];
   dismissedRequests: string[];
   currentMode: Mode | null;
-  modeRankings: ModeRankings;
-  contactSortOrder: SortOrder;
   
   // Actions
   setUser: (user: User) => void;
@@ -76,7 +63,4 @@ export interface AppState {
   updateContactLastOnline: (contactId: string) => void;
   setCurrentMode: (mode: Mode | null) => void;
   toggleContactFavorite: (contactId: string) => void;
-  updateModeRanking: (mode: Mode, contactId: string, rank: number) => void;
-  reorderContactsInMode: (mode: Mode, contactIds: string[]) => void;
-  setContactSortOrder: (order: SortOrder) => void;
 }

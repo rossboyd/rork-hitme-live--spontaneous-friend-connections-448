@@ -39,7 +39,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="hitlist"
+        name="index"
         options={{
           title: "HitList",
           tabBarLabel: "HitList",

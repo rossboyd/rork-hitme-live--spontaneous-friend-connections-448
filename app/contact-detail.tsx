@@ -18,7 +18,7 @@ import { AddRequestModal } from '@/components/AddRequestModal';
 import { useThemeStore } from '@/store/useThemeStore';
 import { Avatar } from '@/components/common/Avatar';
 import { ModeAssociations } from '@/components/ModeAssociations';
-import { Mode, Contact } from '@/types';
+import { Mode } from '@/types';
 
 export default function ContactDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -94,7 +94,7 @@ export default function ContactDetailScreen() {
     addOutboundRequest({
       senderId: 'user-1', // Current user ID
       receiverId: contact.id,
-      message: data.topic,
+      topic: data.topic,
       urgency: data.urgency,
       expiresAt: data.expiresIn ? Date.now() + data.expiresIn : null,
     });
@@ -192,7 +192,7 @@ export default function ContactDetailScreen() {
           </TouchableOpacity>
         </View>
         
-        <View style={styles.traitsContainer}>
+        <View style={styles.modesContainer}>
           <ModeAssociations 
             contact={contact} 
             onToggleMode={handleToggleMode} 
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
   activeActionText: {
     color: '#fff',
   },
-  traitsContainer: {
+  modesContainer: {
     paddingHorizontal: 16,
     marginTop: 16,
   },
